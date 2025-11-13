@@ -1,0 +1,74 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.analysis-medication-item {
+  display: block;
+  position: relative;
+  
+  .doses-per-day {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 10rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    z-index: 10;
+  }
+  
+  ::ng-deep .medication-item {
+    height: 4.5rem; // 60% of original 7.5rem
+    margin-bottom: 1rem;
+    
+    .medication-header {
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none !important;
+      cursor: default !important;
+    }
+    
+    // Re-enable pointer events for action buttons
+    .action-buttons {
+      pointer-events: auto !important;
+    }
+    
+    .medication-name {
+      font-size: 0.95625rem !important; // 85% of 1.125rem (15% smaller)
+    }
+    
+    .medication-codes {
+      display: none !important; // Hide CNK and VMP codes
+    }
+    
+    .medication-indication {
+      font-size: 0.6375rem !important; // 85% of 0.75rem (15% smaller)
+      display: inline-block !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 12rem !important;
+    }
+    
+    .medication-details {
+      font-size: 0.74375rem !important; // 85% of 0.875rem (15% smaller)
+    }
+    
+    /* Stack header content vertically so boxes appear below the name */
+    .header-content {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 0.25rem !important;
+    }
+
+    /* Ensure badges and frequency are block-level and appear under the name */
+    .header-frequency,
+    .as-needed-badge,
+    .medication-indication {
+      display: block !important;
+      margin-top: 0 !important;
+    }
+  }
+}

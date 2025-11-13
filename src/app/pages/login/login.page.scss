@@ -1,0 +1,171 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 2rem;
+  background-color: #132F52;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/images/logo-transparent-stalk.svg');
+    background-repeat: no-repeat;
+    background-position: right bottom;
+    background-size: contain;
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .login-container {
+    width: 100%;
+    max-width: 450px;
+    position: relative;
+    z-index: 1;
+
+    .login-box {
+      background-color: $box-background;
+      border: $box-border-width solid $box-border-primary;
+      border-radius: $box-border-radius;
+      padding: 2.5rem;
+
+      .login-title {
+        font-size: 1.8rem;
+        color: $text-primary;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+
+        .field-group {
+          display: flex;
+          flex-direction: column;
+
+          label {
+            font-size: 0.875rem;
+            color: $text-secondary;
+            margin-bottom: 0.5rem;
+            font-weight: $font-weight-regular;
+
+            .required {
+              color: #e74c3c;
+            }
+
+            .optional {
+              color: $text-muted;
+              font-size: 0.75rem;
+            }
+          }
+
+          input {
+            padding: 0.75rem;
+            border: $box-border-width solid $box-border-primary;
+            border-radius: $box-border-radius;
+            font-family: $primary-font;
+            font-size: 0.875rem;
+            
+            &:focus {
+              outline: none;
+              border-color: $button-primary;
+            }
+
+            &::placeholder {
+              color: $text-muted;
+            }
+
+            &:disabled {
+              opacity: 0.6;
+              cursor: not-allowed;
+            }
+          }
+        }
+
+        .error-message {
+          padding: 0.75rem;
+          background-color: #fee;
+          border: 1px solid #e74c3c;
+          border-radius: $box-border-radius;
+          color: #c0392b;
+          font-size: 0.875rem;
+          text-align: center;
+        }
+
+        .submit-button {
+          margin-top: 1rem;
+          padding: 0.75rem 1.5rem;
+          background-color: $button-primary;
+          color: $text-button-primary;
+          border: $box-border-width solid $box-border-primary;
+          border-radius: $box-border-radius;
+          font-family: $primary-font;
+          font-size: 1rem;
+          font-weight: $font-weight-medium;
+          cursor: pointer;
+          transition: background-color 0.2s ease, opacity 0.2s ease;
+
+          &:hover:not(.disabled) {
+            background-color: $button-primary-hover;
+          }
+
+          &.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+
+    .language-selector {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 10;
+
+      .language-button {
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: $box-border-radius;
+        color: rgba(255, 255, 255, 0.7);
+        font-family: $primary-font;
+        font-size: 0.75rem;
+        font-weight: $font-weight-medium;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.5);
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        &.active {
+          background-color: $button-primary;
+          border-color: $button-primary;
+          color: $text-button-primary;
+          box-shadow: 0 2px 8px rgba(69, 75, 96, 0.3);
+        }
+      }
+    }
+  }
+}

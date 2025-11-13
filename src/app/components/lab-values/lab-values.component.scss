@@ -1,0 +1,74 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.lab-values-box {
+  background-color: $box-background;
+  border: $box-border-width solid $box-border-primary;
+  border-radius: $box-border-radius;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .box-title {
+      font-size: 1.2rem;
+      margin: 0;
+      color: $text-primary;
+    }
+
+    .add-button {
+      padding: 0.5rem 1rem;
+      background-color: $button-primary;
+      color: $text-button-primary;
+      border: $box-border-width solid $box-border-primary;
+      border-radius: $box-border-radius;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: $button-primary-hover;
+      }
+
+      .plus-icon {
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .list-container {
+    .items-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        background-color: $main-background;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        color: $text-primary;
+        display: flex;
+        justify-content: space-between;
+
+        .lab-name {
+          font-weight: $font-weight-medium;
+        }
+
+        .lab-value {
+          color: $text-secondary;
+        }
+      }
+    }
+  }
+}

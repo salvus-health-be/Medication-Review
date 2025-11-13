@@ -1,0 +1,220 @@
+<div class="analysis-page">
+  <app-analysis-toolbar 
+    [activeTool]="activeTool" 
+    (toolSelected)="onToolSelected($event)">
+  </app-analysis-toolbar>
+  
+  <div class="medications-panel">
+    <h2 class="medications-panel-title">{{ getToolTitle() }}</h2>
+    <div class="medications-scroll">
+      <app-analysis-medication-item
+        *ngFor="let medication of medications" 
+        [medication]="medication"
+        [class.clickable]="activeTool === 'interactions' || activeTool === 'posology' || activeTool === 'renadapter'"
+        [class.selected]="(activeTool === 'interactions' && isSelectedForInteractions(medication.medicationId)) || (activeTool === 'posology' && isSelectedForPosology(medication.medicationId)) || (activeTool === 'renadapter' && isSelectedForRenadaptor(medication.medicationId))"
+        (click)="onMedicationBoxClick(medication)"
+        (medicationDeleted)="onMedicationDeleted($event)"
+        (editRequested)="onEditRequested($event)">
+      </app-analysis-medication-item>
+      
+      <button class="add-medication-button" (click)="addMedication()">
+        {{ 'medication.add_medication' | transloco }} +
+      </button>
+    </div>
+  </div>
+  
+  <div class="tools-panel" [class]="'tool-' + activeTool">
+    @if (activeTool === 'medication-schema') {
+      <div class="medication-schema-view">
+        <!-- General note button (top right) -->
+        <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal('medication-schema')" [title]="'tools.add_note' | transloco">
+          +
+        </button>
+
+        <!-- Table headers at the top -->
+        <div class="schema-header">
+          <div class="schema-time-header">
+            <span class="time-title">{{ 'medication.breakfast' | transloco }}</span>
+            <div class="time-subtitle">
+              <span>{{ 'medication.before' | transloco }}</span>
+              <span>{{ 'medication.during' | transloco }}</span>
+            </div>
+          </div>
+          <div class="schema-time-header">
+            <span class="time-title">{{ 'medication.lunch' | transloco }}</span>
+            <div class="time-subtitle">
+              <span>{{ 'medication.before' | transloco }}</span>
+              <span>{{ 'medication.during' | transloco }}</span>
+            </div>
+          </div>
+          <div class="schema-time-header">
+            <span class="time-title">{{ 'medication.dinner' | transloco }}</span>
+            <div class="time-subtitle">
+              <span>{{ 'medication.before' | transloco }}</span>
+              <span>{{ 'medication.during' | transloco }}</span>
+            </div>
+          </div>
+          <div class="schema-time-header">
+            <span class="time-title">{{ 'medication.at_bedtime' | transloco }}</span>
+          </div>
+        </div>
+        
+        <!-- One row per medication -->
+        <div class="schema-row-wrapper" *ngFor="let medication of medications">
+          @if (medication.asNeeded) {
+            <div class="schema-as-needed">
+              <span class="as-needed-text">{{ 'medication.as_needed_short' | transloco }}</span>
+            </div>
+          } @else {
+            <div class="schema-medication-row">
+              <div class="schema-cell">
+              <div class="sub-box">
+                <span class="value-label">{{ 'medication.before' | transloco }}</span>
+                <input 
+                  type="number" 
+                  class="value-input"
+                  [(ngModel)]="medication.unitsBeforeBreakfast"
+                  (ngModelChange)="onSchemaValueChange(medication)"
+                  placeholder="-"
+                  min="0"
+                  step="0.5">
+              </div>
+              <div class="sub-box">
+                <span class="value-label">{{ 'medication.during' | transloco }}</span>
+                <input 
+                  type="number" 
+                  class="value-input"
+                  [(ngModel)]="medication.unitsDuringBreakfast"
+                  (ngModelChange)="onSchemaValueChange(medication)"
+                  placeholder="-"
+                  min="0"
+                  step="0.5">
+              </div>
+            </div>
+            
+            <div class="schema-cell">
+              <div class="sub-box">
+                <span class="value-label">{{ 'medication.before' | transloco }}</span>
+                <input 
+                  type="number" 
+                  class="value-input"
+                  [(ngModel)]="medication.unitsBeforeLunch"
+                  (ngModelChange)="onSchemaValueChange(medication)"
+                  placeholder="-"
+                  min="0"
+                  step="0.5">
+              </div>
+              <div class="sub-box">
+                <span class="value-label">{{ 'medication.during' | transloco }}</span>
+                <input 
+                  type="number" 
+                  class="value-input"
+                  [(ngModel)]="medication.unitsDuringLunch"
+                  (ngModelChange)="onSchemaValueChange(medication)"
+                  placeholder="-"
+                  min="0"
+                  step="0.5">
+              </div>
+            </div>
+            
+            <div class="schema-cell">
+              <div class="sub-box">
+                <span class="value-label">{{ 'medication.before' | transloco }}</span>
+                <input 
+                  type="number" 
+                  class="value-input"
+                  [(ngModel)]="medication.unitsBeforeDinner"
+                  (ngModelChange)="onSchemaValueChange(medication)"
+                  placeholder="-"
+                  min="0"
+                  step="0.5">
+              </div>
+              <div class="sub-box">
+                <span class="value-label">{{ 'medication.during' | transloco }}</span>
+                <input 
+                  type="number" 
+                  class="value-input"
+                  [(ngModel)]="medication.unitsDuringDinner"
+                  (ngModelChange)="onSchemaValueChange(medication)"
+                  placeholder="-"
+                  min="0"
+                  step="0.5">
+              </div>
+            </div>
+            
+            <div class="schema-cell night-cell">
+              <input 
+                type="number" 
+                class="value-input night-input"
+                [(ngModel)]="medication.unitsAtBedtime"
+                (ngModelChange)="onSchemaValueChange(medication)"
+                placeholder="-"
+                min="0"
+                step="0.5">
+            </div>
+            </div>
+          }
+
+          <button class="add-note-button" (click)="openNotesModal(medication)" [title]="'tools.add_note' | transloco">
+            +
+          </button>
+        </div>
+      </div>
+    } @else if (activeTool === 'therapy-adherence') {
+      <app-therapy-adherence (openNotes)="openNotesModal($event)"></app-therapy-adherence>
+    } @else if (activeTool === 'interactions') {
+      <app-interactions (openNotes)="openInteractionNotesModal($event)"></app-interactions>
+    } @else if (activeTool === 'contra-indications') {
+      <app-contraindications></app-contraindications>
+    } @else if (activeTool === 'posology') {
+      <app-posology (openNotes)="openNotesModal($event.medication)"></app-posology>
+    } @else if (activeTool === 'renadapter') {
+      <app-renadaptor (openNotes)="openNotesModal($event)"></app-renadaptor>
+    } @else if (activeTool === 'gheops') {
+      <app-gheops (openNotes)="openReferenceNotesModal('gheops')"></app-gheops>
+    } @else if (activeTool === 'start-stop-nl') {
+      <app-start-stop (openNotes)="openReferenceNotesModal('start-stop-nl')"></app-start-stop>
+    } @else if (activeTool) {
+      <div class="tool-content">
+        <h2>{{ getToolTitle() }}</h2>
+        <p>Tool panel for {{ getToolTitle() }}</p>
+      </div>
+    } @else {
+      <div class="no-tool-selected">
+        <p>Select a tool from the toolbar to begin</p>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Medication Search Modal -->
+<app-medication-search-modal 
+  *ngIf="showSearchModal" 
+  [isEditMode]="editingMedication !== null"
+  (close)="onModalClose()" 
+  (medicationSelected)="onMedicationSelected($event)">
+</app-medication-search-modal>
+
+<!-- Medication Notes Modal -->
+<app-medication-notes-modal
+  *ngIf="showNotesModal"
+  [medication]="selectedMedicationForNotes"
+  [category]="noteCategory"
+  (close)="onNotesModalClose()"
+></app-medication-notes-modal>
+
+<!-- Interaction Notes Modal -->
+<app-interaction-notes-modal
+  *ngIf="showInteractionNotesModal"
+  [interaction]="selectedInteraction"
+  [interactionType]="selectedInteractionType"
+  (close)="onInteractionNotesModalClose()"
+></app-interaction-notes-modal>
+
+<!-- Note Overview Modal -->
+@if (showNoteOverviewModal) {
+  <app-note-overview-modal
+    (closeModal)="closeNoteOverview()"
+    (createConversation)="onCreatePatientConversation()"
+  ></app-note-overview-modal>
+}

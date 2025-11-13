@@ -1,0 +1,8 @@
+<div class="analysis-medication-item">
+  <app-medication-item
+    [medication]="medication"
+    [expandable]="false"
+    (medicationDeleted)="onMedicationDeleted($event)"
+    (editRequested)="onEditRequested($event)">
+  </app-medication-item>
+</div>

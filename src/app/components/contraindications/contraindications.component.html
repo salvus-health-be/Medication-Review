@@ -1,0 +1,175 @@
+<div class="contraindications-container">
+  @if (loading) {
+    <div class="loading-state">
+      <p>{{ 'contraindications.checking' | transloco }}</p>
+    </div>
+  } @else if (error) {
+    <div class="error-state">
+      <p class="error-message">{{ error }}</p>
+      <button class="retry-button" (click)="loadData()">{{ 'common.retry' | transloco }}</button>
+    </div>
+  } @else {
+    <div class="contraindications-content">
+      <!-- General note button (top right) -->
+      <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal()" title="Add general note">
+        +
+      </button>
+
+      <!-- Type 1: Contraindication Matches (Patient Conditions vs Medications) -->
+      <div class="contraindications-section">
+        <div class="section-header">
+          <h2>{{ 'tools.patient_contraindications' | transloco }}</h2>
+          <span class="count-badge">{{ getFilteredMatches().length }}</span>
+        </div>
+        <p class="section-description">{{ 'tools.contraindications_based_on_conditions' | transloco }}</p>
+
+        @if (getFilteredMatches().length === 0) {
+          <div class="no-contraindications">
+            <p>✓ No contraindications found for patient conditions</p>
+          </div>
+        } @else {
+          <!-- Table Header -->
+          <div class="contraindications-header">
+            <div class="header-cell medication-header">Medication</div>
+            <div class="header-cell condition-header">Condition</div>
+            <div class="header-cell severity-header">Type</div>
+            <div class="header-cell description-header">Details</div>
+            <div class="header-cell notes-header">Notes</div>
+          </div>
+
+          <div class="contraindications-list">
+            @for (contraindication of getFilteredMatches(); track getUniqueKey(contraindication, $index)) {
+              <div class="contraindication-row-wrapper">
+                <div 
+                  class="contraindication-card" 
+                  [class.expanded]="expandedContraindication === getUniqueKey(contraindication, $index)"
+                >
+                  <div class="contraindication-row" (click)="toggleContraindication(getUniqueKey(contraindication, $index))">
+                    <div class="cell medication-cell">
+                      <span class="medication-name">{{ contraindication.medication || ('fallbacks.no_medication_name' | transloco) }}</span>
+                      <span class="cnk-code">CNK: {{ contraindication.medicationCnk || 'NO CNK' }}</span>
+                    </div>
+                    <div class="cell condition-cell">
+                      <span class="condition-name">{{ contraindication.condition || ('fallbacks.no_condition' | transloco) }}</span>
+                      <span class="condition-code">{{ contraindication.conditionCode || 'NO CODE' }}</span>
+                    </div>
+                    <div class="cell severity-cell">
+                      <span class="severity-badge" [class]="getSeverityClass(contraindication.appreciationCode)">
+                        {{ contraindication.appreciation }}
+                      </span>
+                    </div>
+                    <div class="cell description-cell">
+                      <span class="count-badge">{{ contraindication.contraindications.length }} reason(s)</span>
+                      <svg class="expand-icon" [class.rotated]="expandedContraindication === getUniqueKey(contraindication, $index)" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                    <div class="cell notes-cell" (click)="$event.stopPropagation()">
+                      <button class="add-note-button" (click)="openNotesModal(contraindication, 'match')" title="Add notes">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  
+                  @if (expandedContraindication === getUniqueKey(contraindication, $index)) {
+                    <div class="contraindication-details" (click)="$event.stopPropagation()">
+                      <div class="details-header">
+                        <h4>Contraindication Details</h4>
+                      </div>
+                      <div class="details-list">
+                        @for (detail of contraindication.contraindications; track detail.code) {
+                          <div class="detail-item">
+                            <span class="detail-code">[{{ detail.code }}]</span>
+                            <span class="detail-description">{{ detail.description }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Type 2: Product Contraindications (All contraindications per medication) -->
+      <div class="contraindications-section">
+        <div class="section-header">
+          <h2>{{ 'tools.additional_contraindications' | transloco }}</h2>
+          <span class="count-badge">{{ getFilteredProductContraindications().length }}</span>
+        </div>
+        <p class="section-description">{{ 'tools.other_contraindications' | transloco }}</p>
+
+        @if (getFilteredProductContraindications().length === 0) {
+          <div class="no-contraindications">
+            <p>✓ No additional contraindications found</p>
+          </div>
+        } @else {
+          <!-- Table Header -->
+          <div class="contraindications-header">
+            <div class="header-cell medication-header">Medication</div>
+            <div class="header-cell condition-header">Condition</div>
+            <div class="header-cell severity-header">Type</div>
+            <div class="header-cell description-header">Details</div>
+            <div class="header-cell notes-header">Notes</div>
+          </div>
+
+          <div class="contraindications-list">
+            @for (contraindication of getFilteredProductContraindications(); track getUniqueKey(contraindication, $index)) {
+              <div class="contraindication-row-wrapper">
+                <div 
+                  class="contraindication-card" 
+                  [class.expanded]="expandedContraindication === getUniqueKey(contraindication, $index)"
+                >
+                  <div class="contraindication-row" (click)="toggleContraindication(getUniqueKey(contraindication, $index))">
+                    <div class="cell medication-cell">
+                      <span class="medication-name">{{ contraindication.medicationName || ('fallbacks.no_medication_name' | transloco) }}</span>
+                      <span class="cnk-code">CNK: {{ contraindication.cnk || 'NO CNK' }}</span>
+                    </div>
+                    <div class="cell condition-cell">
+                      <span class="condition-name">{{ contraindication.condition || ('fallbacks.no_condition' | transloco) }}</span>
+                      <span class="condition-code">{{ contraindication.conditionCode || 'NO CODE' }}</span>
+                    </div>
+                    <div class="cell severity-cell">
+                      <span class="severity-badge" [class]="getSeverityClass(contraindication.appreciationCode)">
+                        {{ contraindication.appreciation }}
+                      </span>
+                    </div>
+                    <div class="cell description-cell">
+                      <span class="count-badge">{{ contraindication.contraindications.length }} reason(s)</span>
+                      <svg class="expand-icon" [class.rotated]="expandedContraindication === getUniqueKey(contraindication, $index)" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                    <div class="cell notes-cell" (click)="$event.stopPropagation()">
+                      <button class="add-note-button" (click)="openNotesModal(contraindication, 'product')" title="Add notes">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  
+                  @if (expandedContraindication === getUniqueKey(contraindication, $index)) {
+                    <div class="contraindication-details" (click)="$event.stopPropagation()">
+                      <div class="details-header">
+                        <h4>Contraindication Details</h4>
+                      </div>
+                      <div class="details-list">
+                        @for (detail of contraindication.contraindications; track detail.code) {
+                          <div class="detail-item">
+                            <span class="detail-code">[{{ detail.code }}]</span>
+                            <span class="detail-description">{{ detail.description }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

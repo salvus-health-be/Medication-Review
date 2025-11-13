@@ -1,0 +1,16 @@
+// Centralized font settings
+// Define font-family variables here so they can be changed in one place
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;600;700&display=swap');
+
+$primary-font: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+// Font weight variables
+$font-weight-thin: 200; // thin (light) version for headers
+$font-weight-regular: 400;
+$font-weight-medium: 600;
+$font-weight-bold: 700;
+// Semi-bold alias
+$font-weight-semibold: 600;
+// Secondary font - used for accents and headings where a different family is desired
+$secondary-font: $primary-font;

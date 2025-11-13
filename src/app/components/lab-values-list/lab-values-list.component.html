@@ -1,0 +1,32 @@
+<div class="lab-values-container">
+  <div class="header">
+    <h3 class="title">{{ 'tools.lab_values' | transloco }}</h3>
+    <button class="add-button" (click)="openAddModal()">
+      <span class="plus-icon">+</span> {{ 'common.add' | transloco }}
+    </button>
+  </div>
+
+  <div class="list-container">
+    @if (isLoading) {
+      <div class="loading">{{ 'common.loading' | transloco }}</div>
+    } @else if (labValues.length === 0) {
+      <div class="empty-state">
+        {{ 'tools.lab_values' | transloco }} - {{ 'tools.add' | transloco }}
+      </div>
+    } @else {
+      <app-lab-value-item
+        *ngFor="let labValue of labValues"
+        [labValue]="labValue"
+        (delete)="onLabValueDeleted($event)">
+      </app-lab-value-item>
+    }
+  </div>
+</div>
+
+<!-- Add Lab Value Modal -->
+@if (showAddModal) {
+  <app-add-lab-value-modal
+    (close)="closeAddModal()"
+    (labValueAdded)="onLabValueAdded($event)">
+  </app-add-lab-value-modal>
+}

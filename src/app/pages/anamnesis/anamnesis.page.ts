@@ -1,0 +1,842 @@
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, groupBy, mergeMap } from 'rxjs/operators';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { ReviewNotesService, ReviewNote } from '../../services/review-notes.service';
+import { StateService } from '../../services/state.service';
+import { ApiService } from '../../services/api.service';
+import { QuestionAnswer } from '../../models/api.models';
+
+interface Question {
+  name: string;
+  text: string;
+  type: 'text' | 'textarea' | 'checkbox' | 'number' | 'date' | 'radio';
+  value: any;
+  options?: string[]; // For radio button options
+  hidden?: boolean; // To conditionally show/hide questions
+  shareWithPatient?: boolean; // For pharmacist notes - share with patient
+  shareWithDoctor?: boolean; // For pharmacist notes - share with doctor
+}
+
+interface QuestionBox {
+  id: string;
+  title: string;
+  description?: string;
+  questions: Question[];
+}
+
+@Component({
+  selector: 'app-anamnesis',
+  standalone: true,
+  imports: [CommonModule, FormsModule, TranslocoModule],
+  templateUrl: './anamnesis.page.html',
+  styleUrls: ['./anamnesis.page.scss']
+})
+export class AnamnesisPage implements OnInit, OnDestroy {
+  allQuestionBoxes: { part1: QuestionBox[], part2: QuestionBox[], part3: QuestionBox[] } = {
+    part1: [],
+    part2: [],
+    part3: []
+  };
+  currentPart: 'part1' | 'part2' | 'part3' = 'part1';
+  questionBoxes: QuestionBox[] = [];
+  selectedBox: QuestionBox | null = null;
+  questionAnswers: Map<string, QuestionAnswer> = new Map();
+  medications: any[] = [];
+  notes: ReviewNote[] = [];
+  
+  private destroy$ = new Subject<void>();
+  private saveQueue$ = new Subject<{ questionName: string; value: any }>();
+
+  private transloco = inject(TranslocoService);
+
+  constructor(
+    private reviewNotesService: ReviewNotesService,
+    private stateService: StateService,
+    private router: Router,
+    private apiService: ApiService
+  ) {}
+
+  goToDocumentation() {
+    this.router.navigate(['/report-generation']);
+  }
+
+  ngOnInit() {
+    // Immediately verify session; if missing, redirect to home/login
+    if (!this.stateService.medicationReviewId) {
+      console.warn('[Anamnesis] No medicationReviewId in session - redirecting to home');
+      this.router.navigate(['/']);
+      return;
+    }
+
+    // Listen for window focus to handle session loss while user navigates away
+    window.addEventListener('focus', this.handleWindowFocus);
+    // Also listen for storage events so changes in other tabs can be detected
+    window.addEventListener('storage', this.handleStorageEvent);
+
+    this.initializeQuestionBoxes();
+    this.loadMedications();
+    this.loadNotes();
+    this.loadQuestionAnswers();
+    this.setupAutoSave();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    // Cleanup listeners
+    window.removeEventListener('focus', this.handleWindowFocus);
+    window.removeEventListener('storage', this.handleStorageEvent);
+  }
+
+  // Use class properties with arrow functions so `this` is lexical when used as listener
+  private handleWindowFocus = () => {
+    // If session has been cleared, redirect to home/login
+    if (!this.stateService.medicationReviewId) {
+      console.warn('[Anamnesis] Session lost on window focus - redirecting to home');
+      this.router.navigate(['/']);
+    }
+  };
+
+  private handleStorageEvent = (event: StorageEvent) => {
+    // If session storage was cleared in another tab, redirect
+    if (event.key === null || event.key === 'medicationReviewId' || event.key === 'sessionData') {
+      if (!this.stateService.medicationReviewId) {
+        console.warn('[Anamnesis] Session change detected via storage event - redirecting to home');
+        this.router.navigate(['/']);
+      }
+    }
+  };
+
+  private loadMedications() {
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) return;
+
+    this.apiService.getMedications(reviewId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (meds) => {
+          this.medications = meds || [];
+          this.updatePart2And3QuestionBoxes();
+        },
+        error: (err) => {
+          console.error('[Anamnesis] Failed to load medications:', err);
+        }
+      });
+  }
+
+  private loadNotes() {
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) return;
+
+    this.reviewNotesService.notes$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(notes => {
+        this.notes = notes.filter(note => note.discussWithPatient === true);
+        this.updatePart2And3QuestionBoxes();
+      });
+
+    if (this.reviewNotesService.getNotesCount() === 0) {
+      this.reviewNotesService.loadReviewNotes(reviewId);
+    }
+  }
+
+  private updatePart2And3QuestionBoxes() {
+    // Rebuild part 2 and 3 with medication-specific boxes
+    this.initializePart2QuestionBoxes();
+    this.initializePart3QuestionBoxes();
+    
+    // Refresh current view if on part 2 or 3
+    if (this.currentPart === 'part2') {
+      this.questionBoxes = this.allQuestionBoxes.part2;
+    } else if (this.currentPart === 'part3') {
+      this.questionBoxes = this.allQuestionBoxes.part3;
+    }
+  }
+
+  private initializeQuestionBoxes() {
+    // Part 1: General Questions
+    this.allQuestionBoxes.part1 = [
+      {
+        id: 'concerns',
+        title: 'Bezorgdheden/Ervaringen',
+        description: 'Patient concerns and experiences with medication',
+        questions: [
+          { name: 'p1_concerns_tooMany', text: 'Ervaart de patient de geneesmiddelen als te veel?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_concerns_tooManyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_financialBurden', text: 'Ervaart de patient financiële last?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_concerns_financialBurdenAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_anxiety', text: 'Ervaart de patient angst?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_concerns_anxietyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_untreatedComplaints', text: 'Ervaart de patient onvoldoende of niet behandelde klachten?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_concerns_untreatedComplaintsAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_other', text: 'Zijn er andere bezorgdheden?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_concerns_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+        ]
+      },
+      {
+        id: 'medication_help',
+        title: this.transloco.translate('anamnesis_dynamic.medication_help_title'),
+        description: 'Assistance with medication intake',
+        questions: [
+          { name: 'p1_help_hasAssistance', text: 'Heeft de patient hulp bij inname, bijvoorbeeld een pillendoos of partner/familielid?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_help_additionalNeededQuestion', text: 'Is extra hulp wenselijk voor de patient?', type: 'radio', options: ['Yes', 'No'], value: '', hidden: true },
+          { name: 'p1_help_additionalNeededAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+        ]
+      },
+      {
+        id: 'practical_problems',
+        title: 'Praktische problemen',
+        description: 'Practical issues affecting medication use',
+        questions: [
+          { name: 'p1_practical_swallowing', text: 'Heeft de patient slikproblemen?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_practical_swallowingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_movement', text: 'Heeft de patient beweegstoornissen?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_practical_movementAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_vision', text: 'Heeft de patient visusstoornissen?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_practical_visionAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_hearing', text: 'Heeft de patient gehoorstoornissen?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_practical_hearingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_cognitive', text: 'Heeft de patient cognitieve problemen?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_practical_cognitiveAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_dexterity', text: 'Heeft de patient problemen met handvaardigheid?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_practical_dexterityAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_other', text: 'Zijn er andere praktische problemen?', type: 'radio', options: ['Yes', 'No'], value: '' },
+          { name: 'p1_practical_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+        ]
+      },
+      {
+        id: 'incidents',
+        title: 'Incidenten',
+        description: 'Falls and hospitalizations',
+        questions: [
+          { name: 'p1_incidents_falls', text: 'Hoe vaak is de patient in de afgelopen 6 maanden gevallen?', type: 'number', value: 0 },
+          { name: 'p1_incidents_hospitalizations', text: 'Hoe vaak is de patient gehospitaliseerd in het afgelopen jaar?', type: 'number', value: 0 },
+          { name: 'p1_incidents_actionNeeded', text: 'Is action needed?', type: 'radio', value: '', options: ['Yes', 'No'] },
+          { name: 'p1_incidents_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+        ]
+      },
+      {
+        id: 'followup',
+        title: 'Opvolging/monitoring',
+        description: 'Care providers and parameter monitoring',
+        questions: [
+          { name: 'p1_followup_careProviders', text: 'Door welke hulpverleners wordt de patient opgevolgd?', type: 'textarea', value: '' },
+          { name: 'p1_followup_parameterMonitoring', text: 'Door welke hulpverleners worden de parameters opgevolgd?', type: 'textarea', value: '' },
+          { name: 'p1_followup_actionNeeded', text: 'Is action needed?', type: 'radio', value: '', options: ['Yes', 'No'] },
+          { name: 'p1_followup_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+        ]
+      }
+    ];
+
+    // Initialize part 2 and 3 (will be populated when medications load)
+    this.initializePart2QuestionBoxes();
+    this.initializePart3QuestionBoxes();
+
+    // Set initial question boxes to part 1
+    this.questionBoxes = this.allQuestionBoxes.part1;
+  }
+
+  private initializePart2QuestionBoxes() {
+    const boxes: QuestionBox[] = [];
+
+    // Add general notes section if there are any general adherence notes
+    const generalAdherenceNotes = this.notes.filter(note => 
+      !note.linkedCnk && (note.category === 'TherapyAdherence' || note.category === 'MedicationSchema')
+    );
+
+    if (generalAdherenceNotes.length > 0) {
+      boxes.push({
+        id: 'p2_general_notes',
+        title: 'General Notes',
+        description: `${generalAdherenceNotes.length} general adherence note(s)`,
+        questions: [
+          
+        ]
+      });
+    }
+
+    // Add a box for each medication
+    this.medications.forEach(med => {
+      const cnk = med.cnk != null ? String(med.cnk) : 'uncategorized';
+      const medicationNotes = this.notes.filter(note => 
+        String(note.linkedCnk) === cnk && (note.category === 'TherapyAdherence' || note.category === 'MedicationSchema')
+      );
+
+      boxes.push({
+        id: `p2_med_${cnk}`,
+        title: med.name || 'Unnamed medication',
+        description: `CNK: ${med.cnk || '—'} | ${medicationNotes.length} note(s)`,
+        questions: [
+          { name: `p2_med_${cnk}_adherence`, text: this.transloco.translate('anamnesis_dynamic.takes_as_prescribed'), type: 'radio', value: '', options: ['Yes', 'No'] },
+          { name: `p2_med_${cnk}_frequency`, text: this.transloco.translate('anamnesis_dynamic.how_often_forgotten'), type: 'textarea', value: '', hidden: true },
+          { name: `p2_med_${cnk}_barriers`, text: this.transloco.translate('anamnesis_dynamic.what_problems'), type: 'textarea', value: '', hidden: true },
+          { name: `p2_med_${cnk}_notes`, text: this.transloco.translate('anamnesis_dynamic.pharmacist_notes'), type: 'textarea', value: '', hidden: true }
+        ]
+      });
+    });
+
+    this.allQuestionBoxes.part2 = boxes;
+  }
+
+  private initializePart3QuestionBoxes() {
+    const boxes: QuestionBox[] = [];
+
+    // Add general notes section if there are any general effectiveness notes
+    const generalEffectivenessNotes = this.notes.filter(note => 
+      !note.linkedCnk && note.category !== 'TherapyAdherence' && note.category !== 'MedicationSchema'
+    );
+
+    if (generalEffectivenessNotes.length > 0) {
+      boxes.push({
+        id: 'p3_general_notes',
+        title: 'General Notes',
+        description: `${generalEffectivenessNotes.length} general effectiveness note(s)`,
+        questions: [
+          
+        ]
+      });
+    }
+
+    // Add a box for each medication
+    this.medications.forEach(med => {
+      const cnk = med.cnk != null ? String(med.cnk) : 'uncategorized';
+      const medicationNotes = this.notes.filter(note => 
+        String(note.linkedCnk) === cnk && note.category !== 'TherapyAdherence' && note.category !== 'MedicationSchema'
+      );
+
+      boxes.push({
+        id: `p3_med_${cnk}`,
+        title: med.name || 'Unnamed medication',
+        description: `CNK: ${med.cnk || '—'} | ${medicationNotes.length} note(s)`,
+        questions: [
+          { name: `p3_med_${cnk}_effective`, text: this.transloco.translate('anamnesis_dynamic.medication_effective_question'), type: 'radio', value: '', options: ['Yes', 'No'] },
+          { name: `p3_med_${cnk}_effectiveAction`, text: this.transloco.translate('anamnesis_dynamic.action_if_not_effective'), type: 'textarea', value: '', hidden: true },
+          { name: `p3_med_${cnk}_hasSideEffects`, text: this.transloco.translate('anamnesis_dynamic.side_effects_question'), type: 'radio', value: '', options: ['Yes', 'No'] },
+          { name: `p3_med_${cnk}_sideEffectsAction`, text: this.transloco.translate('anamnesis_dynamic.action_for_side_effects'), type: 'textarea', value: '', hidden: true }
+        ]
+      });
+    });
+
+    this.allQuestionBoxes.part3 = boxes;
+  }
+
+  private loadQuestionAnswers() {
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) return;
+
+    this.apiService.getQuestionAnswers(reviewId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (answers) => {
+          // Store answers in map (includes both regular questions and note comments)
+          answers.forEach(answer => {
+            this.questionAnswers.set(answer.questionName, answer);
+          });
+
+          // Update question values for all parts
+          let loadedCount = 0;
+          ['part1', 'part2', 'part3'].forEach(partKey => {
+            const part = partKey as 'part1' | 'part2' | 'part3';
+            this.allQuestionBoxes[part].forEach(box => {
+              box.questions.forEach(q => {
+                const savedAnswer = this.questionAnswers.get(q.name);
+                if (savedAnswer && savedAnswer.value !== null && savedAnswer.value !== undefined) {
+                  // Convert string values to appropriate types
+                  if (q.type === 'checkbox') {
+                    const oldValue = q.value;
+                    q.value = savedAnswer.value === 'true';
+                    console.log('[Anamnesis] Loaded checkbox:', q.name, 'from:', savedAnswer.value, 'to:', q.value);
+                    loadedCount++;
+                  } else if (q.type === 'number') {
+                    q.value = Number(savedAnswer.value) || 0;
+                    console.log('[Anamnesis] Loaded number:', q.name, '=', q.value);
+                    loadedCount++;
+                  } else if (q.type === 'radio') {
+                    q.value = savedAnswer.value;
+                    console.log('[Anamnesis] Loaded radio:', q.name, '=', q.value);
+                    loadedCount++;
+                  } else {
+                    q.value = savedAnswer.value;
+                    if (savedAnswer.value) {
+                      console.log('[Anamnesis] Loaded', q.type, ':', q.name, '=', q.value?.substring(0, 50));
+                      loadedCount++;
+                    }
+                  }
+
+                  // Load share flags for pharmacist notes
+                  if (savedAnswer.shareWithPatient !== undefined) {
+                    q.shareWithPatient = savedAnswer.shareWithPatient;
+                  }
+                  if (savedAnswer.shareWithDoctor !== undefined) {
+                    q.shareWithDoctor = savedAnswer.shareWithDoctor;
+                  }
+                  
+                  // For Part 1 concern questions, update visibility of action fields
+                  if (part === 'part1') {
+                    if (q.name.startsWith('p1_concerns_')) {
+                      this.updatePart1ConcernsVisibility(q.name);
+                    } else if (q.name.startsWith('p1_help_')) {
+                      this.updatePart1MedicationHelpVisibility(q.name);
+                    } else if (q.name.startsWith('p1_practical_')) {
+                      this.updatePart1PracticalProblemsVisibility(q.name);
+                    } else if (q.name === 'p1_incidents_actionNeeded') {
+                      this.updatePart1IncidentsVisibility(q.value);
+                    } else if (q.name === 'p1_followup_actionNeeded') {
+                      this.updatePart1FollowupVisibility(q.value);
+                    }
+                  }
+                  
+                  // For Part 2 adherence questions, update visibility of follow-up questions
+                  if (q.name.includes('_adherence') && part === 'part2') {
+                    this.updatePart2QuestionVisibility(q.name, q.value);
+                  }
+                  
+                  // For Part 3 effectiveness and side effects questions, update visibility
+                  if (part === 'part3') {
+                    if (q.name.includes('_effective')) {
+                      this.updatePart3EffectivenessVisibility(q.name, q.value);
+                    } else if (q.name.includes('_hasSideEffects')) {
+                      this.updatePart3SideEffectsVisibility(q.name, q.value);
+                    }
+                  }
+                }
+              });
+            });
+          });
+
+          console.log('[Anamnesis] ✓ Loaded', loadedCount, 'question answers from', answers.length, 'total records');
+        },
+        error: (err) => {
+          console.error('[Anamnesis] Failed to load question answers:', err);
+        }
+      });
+  }
+
+  private setupAutoSave() {
+    // Group by questionName so each question has its own debounce stream
+    // This ensures rapid clicks on different checkboxes all get saved
+    this.saveQueue$
+      .pipe(
+        takeUntil(this.destroy$),
+        groupBy(item => item.questionName),
+        mergeMap(group => 
+          group.pipe(
+            debounceTime(800),
+            distinctUntilChanged((prev, curr) => prev.value === curr.value)
+          )
+        )
+      )
+      .subscribe(({ questionName, value }) => {
+        this.saveQuestionAnswer(questionName, value);
+      });
+  }
+
+  private saveQuestionAnswer(questionName: string, value: any, forceShareFlagsUpdate: boolean = false) {
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) {
+      console.warn('[Anamnesis] Cannot save - no medicationReviewId');
+      return;
+    }
+
+    // Find the question object to get share flags
+    let question: Question | undefined;
+    for (const part of ['part1', 'part2', 'part3'] as ('part1' | 'part2' | 'part3')[]) {
+      for (const box of this.allQuestionBoxes[part]) {
+        const found = box.questions.find(q => q.name === questionName);
+        if (found) {
+          question = found;
+          break;
+        }
+      }
+      if (question) break;
+    }
+
+    // Convert value to string for storage
+    const stringValue = String(value);
+
+    console.log('[Anamnesis] Saving question:', questionName, 'value:', stringValue, 'type:', typeof value);
+
+    // Check if answer already exists
+    const existingAnswer = this.questionAnswers.get(questionName);
+
+    if (existingAnswer) {
+      // Check if share flags changed
+      const shareFlagsChanged = forceShareFlagsUpdate || 
+        existingAnswer.shareWithPatient !== question?.shareWithPatient ||
+        existingAnswer.shareWithDoctor !== question?.shareWithDoctor;
+
+      // Don't save if the value hasn't changed AND share flags haven't changed
+      if (existingAnswer.value === stringValue && !shareFlagsChanged) {
+        console.log('[Anamnesis] Skipping save - value and share flags unchanged:', questionName, stringValue);
+        return;
+      }
+
+      console.log('[Anamnesis] Updating existing answer:', questionName, 'old:', existingAnswer.value, 'new:', stringValue, 'shareFlags changed:', shareFlagsChanged);
+      
+      // Update existing answer
+      this.apiService.updateQuestionAnswer({
+        medicationReviewId: reviewId,
+        questionName,
+        value: stringValue,
+        shareWithPatient: question?.shareWithPatient,
+        shareWithDoctor: question?.shareWithDoctor
+      }).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (response) => {
+          this.questionAnswers.set(questionName, response);
+          console.log('[Anamnesis] ✓ Updated question answer:', questionName, '=', stringValue);
+        },
+        error: (err) => {
+          console.error('[Anamnesis] ✗ Failed to update question answer:', questionName, err);
+        }
+      });
+    } else {
+      console.log('[Anamnesis] Creating new answer:', questionName, '=', stringValue);
+      
+      // Create new answer
+      this.apiService.addQuestionAnswer({
+        medicationReviewId: reviewId,
+        questionName,
+        value: stringValue,
+        shareWithPatient: question?.shareWithPatient,
+        shareWithDoctor: question?.shareWithDoctor
+      }).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (response) => {
+          this.questionAnswers.set(questionName, response);
+          console.log('[Anamnesis] ✓ Added question answer:', questionName, '=', stringValue);
+        },
+        error: (err) => {
+          console.error('[Anamnesis] ✗ Failed to add question answer:', questionName, err);
+        }
+      });
+    }
+  }
+
+  selectBox(box: QuestionBox) {
+    this.selectedBox = box;
+  }
+
+  onShareCheckboxChange(questionName: string) {
+    // Immediately save when share checkbox changes
+    // Find the question object across all parts
+    let question: Question | undefined;
+    for (const part of ['part1', 'part2', 'part3'] as ('part1' | 'part2' | 'part3')[]) {
+      for (const box of this.allQuestionBoxes[part]) {
+        const found = box.questions.find(q => q.name === questionName);
+        if (found) {
+          question = found;
+          break;
+        }
+      }
+      if (question) break;
+    }
+    
+    if (question) {
+      // Force update of share flags even if value hasn't changed
+      this.saveQuestionAnswer(questionName, question.value, true);
+    }
+  }
+
+  onQuestionChange(questionName: string, value: any) {
+    this.saveQueue$.next({ questionName, value });
+    
+    // For Part 1 concern questions, show/hide action fields
+    if (this.currentPart === 'part1') {
+      if (questionName.startsWith('p1_concerns_')) {
+        this.updatePart1ConcernsVisibility(questionName);
+      } else if (questionName.startsWith('p1_help_')) {
+        this.updatePart1MedicationHelpVisibility(questionName);
+      } else if (questionName.startsWith('p1_practical_')) {
+        this.updatePart1PracticalProblemsVisibility(questionName);
+      } else if (questionName === 'p1_incidents_actionNeeded') {
+        this.updatePart1IncidentsVisibility(value);
+      } else if (questionName === 'p1_followup_actionNeeded') {
+        this.updatePart1FollowupVisibility(value);
+      }
+    }
+    
+    // For Part 2 adherence questions, show/hide follow-up questions based on answer
+    if (questionName.includes('_adherence') && this.currentPart === 'part2') {
+      this.updatePart2QuestionVisibility(questionName, value);
+    }
+    
+    // For Part 3 effectiveness and side effects questions, show/hide action fields
+    if (this.currentPart === 'part3') {
+      if (questionName.includes('_effective')) {
+        this.updatePart3EffectivenessVisibility(questionName, value);
+      } else if (questionName.includes('_hasSideEffects')) {
+        this.updatePart3SideEffectsVisibility(questionName, value);
+      }
+    }
+  }
+
+  private updatePart2QuestionVisibility(adherenceQuestionName: string, value: string) {
+    // Extract CNK from question name (e.g., "p2_med_12345_adherence" -> "12345")
+    const cnkMatch = adherenceQuestionName.match(/p2_med_(.+)_adherence/);
+    if (!cnkMatch) return;
+
+    const cnk = cnkMatch[1];
+    // Find the medication box
+    const box = this.allQuestionBoxes.part2.find(b => b.id === `p2_med_${cnk}`);
+    if (!box) return;
+
+    // Derive the current adherence value from the adherence question in the box (more robust)
+    const adherenceQ = box.questions.find(q => q.name.includes('_adherence'));
+    const adherenceValue = adherenceQ ? adherenceQ.value : null;
+    const showFollowUpQuestions = adherenceValue === 'No';
+
+    console.log('[Anamnesis] updatePart2QuestionVisibility for', cnk, 'adherenceValue=', adherenceValue, '-> showFollowUp=', showFollowUpQuestions);
+
+    box.questions.forEach(q => {
+      if (q.name.includes('_frequency') || q.name.includes('_barriers') || q.name.includes('_notes')) {
+        q.hidden = !showFollowUpQuestions;
+      }
+    });
+  }
+
+  private updatePart3EffectivenessVisibility(effectiveQuestionName: string, value: string) {
+    // Extract CNK from question name (e.g., "p3_med_12345_effective" -> "12345")
+    const cnkMatch = effectiveQuestionName.match(/p3_med_(.+)_effective/);
+    if (!cnkMatch) return;
+
+    const cnk = cnkMatch[1];
+    const box = this.allQuestionBoxes.part3.find(b => b.id === `p3_med_${cnk}`);
+    if (!box) return;
+
+    // Derive current value from the corresponding radio question (robust against timing)
+    const effectiveQ = box.questions.find(q => q.name.includes('_effective'));
+    const effectiveValue = effectiveQ ? effectiveQ.value : null;
+    const showActionField = effectiveValue === 'No';
+
+    console.log('[Anamnesis] updatePart3EffectivenessVisibility for', cnk, 'effectiveValue=', effectiveValue, '-> showAction=', showActionField);
+
+    const actionField = box.questions.find(q => q.name.includes('_effectiveAction'));
+    if (actionField) {
+      actionField.hidden = !showActionField;
+    }
+  }
+
+  private updatePart3SideEffectsVisibility(sideEffectsQuestionName: string, value: string) {
+    // Extract CNK from question name (e.g., "p3_med_12345_hasSideEffects" -> "12345")
+    const cnkMatch = sideEffectsQuestionName.match(/p3_med_(.+)_hasSideEffects/);
+    if (!cnkMatch) return;
+
+    const cnk = cnkMatch[1];
+    const box = this.allQuestionBoxes.part3.find(b => b.id === `p3_med_${cnk}`);
+    if (!box) return;
+
+    // Derive current value from the corresponding radio question
+    const sideQ = box.questions.find(q => q.name.includes('_hasSideEffects'));
+    const sideValue = sideQ ? sideQ.value : null;
+    const showActionField = sideValue === 'Yes';
+
+    console.log('[Anamnesis] updatePart3SideEffectsVisibility for', cnk, 'sideValue=', sideValue, '-> showAction=', showActionField);
+
+    const actionField = box.questions.find(q => q.name.includes('_sideEffectsAction'));
+    if (actionField) {
+      actionField.hidden = !showActionField;
+    }
+  }
+
+  private updatePart1ConcernsVisibility(questionName: string) {
+    const box = this.allQuestionBoxes.part1.find(b => b.id === 'concerns');
+    if (!box) return;
+
+    // Check each concern question and show/hide its action field
+    const concernFields = ['tooMany', 'financialBurden', 'anxiety', 'untreatedComplaints', 'other'];
+    concernFields.forEach(field => {
+      const concernQ = box.questions.find(q => q.name === `p1_concerns_${field}`);
+      const actionQ = box.questions.find(q => q.name === `p1_concerns_${field}Action`);
+      if (concernQ && actionQ) {
+        const showAction = concernQ.value === 'Yes';
+        actionQ.hidden = !showAction;
+        
+        // If hiding, clear the field and its share flags, then save
+        if (!showAction && (actionQ.value || actionQ.shareWithPatient || actionQ.shareWithDoctor)) {
+          actionQ.value = '';
+          actionQ.shareWithPatient = false;
+          actionQ.shareWithDoctor = false;
+          this.saveQuestionAnswer(`p1_concerns_${field}Action`, '', true);
+        }
+        
+        console.log('[Anamnesis] updatePart1ConcernsVisibility:', field, 'value=', concernQ.value, '-> showAction=', showAction);
+      }
+    });
+  }
+
+  private updatePart1MedicationHelpVisibility(questionName: string) {
+    const box = this.allQuestionBoxes.part1.find(b => b.id === 'medication_help');
+    if (!box) return;
+
+    const hasAssistanceQ = box.questions.find(q => q.name === 'p1_help_hasAssistance');
+    const additionalNeededQ = box.questions.find(q => q.name === 'p1_help_additionalNeededQuestion');
+    const actionQ = box.questions.find(q => q.name === 'p1_help_additionalNeededAction');
+
+    if (!hasAssistanceQ || !additionalNeededQ || !actionQ) return;
+
+    // Show "Is extra hulp wenselijk" question when hasAssistance is "No"
+    const showNestedQuestion = hasAssistanceQ.value === 'No';
+    additionalNeededQ.hidden = !showNestedQuestion;
+
+    // Show action field when nested question is "Yes"
+    const showAction = additionalNeededQ.value === 'Yes' && showNestedQuestion;
+    actionQ.hidden = !showAction;
+    
+    // If hiding action field, clear it and its share flags, then save
+    if (!showAction && (actionQ.value || actionQ.shareWithPatient || actionQ.shareWithDoctor)) {
+      actionQ.value = '';
+      actionQ.shareWithPatient = false;
+      actionQ.shareWithDoctor = false;
+      this.saveQuestionAnswer('p1_help_additionalNeededAction', '', true);
+    }
+
+    console.log('[Anamnesis] updatePart1MedicationHelpVisibility: hasAssistance=', hasAssistanceQ.value, 
+                'additionalNeeded=', additionalNeededQ.value, '-> showNestedQ=', showNestedQuestion, 'showAction=', showAction);
+  }
+
+  private updatePart1PracticalProblemsVisibility(questionName: string) {
+    const box = this.allQuestionBoxes.part1.find(b => b.id === 'practical_problems');
+    if (!box) return;
+
+    // Check each practical problem question and show/hide its action field
+    const problemFields = ['swallowing', 'movement', 'vision', 'hearing', 'cognitive', 'dexterity', 'other'];
+    problemFields.forEach(field => {
+      const problemQ = box.questions.find(q => q.name === `p1_practical_${field}`);
+      const actionQ = box.questions.find(q => q.name === `p1_practical_${field}Action`);
+      if (problemQ && actionQ) {
+        const showAction = problemQ.value === 'Yes';
+        actionQ.hidden = !showAction;
+        
+        // If hiding, clear the field and its share flags, then save
+        if (!showAction && (actionQ.value || actionQ.shareWithPatient || actionQ.shareWithDoctor)) {
+          actionQ.value = '';
+          actionQ.shareWithPatient = false;
+          actionQ.shareWithDoctor = false;
+          this.saveQuestionAnswer(`p1_practical_${field}Action`, '', true);
+        }
+        
+        console.log('[Anamnesis] updatePart1PracticalProblemsVisibility:', field, 'value=', problemQ.value, '-> showAction=', showAction);
+      }
+    });
+  }
+
+  private updatePart1IncidentsVisibility(value: string) {
+    const box = this.allQuestionBoxes.part1.find(b => b.id === 'incidents');
+    if (!box) return;
+
+    const actionQ = box.questions.find(q => q.name === 'p1_incidents_action');
+    if (actionQ) {
+      const shouldShow = value === 'Yes';
+      actionQ.hidden = !shouldShow;
+      
+      // If hiding, clear the field and its share flags, then save
+      if (!shouldShow && (actionQ.value || actionQ.shareWithPatient || actionQ.shareWithDoctor)) {
+        actionQ.value = '';
+        actionQ.shareWithPatient = false;
+        actionQ.shareWithDoctor = false;
+        this.saveQuestionAnswer('p1_incidents_action', '', true);
+      }
+      
+      console.log('[Anamnesis] updatePart1IncidentsVisibility: actionNeeded=', value, '-> showAction=', shouldShow);
+    }
+  }
+
+  private updatePart1FollowupVisibility(value: string) {
+    const box = this.allQuestionBoxes.part1.find(b => b.id === 'followup');
+    if (!box) return;
+
+    const actionQ = box.questions.find(q => q.name === 'p1_followup_action');
+    if (actionQ) {
+      const shouldShow = value === 'Yes';
+      actionQ.hidden = !shouldShow;
+      
+      // If hiding, clear the field and its share flags, then save
+      if (!shouldShow && (actionQ.value || actionQ.shareWithPatient || actionQ.shareWithDoctor)) {
+        actionQ.value = '';
+        actionQ.shareWithPatient = false;
+        actionQ.shareWithDoctor = false;
+        this.saveQuestionAnswer('p1_followup_action', '', true);
+      }
+      
+      console.log('[Anamnesis] updatePart1FollowupVisibility: actionNeeded=', value, '-> showAction=', shouldShow);
+    }
+  }
+
+  switchPart(part: 'part1' | 'part2' | 'part3') {
+    this.currentPart = part;
+    this.questionBoxes = this.allQuestionBoxes[part];
+    this.selectedBox = null; // Clear selection when switching parts
+  }
+
+  getVisibleQuestionCount(box: QuestionBox): number {
+    return box.questions.filter(q => !q.hidden).length;
+  }
+
+  getNotesForSelectedBox(): ReviewNote[] {
+    if (!this.selectedBox) return [];
+
+    // Part 2: Therapy Adherence notes
+    if (this.currentPart === 'part2') {
+      if (this.selectedBox.id === 'p2_general_notes') {
+        // Return general adherence notes
+        return this.notes.filter(note => 
+          !note.linkedCnk && (note.category === 'TherapyAdherence' || note.category === 'MedicationSchema')
+        );
+      } else if (this.selectedBox.id.startsWith('p2_med_')) {
+        // Extract CNK from box ID
+        const cnk = this.selectedBox.id.replace('p2_med_', '');
+        return this.notes.filter(note => 
+          String(note.linkedCnk) === cnk && (note.category === 'TherapyAdherence' || note.category === 'MedicationSchema')
+        );
+      }
+    }
+
+    // Part 3: Effectiveness & Side Effects notes
+    if (this.currentPart === 'part3') {
+      if (this.selectedBox.id === 'p3_general_notes') {
+        // Return general effectiveness notes
+        return this.notes.filter(note => 
+          !note.linkedCnk && note.category !== 'TherapyAdherence' && note.category !== 'MedicationSchema'
+        );
+      } else if (this.selectedBox.id.startsWith('p3_med_')) {
+        // Extract CNK from box ID
+        const cnk = this.selectedBox.id.replace('p3_med_', '');
+        return this.notes.filter(note => 
+          String(note.linkedCnk) === cnk && note.category !== 'TherapyAdherence' && note.category !== 'MedicationSchema'
+        );
+      }
+    }
+
+    return [];
+  }
+
+  getNoteComment(noteRowKey: string): string {
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) return '';
+
+    // Use questionName format: note_comment_{noteRowKey}
+    const questionName = `note_comment_${noteRowKey}`;
+    const savedAnswer = this.questionAnswers.get(questionName);
+    return savedAnswer?.value || '';
+  }
+
+  onNoteCommentChange(noteRowKey: string, event: Event) {
+    const target = event.target as HTMLTextAreaElement;
+    const value = target.value;
+    const questionName = `note_comment_${noteRowKey}`;
+    
+    // Queue the save
+    this.saveQueue$.next({ questionName, value });
+  }
+
+  // Navigate to PDF preview page
+  previewPdf() {
+    console.log('[AnamnesisPage] Navigating to PDF preview');
+    this.router.navigate(['/pdf-preview']);
+  }
+}
+

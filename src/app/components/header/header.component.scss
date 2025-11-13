@@ -1,0 +1,431 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.app-header {
+  height: 7vh;
+  width: 100%;
+  background-color: $header-background;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1000;
+  min-height: 60px;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-shrink: 0;
+
+    .logo {
+      height: 70%;
+      max-height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .patient-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $text-primary;
+      opacity: 0.8;
+      
+      svg {
+        position: relative;
+        left: 10px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .patient-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+
+      .patient-name {
+        font-family: $primary-font;
+        font-weight: $font-weight-semibold;
+        font-size: 0.9rem;
+        color: $text-primary;
+      }
+
+      .patient-details {
+        font-family: $primary-font;
+        font-weight: $font-weight-regular;
+        font-size: 0.75rem;
+        color: $text-secondary;
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+
+        .separator {
+          font-weight: $font-weight-bold;
+          color: $text-muted;
+        }
+      }
+    }
+
+    .contraindications-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      max-width: 400px;
+      overflow: hidden;
+
+      .contraindications-header {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+
+        .section-label {
+          font-family: $primary-font;
+          font-weight: $font-weight-medium;
+          font-size: 0.7rem;
+          color: $text-secondary;
+        }
+
+        .add-ci-button {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background-color: transparent;
+          color: $button-primary-background;
+          border: 1px solid $button-primary-background;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9rem;
+          font-weight: bold;
+          line-height: 1;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: $button-primary-background;
+            color: white;
+          }
+        }
+      }
+
+      .contraindications-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        align-items: center;
+        min-height: 18px;
+        max-height: 36px;
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        .no-ci-message {
+          font-family: $primary-font;
+          font-size: 0.65rem;
+          color: $text-muted;
+          font-style: italic;
+        }
+
+        .ci-item {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          background-color: rgba($text-secondary, 0.08);
+          border: 1px solid rgba($text-secondary, 0.15);
+          border-radius: 10px;
+          padding: 0.125rem 0.35rem 0.125rem 0.45rem;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: rgba($text-secondary, 0.12);
+            border-color: rgba($text-secondary, 0.25);
+          }
+
+          .ci-text {
+            font-family: $primary-font;
+            font-size: 0.65rem;
+            font-weight: $font-weight-regular;
+            color: $text-secondary;
+          }
+
+          .remove-ci-button {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background-color: transparent;
+            color: $text-secondary;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            line-height: 1;
+            transition: all 0.2s ease;
+            opacity: 0.6;
+
+            &:hover {
+              background-color: rgba(220, 53, 69, 0.2);
+              color: #dc3545;
+              opacity: 1;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .header-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 24px;
+      pointer-events: all;
+
+      .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0.3rem;
+        border-radius: 8px;
+
+        &:hover:not(.disabled) {
+          background-color: rgba($button-primary-background, 0.08);
+        }
+
+        &.disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+
+        .step-icon-wrapper {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: rgba($text-muted, 0.15);
+          border: 2px solid rgba($text-muted, 0.3);
+          transition: all 0.2s ease;
+          position: relative;
+
+          svg {
+            width: 18px;
+            height: 18px;
+            color: $text-muted;
+            transition: all 0.2s ease;
+          }
+
+          &.active {
+            background-color: $button-primary-background;
+            border-color: $button-primary-background;
+
+            svg {
+              color: white;
+            }
+          }
+
+          &.completed {
+            background-color: rgba($button-primary-background, 0.15);
+            border-color: $button-primary-background;
+
+            svg {
+              color: $button-primary-background;
+            }
+          }
+        }
+
+        .step-label {
+          font-family: $primary-font;
+          font-weight: $font-weight-medium;
+          font-size: 0.65rem;
+          color: $text-secondary;
+          white-space: nowrap;
+        }
+      }
+
+      .step-connector {
+        width: 24px;
+        height: 2px;
+        background-color: rgba($text-muted, 0.3);
+        transition: all 0.2s ease;
+
+        &.completed {
+          background-color: $button-primary-background;
+        }
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    height: 100%;
+    flex-shrink: 0;
+
+    .separator {
+      width: 2px;
+      height: 60%;
+      background-color: rgba(0, 0, 0, 0.15);
+      margin-right: 0.5rem;
+    }
+
+    .icon-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $icon-color;
+      transition: color 0.2s ease;
+      border-radius: 4px;
+      position: relative;
+
+      &:hover {
+        color: $icon-hover;
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      &.conversation-button {
+        &.animate-pop {
+          animation: header-notes-pop 520ms cubic-bezier(.2,.8,.2,1);
+        }
+
+        @keyframes header-notes-pop {
+          0% { transform: scale(1); }
+          30% { transform: scale(1.18); }
+          60% { transform: scale(0.96); }
+          100% { transform: scale(1); }
+        }
+
+        .notes-badge {
+          position: absolute;
+          top: 0;
+          right: 0;
+          background-color: #dc3545;
+          color: white;
+          font-size: 0.65rem;
+          font-weight: $font-weight-semibold;
+          font-family: $primary-font;
+          min-width: 18px;
+          height: 18px;
+          border-radius: 9px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 4px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+      }
+    }
+
+    .lang-selector {
+      position: relative;
+
+      .lang-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        background-color: rgba($text-secondary, 0.06);
+        border: 1px solid rgba($text-secondary, 0.08);
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.15s ease;
+        outline: none;
+
+        &:hover, &:focus {
+          background-color: rgba($text-secondary, 0.09);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+        }
+
+        .lang-code {
+          font-family: $primary-font;
+          font-weight: $font-weight-semibold;
+          font-size: 0.85rem;
+          color: $text-primary;
+        }
+
+        .caret {
+          color: $text-muted;
+        }
+      }
+
+      .lang-dropdown {
+        position: absolute;
+        right: 0;
+        margin-top: 0.5rem;
+        background: white;
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 8px;
+        min-width: 160px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        padding: 0.25rem 0;
+        z-index: 1100;
+
+        .lang-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 0.75rem;
+          cursor: pointer;
+          transition: background 0.12s ease;
+
+          &:hover, &:focus {
+            background: rgba($button-primary-background, 0.04);
+          }
+
+          &.active {
+            background: rgba($button-primary-background, 0.06);
+            font-weight: $font-weight-semibold;
+          }
+
+          .label {
+            font-family: $primary-font;
+            font-size: 0.9rem;
+            color: $text-primary;
+          }
+
+          .code {
+            font-family: $primary-font;
+            font-size: 0.75rem;
+            color: $text-muted;
+            border-radius: 4px;
+            padding: 0.1rem 0.35rem;
+            background: rgba($text-secondary, 0.04);
+          }
+        }
+      }
+    }
+  }
+}

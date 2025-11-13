@@ -1,0 +1,163 @@
+@import '../../../styles/_colors';
+@import '../../../styles/_fonts';
+
+.note-overview-page {
+  height: 93vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $main-background;
+  overflow: hidden;
+
+  .page-header {
+    background-color: $box-background;
+    padding: 1.25rem 1.5rem;
+    border: $box-border-width solid $box-border;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-shrink: 0;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.9rem;
+      background-color: transparent;
+      border: $box-border-width solid $box-border;
+      border-radius: $box-border-radius-small;
+      color: $text-secondary;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.12s ease;
+
+      &:hover {
+        background-color: $input-background;
+        border-color: $button-primary-background;
+        color: $button-primary-background;
+      }
+
+      svg { flex-shrink: 0; }
+    }
+
+    h1 {
+      flex: 1;
+      margin: 0;
+      font-family: $primary-font;
+      font-weight: $font-weight-semibold;
+      font-size: 1.375rem;
+      color: $text-primary;
+    }
+
+    .notes-count {
+      padding: 0.35rem 0.75rem;
+      background-color: rgba($button-primary-background, 0.08);
+      color: $button-primary-background;
+      border-radius: 16px;
+      font-family: $primary-font;
+      font-size: 0.85rem;
+      font-weight: $font-weight-medium;
+    }
+
+    .generate-actions { 
+      margin-left: 0.5rem;
+
+      .btn-primary {
+        padding: 0.55rem 1rem;
+        background-color: $button-primary-background;
+        color: $text-button-primary;
+        border: none;
+        border-radius: $box-border-radius-small;
+        font-family: $primary-font;
+        font-size: 0.9rem;
+        font-weight: $font-weight-medium;
+        cursor: pointer;
+        transition: all 0.12s ease;
+
+        &:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(69,75,96,0.08); }
+      }
+    }
+  }
+
+  // -------------------- Empty State --------------------
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+
+    svg { color: $text-muted; margin-bottom: 1.25rem; }
+
+    h2 { font-family: $primary-font; font-weight: $font-weight-semibold; font-size: 1.25rem; color: $text-primary; margin: 0 0 0.5rem 0; }
+    p  { font-family: $primary-font; color: $text-secondary; margin: 0 0 1.5rem 0; }
+
+    .btn-primary {
+      padding: 0.6rem 1.25rem;
+      background-color: $button-primary-background;
+      color: $text-button-primary;
+      border-radius: $box-border-radius;
+      border: none;
+      font-family: $primary-font;
+      cursor: pointer;
+      transition: all 0.12s ease;
+
+      &:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(69,75,96,0.08); }
+    }
+  }
+
+  // -------------------- Notes Container --------------------
+  .notes-container { flex: 1; overflow-y: auto; padding: 1.25rem; }
+
+  .notes-section {
+    background-color: $box-background;
+    border: $box-border-width solid $box-border;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+
+    .section-title {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.95rem 1rem; margin: 0;
+      font-family: $primary-font; font-weight: $font-weight-semibold; font-size: 1.05rem; border-bottom: $box-border-width solid $box-border;
+
+      &.patient-section { background-color: rgba(69,75,96,0.05); color: $button-primary-background; }
+      &.doctor-section  { background-color: rgba(244,114,128,0.05); color: #f4576c; }
+      &.internal-section{ background-color: rgba(79,172,254,0.05); color: #4facfe; }
+    }
+
+    .notes-list { padding: 1rem; display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+  }
+
+  // -------------------- Note Cards --------------------
+  .note-card {
+    display: flex; gap: 1rem; padding: 1rem; border-radius: 8px; border: $box-border-width solid $box-border; background-color: $box-background;
+    transition: all 0.12s ease;
+
+    &:hover { box-shadow: 0 6px 18px rgba(69,75,96,0.06); transform: translateY(-3px); }
+
+    &.patient-note { border-left: 4px solid $button-primary-background; }
+    &.doctor-note  { border-left: 4px solid #f4576c; }
+    &.internal-note{ border-left: 4px solid #4facfe; }
+
+    .note-content { flex: 1; min-width: 0;
+      .note-text { margin: 0 0 0.5rem 0; font-family: $primary-font; font-size: 0.95rem; color: $text-primary; line-height: 1.5; white-space: pre-wrap; }
+
+      .note-meta { display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;
+        .note-category { padding: 0.2rem 0.55rem; background-color: rgba($button-primary-background,0.06); color: $button-primary-background; border-radius: 4px; font-size: 0.75rem; }
+        .note-timestamp { font-size: 0.8rem; color: $text-muted; }
+      }
+    }
+
+    .note-actions { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;
+      .category-buttons { display: flex; gap: 0.5rem;
+        .category-btn { padding: 0.35rem 0.7rem; border: $box-border-width solid $box-border; background: $box-background; border-radius: 6px; font-size: 0.82rem; color: $text-secondary; transition: all 0.12s ease; }
+        .category-btn.active { background: $button-primary-background; color: $text-button-primary; border-color: $button-primary-background; }
+      }
+
+      .delete-button { padding: 0.45rem; border-radius: 6px; border: 1px solid #ffd7d9; background: $box-background; svg { color: #c62828; } &:hover { background: #fff1f1; transform: scale(1.03); } }
+    }
+  }
+}

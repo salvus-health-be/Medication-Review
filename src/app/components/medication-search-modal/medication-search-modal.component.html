@@ -1,0 +1,54 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? ('medication.replace_medication' | transloco) : ('medication.search_medication' | transloco) }}</h2>
+      <button class="close-button" (click)="onCancel()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Search Input -->
+      <div class="search-section">
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="{{ 'medication.search_placeholder' | transloco }}" 
+          [value]="searchTerm"
+          (input)="onSearchInput($event)"
+          autofocus
+        />
+        <div *ngIf="isSearching" class="searching-indicator">{{ 'common.loading' | transloco }}</div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Search Results Dropdown -->
+      <div class="results-container" *ngIf="searchResults.length > 0">
+        <div 
+          *ngFor="let medication of searchResults" 
+          class="result-item"
+          (click)="selectMedication(medication)"
+        >
+          <div class="medication-name">{{ medication.benaming }}</div>
+          <div class="medication-details">
+            <span class="cnk-code">CNK: {{ medication.cnk }}</span>
+            <span class="vmp-code" *ngIf="medication.vmp">VMP: {{ medication.vmp }}</span>
+            <span class="packaging">{{ medication.verpakking }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isSearching && searchTerm.length >= 2 && searchResults.length === 0" class="empty-state">
+        {{ 'medication.no_results' | transloco:{term: searchTerm} }}
+      </div>
+
+      <!-- Initial State -->
+      <div *ngIf="!isSearching && searchTerm.length < 2 && searchResults.length === 0" class="initial-state">
+        {{ 'medication.search_hint' | transloco }}
+      </div>
+    </div>
+  </div>
+</div>

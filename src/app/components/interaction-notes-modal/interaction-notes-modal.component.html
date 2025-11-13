@@ -1,0 +1,57 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>Add Note for Interaction</h2>
+
+    <div class="interaction-info" *ngIf="interaction">
+      <div class="info-row">
+        <span class="info-label">Interaction:</span>
+        <span class="info-value">{{ getInteractionTitle() }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Type:</span>
+        <span class="info-value">{{ interactionType === 'drug-drug' ? ('interaction_types.drug_drug' | transloco) : ('interaction_types.drug_food' | transloco) }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Severity:</span>
+        <span class="info-value">{{ interaction.severity }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Number:</span>
+        <span class="info-value">#{{ interaction.interactionNumber }}</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label for="note-text">Note:</label>
+      <textarea 
+        id="note-text"
+        [(ngModel)]="noteText"
+        placeholder="Enter your note about this interaction..."
+        rows="6"
+      ></textarea>
+    </div>
+
+    <div class="checkboxes-section">
+      <label class="checkbox-label">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="addToPatientConversation"
+        >
+        <span>Add to patient conversation</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="addToGpReport"
+        >
+        <span>Add to GP report</span>
+      </label>
+    </div>
+
+    <div class="button-row">
+      <button class="btn-secondary" (click)="onCancel()">{{ 'common.cancel' | transloco }}</button>
+      <button class="btn-primary" (click)="onAddToAnamnesis()">Add to anamnesis</button>
+    </div>
+  </div>
+</div>

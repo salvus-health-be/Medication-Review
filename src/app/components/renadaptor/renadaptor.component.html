@@ -1,0 +1,116 @@
+<div class="renadaptor-container">
+  <!-- Note button (top right) - attaches to selected medication or general if none selected -->
+  <button class="add-note-button floating-top-right" (click)="openNotesModal()" title="Add note">
+    +
+  </button>
+
+  @if (medications.length === 0) {
+    <div class="no-medications">
+      <p>No medications with CNK codes found</p>
+      <p class="hint">Click on a medication in the left panel to access Renadaptor</p>
+    </div>
+  } @else if (!selectedMedicationId) {
+    <div class="no-selection">
+      <p>Select a medication from the left panel</p>
+      <p class="hint">Click on any medication box to access Renadaptor for renal dosing information</p>
+    </div>
+  } @else {
+    @if (getSelectedRenadaptorData(); as data) {
+      <div class="renadaptor-content">
+        <!-- Header with medication name and controls -->
+        <div class="renadaptor-header">
+          <div class="header-info">
+            <h2>{{ data.medicationName }}</h2>
+            <span class="cnk-badge">CNK: {{ data.cnk }}</span>
+            @if (data.lastGenerated && !isUrlExpired()) {
+              <span class="timer-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                {{ getTimeRemaining() }}
+              </span>
+            }
+            @if (isUrlExpired() && data.lastGenerated) {
+              <span class="expired-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <line x1="8" y1="8" x2="16" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="16" y1="8" x2="8" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Expired
+              </span>
+            }
+          </div>
+          <div class="header-actions">
+            <button 
+              class="refresh-button" 
+              (click)="refreshUrl()"
+              [disabled]="data.loading"
+              title="Refresh URL (generates new 5-minute link)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Info banner -->
+        <div class="info-banner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>Renadaptor provides renal dosing adjustments and guidance for patients with kidney disease. URLs expire after 5 minutes.</span>
+        </div>
+
+        <!-- Loading state -->
+        @if (data.loading) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>{{ 'renadaptor.loading' | transloco }}</p>
+          </div>
+        }
+
+        <!-- Error state -->
+        @if (data.error && !data.loading) {
+          <div class="error-state">
+            <p class="error-message">{{ data.error }}</p>
+            <button class="retry-button" (click)="refreshUrl()">{{ 'renadaptor.try_again' | transloco }}</button>
+          </div>
+        }
+
+        <!-- Renadaptor iframe -->
+        @if (data.safeUrl && !data.loading && !data.error) {
+          <div class="iframe-container">
+            @if (isUrlExpired()) {
+              <div class="expired-overlay">
+                <div class="expired-message">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <line x1="8" y1="8" x2="16" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="16" y1="8" x2="8" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <h3>URL Expired</h3>
+                  <p>This Renadaptor link has expired. Click refresh to generate a new one.</p>
+                  <button class="refresh-large-button" (click)="refreshUrl()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Refresh URL
+                  </button>
+                </div>
+              </div>
+            }
+            <iframe 
+              [src]="data.safeUrl" 
+              frameborder="0"
+              title="Renadaptor - Renal dosing information">
+            </iframe>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

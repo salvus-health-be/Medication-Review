@@ -1,0 +1,184 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: $box-border-radius;
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+
+  h2 {
+    font-family: $primary-font;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
+  }
+
+  .medication-info {
+    background-color: #f8f9fa;
+    border-radius: $box-border-radius-small;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid $box-border-primary;
+
+    .info-row {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.35rem 0;
+      font-family: $primary-font;
+
+      &:not(:last-child) {
+        border-bottom: 1px solid rgba($box-border-primary, 0.3);
+      }
+
+      .info-label {
+        font-weight: $font-weight-semibold;
+        color: $text-secondary;
+        font-size: 0.875rem;
+        min-width: 4.5rem;
+      }
+
+      .info-value {
+        color: $text-primary;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .form-section {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      font-family: $primary-font;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      width: 100%;
+      font-family: $primary-font;
+      font-size: 0.95rem;
+      color: $text-primary;
+      border: 2px solid $box-border-primary;
+      border-radius: $box-border-radius-small;
+      padding: 0.75rem;
+      resize: vertical;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: darken($box-border-primary, 10%);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $button-primary-background;
+        box-shadow: 0 0 0 3px rgba($button-primary-background, 0.1);
+      }
+
+      &::placeholder {
+        color: $text-secondary;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .checkboxes-section {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: $primary-font;
+      font-size: 0.95rem;
+      color: $text-primary;
+      cursor: pointer;
+      user-select: none;
+
+      input[type="checkbox"] {
+        width: 1.125rem;
+        height: 1.125rem;
+        cursor: pointer;
+        accent-color: $button-primary-background;
+      }
+
+      &:hover {
+        color: darken($text-primary, 10%);
+      }
+    }
+  }
+
+  .button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+
+    button {
+      font-family: $primary-font;
+      font-weight: $font-weight-semibold;
+      font-size: 0.95rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: $box-border-radius-small;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.btn-secondary {
+        background-color: white;
+        color: $text-primary;
+        border: 2px solid $box-border-primary;
+
+        &:hover {
+          background-color: #f8f9fa;
+          border-color: darken($box-border-primary, 10%);
+        }
+
+        &:active {
+          transform: translateY(1px);
+        }
+      }
+
+      &.btn-primary {
+        background-color: $button-primary-background;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          background-color: darken($button-primary-background, 5%);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        &:active {
+          transform: translateY(1px);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
+}

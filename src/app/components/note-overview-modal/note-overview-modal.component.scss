@@ -1,0 +1,487 @@
+@import '../../../styles/_colors';
+@import '../../../styles/_fonts';
+
+// Modal overlay
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+// Modal container - styled like a notebook
+.modal-container {
+  background: linear-gradient(to right,
+    darken($button-primary-background, 12%) 0%,
+    darken($button-primary-background, 12%) 40px,
+    darken($button-primary-background, 6%) 40px,
+    darken($button-primary-background, 6%) 42px,
+    $main-background 42px,
+    $main-background 100%
+  );
+  width: 90vw;
+  max-width: 1400px;
+  height: 85vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 
+    0 2px 4px rgba(0,0,0,0.1),
+    0 8px 16px rgba(0,0,0,0.1),
+    0 16px 32px rgba(0,0,0,0.15);
+  overflow: hidden;
+  position: relative;
+
+  // Notebook binding rings effect
+  &::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 30px,
+      rgba($box-background, 0.08) 30px,
+      rgba($box-background, 0.08) 35px
+    );
+    z-index: 1;
+  }
+}
+
+// Modal header - notebook cover style
+.modal-header {
+  background: linear-gradient(135deg, darken($button-primary-background, 6%) 0%, $button-primary-background 100%);
+  padding: 1.25rem 1.5rem 1.25rem 60px;
+  border-bottom: 3px solid darken($button-primary-background, 18%);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+  position: relative;
+
+  // Add subtle texture
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 42px;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.01) 2px,
+      rgba(255,255,255,0.01) 4px
+    );
+    pointer-events: none;
+  }
+
+  h1 {
+    flex: 1;
+    margin: 0;
+    font-family: $primary-font;
+    font-weight: $font-weight-bold;
+    font-size: 1.5rem;
+    color: $text-button-primary;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    letter-spacing: 0.5px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .notes-count {
+      padding: 0.35rem 0.75rem;
+      background-color: rgba($box-background, 0.15);
+      color: $text-button-primary;
+      border: 1px solid rgba($box-background, 0.25);
+      border-radius: 16px;
+      font-family: $primary-font;
+      font-size: 0.85rem;
+      font-weight: $font-weight-medium;
+    }
+
+    .btn-primary {
+      padding: 0.55rem 1rem;
+      background-color: rgba($box-background, 0.95);
+      color: $text-primary;
+      border: 1px solid rgba($box-background, 0.3);
+      border-radius: $box-border-radius-small;
+      font-family: $primary-font;
+      font-size: 0.9rem;
+      font-weight: $font-weight-semibold;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      svg {
+        flex-shrink: 0;
+      }
+
+      &:hover { 
+        background-color: $box-background;
+        transform: translateY(-1px); 
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12); 
+      }
+    }
+
+    .close-button {
+      padding: 0.5rem;
+      background-color: transparent;
+      border: 1px solid rgba($box-background, 0.3);
+      border-radius: $box-border-radius-small;
+      color: rgba($box-background, 0.7);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background-color: rgba($text-secondary, 0.1);
+        border-color: rgba($text-secondary, 0.9);
+        color: $text-button-primary;
+      }
+
+      svg {
+        display: block;
+      }
+    }
+  }
+}
+
+// Modal body - notebook pages area
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 1.5rem 1.5rem calc(1.5rem + 42px);
+  background-color: transparent;
+  position: relative;
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  height: 100%;
+
+  svg { 
+    color: $text-muted; 
+    margin-bottom: 1.25rem; 
+  }
+
+  h2 { 
+    font-family: $primary-font; 
+    font-weight: $font-weight-semibold; 
+    font-size: 1.25rem; 
+    color: $text-primary; 
+    margin: 0 0 0.5rem 0; 
+  }
+
+  p { 
+    font-family: $primary-font; 
+    color: $text-secondary; 
+    margin: 0; 
+    font-size: 0.95rem;
+  }
+}
+
+// Notes List
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// Note Card - paper note style
+  .note-card {
+  background-color: $box-background;
+  background-image: 
+    linear-gradient(90deg, rgba($box-background, 0.5) 1px, transparent 1px),
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 1.5rem;
+  background-position: 0 0, 0 0.25rem;
+  border: 1px solid $box-border;
+  border-left: 3px solid $box-border-primary;
+  border-radius: 2px;
+  padding: 1.25rem 1.25rem 1.25rem 1rem;
+  display: flex;
+  gap: 1rem;
+  transition: all 0.2s ease;
+  position: relative;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+
+  &:hover {
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+
+  .note-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    .note-header {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .medication-flag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      background: rgba($button-primary-background, 0.08);
+      border: 1px solid rgba($button-primary-background, 0.2);
+      border-radius: 12px;
+      font-family: $primary-font;
+      font-size: 0.8rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      letter-spacing: 0.01em;
+
+      svg {
+        flex-shrink: 0;
+        color: $button-primary-background;
+        opacity: 0.85;
+      }
+
+      &.general {
+        background: rgba($text-muted, 0.08);
+        border-color: rgba($text-muted, 0.2);
+
+        svg {
+          color: $text-muted;
+        }
+      }
+    }
+
+    .note-category {
+      display: inline-flex;
+      padding: 0.3rem 0.7rem;
+      background-color: rgba($button-primary-background, 0.08);
+      border: 1px solid rgba($button-primary-background, 0.15);
+      color: $button-primary-background;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: $font-weight-medium;
+      font-family: $primary-font;
+    }
+
+    .note-text {
+      margin: 0 0 0.75rem 0;
+      line-height: 1.6;
+      font-family: $primary-font;
+      font-size: 0.95rem;
+      color: $text-primary;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-weight: $font-weight-semibold;
+    }
+
+    .note-edit-input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-family: $primary-font;
+      font-size: 0.95rem;
+      color: $text-primary;
+      background-color: rgba($box-background, 0.6);
+      border: 1px solid $box-border;
+      border-radius: 4px;
+      resize: vertical;
+      min-height: 4rem;
+      transition: all 0.15s ease;
+      line-height: 1.6;
+
+      &:focus {
+        outline: none;
+        border-color: $button-primary-background;
+        background-color: rgba($box-background, 0.9);
+        box-shadow: 0 0 0 3px rgba($button-primary-background, 0.1);
+      }
+    }
+
+    .note-timestamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: $text-muted;
+      font-family: $primary-font;
+      font-weight: $font-weight-regular;
+      margin-top: auto;
+      padding-top: 0.25rem;
+
+      svg {
+        flex-shrink: 0;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .note-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    align-items: flex-end;
+    flex-shrink: 0;
+
+    .toggle-buttons {
+      display: flex;
+      gap: 0.5rem;
+
+  .toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background-color: rgba($box-background, 0.6);
+  border: 1px solid $box-border;
+  border-radius: 10px;
+  font-family: $primary-font;
+  font-size: 0.8rem;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+        svg {
+          flex-shrink: 0;
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.9);
+          border-color: $button-primary-background;
+          color: $button-primary-background;
+          transform: translateY(-1px);
+        }
+
+        &.active {
+          background-color: $button-primary-background;
+          border-color: $button-primary-background;
+          color: white;
+        }
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+
+      .btn-edit,
+      .btn-delete {
+        padding: 0.45rem;
+        background-color: rgba($box-background, 0.6);
+        border: 1px solid $box-border;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+          display: block;
+        }
+      }
+
+      .btn-edit {
+        color: $text-secondary;
+
+        &:hover {
+          background-color: rgba($button-primary-background, 0.15);
+          border-color: $button-primary-background;
+          color: $button-primary-background;
+          transform: translateY(-1px);
+        }
+      }
+
+      .btn-delete {
+        color: $text-secondary;
+        border-color: rgba($text-secondary, 0.3);
+
+        &:hover {
+          background-color: rgba($text-secondary, 0.08);
+          border-color: rgba($text-secondary, 0.9);
+          transform: translateY(-1px);
+        }
+      }
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 0.5rem;
+
+      .btn-save,
+      .btn-cancel {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid;
+        border-radius: 10px;
+        font-family: $primary-font;
+        font-size: 0.8rem;
+        font-weight: $font-weight-medium;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        svg {
+          flex-shrink: 0;
+        }
+      }
+
+      .btn-save {
+        background-color: $button-primary-background;
+        border-color: $button-primary-background;
+        color: white;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba($button-primary-background, 0.25);
+        }
+      }
+
+      .btn-cancel {
+        background-color: rgba(255, 255, 255, 0.6);
+        border-color: #d4c5a9;
+        color: $text-secondary;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.9);
+          border-color: $text-secondary;
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+}

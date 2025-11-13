@@ -1,0 +1,106 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'modals.add_contraindications' | transloco }}</h2>
+      <button class="close-button" (click)="onCancel()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <p>{{ 'modals.loading_contraindications' | transloco }}</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="errorMessage && !isLoading" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Content -->
+      <div *ngIf="!isLoading && !errorMessage">
+        <!-- Search and Filter -->
+        <div class="filter-section">
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="{{ 'modals.search_contraindications_placeholder' | transloco }}" 
+            [value]="searchTerm"
+            (input)="onSearchChange($event)"
+          />
+
+          <div class="category-filters">
+            <button 
+              class="filter-button" 
+              [class.active]="selectedCategory === 'all'"
+              (click)="onCategoryChange('all')"
+            >
+              {{ 'modals.filter_all' | transloco }}
+            </button>
+            <button 
+              class="filter-button" 
+              [class.active]="selectedCategory === 'hypersensitivity'"
+              (click)="onCategoryChange('hypersensitivity')"
+            >
+              {{ 'modals.filter_hypersensitivities' | transloco }}
+            </button>
+            <button 
+              class="filter-button" 
+              [class.active]="selectedCategory === 'pathology'"
+              (click)="onCategoryChange('pathology')"
+            >
+              {{ 'modals.filter_pathologies' | transloco }}
+            </button>
+            <button 
+              class="filter-button" 
+              [class.active]="selectedCategory === 'physiologicalCondition'"
+              (click)="onCategoryChange('physiologicalCondition')"
+            >
+              {{ 'modals.filter_physiological_conditions' | transloco }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Contraindications List -->
+        <div class="contraindications-list">
+          <div 
+            *ngFor="let item of filteredContraindications" 
+            class="contraindication-item"
+            [class.selected]="item.selected"
+            (click)="toggleSelection(item)"
+          >
+            <input 
+              type="checkbox" 
+              [checked]="item.selected"
+              (click)="$event.stopPropagation()"
+            />
+            <div class="item-content">
+              <span class="item-name">
+                <span class="item-code">[{{ item.code }}]</span>
+                {{ item.name }}
+              </span>
+              <span class="item-category">{{ getCategoryLabel(item.category) }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="filteredContraindications.length === 0" class="no-results">
+            {{ 'modals.no_contraindications_found' | transloco }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="selected-count">
+        {{ getSelectedCount() }} {{ 'modals.selected' | transloco }}
+      </div>
+      <div class="footer-buttons">
+        <button class="cancel-button" (click)="onCancel()" [disabled]="isSaving">
+          {{ 'common.cancel' | transloco }}
+        </button>
+        <button class="save-button" (click)="onSave()" [disabled]="isSaving || getSelectedCount() === 0">
+          {{ isSaving ? ('common.loading' | transloco) : ('modals.add_selected' | transloco) }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

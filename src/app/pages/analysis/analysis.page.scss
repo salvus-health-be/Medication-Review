@@ -1,0 +1,352 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.analysis-page {
+  display: flex;
+  height: calc(100vh - 7vh); // Full viewport height minus header (7vh)
+  width: 100%;
+  position: relative;
+  padding-left: 9vh; // Account for fixed toolbar width
+
+  .medications-panel {
+    width: 30%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    margin-top: 4rem;
+    margin-left: 2rem; // Margin between toolbar and medication boxes
+    padding-right: 2rem; // Padding on the right side
+    overflow-y: auto;
+
+    .medications-panel-title {
+      font-family: $primary-font;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      font-size: 1.5rem;
+      margin: 0 0 1rem 0;
+      padding: 1rem 0 0.5rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .medications-scroll {
+      flex: 1;
+      padding: 0 0 2rem 0;
+
+      app-analysis-medication-item {
+        &.clickable {
+          cursor: pointer;
+          transition: transform 0.15s ease;
+          
+          &:hover {
+            transform: translateY(-2px);
+            
+            ::ng-deep .medication-item {
+              border: 2px solid rgba($button-primary-background, 0.4);
+              box-shadow: 0 4px 12px rgba($button-primary-background, 0.2);
+              background-color: rgba($button-primary-background, 0.02);
+            }
+          }
+        }
+
+        &.selected {
+          ::ng-deep .medication-item {
+            border: 3px solid $button-primary-background;
+            box-shadow: 0 6px 16px rgba($button-primary-background, 0.3);
+            background-color: rgba($button-primary-background, 0.05);
+          }
+        }
+      }
+
+      .add-medication-button {
+        width: 100%;
+        padding: 1rem;
+        margin-top: 1rem;
+        background-color: $button-primary-background;
+        color: white;
+        border: none;
+        border-radius: $box-border-radius;
+        font-family: $primary-font;
+        font-weight: $font-weight-semibold;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          background-color: darken($button-primary-background, 5%);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        &:active {
+          transform: translateY(1px);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
+
+  .tools-panel {
+    flex: 1; // Takes remaining 60% of the space
+    height: 100%;
+    padding: 2rem 2rem 2rem 1rem; // Match left padding with gap between schema rows and add note buttons
+    overflow-y: auto;
+    overflow-x: visible; // Ensure controls extending beyond edge are not clipped
+    transition: background-color 0.3s ease;
+
+    .tool-content,
+    .no-tool-selected {
+      h2 {
+        font-family: $primary-font;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-family: $primary-font;
+        color: $text-secondary;
+      }
+    }
+
+    .no-tool-selected {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      
+      p {
+        font-size: 1.125rem;
+        opacity: 0.5;
+      }
+    }
+  }
+
+  // Medication Schema specific styles
+  .medication-schema-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 1.5rem; // Align with medications-scroll padding-top
+    margin-top: 0.125rem; // nudge the entire schema down ~3px for visual alignment
+    position: relative;
+
+    // Floating general note button in top right
+    .floating-top-right {
+      position: absolute;
+      top: 2.5rem;
+      right: 0rem;
+      z-index: 11;
+    }
+    
+    .schema-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 0.5fr;
+      padding: 0.75rem 2rem;
+      background-color: #f8f9fa;
+      border: 1px solid $box-border-primary;
+      border-radius: $box-border-radius-small;
+      margin: 0 5rem 1rem 2rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      font-family: $primary-font;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+
+      .schema-time-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+
+        .time-title {
+          font-size: 0.875rem;
+        }
+
+        .time-subtitle {
+          font-size: 0.65rem;
+          font-weight: $font-weight-thin;
+          color: $text-secondary;
+          display: flex;
+          gap: 0.5rem;
+          justify-content: center;
+        }
+      }
+    }
+
+    .schema-row-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .schema-as-needed {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba($button-primary-background, 0.08);
+      border: 1px solid rgba($button-primary-background, 0.2);
+      border-radius: $box-border-radius;
+      margin-left: 2rem;
+      height: 4.5rem;
+      flex: 1;
+
+      .as-needed-text {
+        font-family: $primary-font;
+        font-size: 0.95rem;
+        font-weight: $font-weight-semibold;
+        color: $button-primary-background;
+        font-style: italic;
+      }
+    }
+
+    .schema-medication-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 0.5fr;
+      background-color: $box-background;
+      border: 1px solid $box-border-primary;
+      border-radius: $box-border-radius;
+      margin-left: 2rem;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      height: 4.5rem; // Match the new medication box height (60% of 7.5rem)
+      flex: 1;
+      
+      .schema-cell {
+        display: flex;
+        flex-direction: row;
+        border-right: 1px solid $box-border-primary;
+        padding: 0;
+
+        &:last-child {
+          border-right: none;
+        }
+
+        &.night-cell {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.75rem;
+
+          .night-input {
+            font-family: $primary-font;
+            color: $text-primary;
+            font-weight: $font-weight-regular;
+            font-size: 0.95rem;
+            text-align: center;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            width: 4rem;
+            background-color: transparent;
+            transition: all 0.2s ease;
+
+            &:hover {
+              background-color: #f8f9fa;
+              border-color: $box-border-primary;
+            }
+
+            &:focus {
+              outline: none;
+              background-color: white;
+              border-color: $button-primary-background;
+              box-shadow: 0 0 0 2px rgba($button-primary-background, 0.1);
+            }
+
+            &::placeholder {
+              color: $text-secondary;
+              opacity: 0.5;
+            }
+          }
+        }
+
+        .sub-box {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.25rem;
+          padding: 0.75rem 0.5rem;
+          border-right: 1px solid lighten($box-border-primary, 10%);
+
+          &:last-child {
+            border-right: none;
+          }
+
+          .value-label {
+            font-size: 0.65rem;
+            font-weight: $font-weight-thin;
+            color: $text-secondary;
+            text-align: center;
+          }
+
+          .value-input {
+            font-family: $primary-font;
+            color: $text-primary;
+            font-weight: $font-weight-regular;
+            font-size: 0.95rem;
+            text-align: center;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            width: 4rem;
+            background-color: transparent;
+            transition: all 0.2s ease;
+
+            &:hover {
+              background-color: #f8f9fa;
+              border-color: $box-border-primary;
+            }
+
+            &:focus {
+              outline: none;
+              background-color: white;
+              border-color: $button-primary-background;
+              box-shadow: 0 0 0 2px rgba($button-primary-background, 0.1);
+            }
+
+            &::placeholder {
+              color: $text-secondary;
+              opacity: 0.5;
+            }
+          }
+        }
+      }
+    }
+
+    .add-note-button {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      color: white;
+      border: none;
+      font-size: 1.5rem;
+      font-weight: $font-weight-thin;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+      margin-right: 2rem;
+
+      &:hover {
+        background-color: darken($button-primary-background, 5%);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transform: scale(1.05);
+      }
+
+      &:active {
+        transform: scale(0.95);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+<div class="input-page">
+  <div class="left-panel">
+    <app-patient-details></app-patient-details>
+    <app-contra-indications></app-contra-indications>
+    <app-lab-values></app-lab-values>
+  </div>
+
+  <div class="right-panel">
+    <div class="right-panel-content">
+      <app-medication-list></app-medication-list>
+    </div>
+    <div class="action-button-container">
+      <button class="start-preparation-button" (click)="startPreparation()">{{ 'input.start_preparation' | transloco }}</button>
+    </div>
+  </div>
+</div>

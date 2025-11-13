@@ -1,0 +1,121 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.contra-indications-box {
+  background-color: $box-background;
+  border: $box-border-width solid $box-border-primary;
+  border-radius: $box-border-radius;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .box-title {
+      font-size: 1.2rem;
+      margin: 0;
+      color: $text-primary;
+    }
+
+    .add-button {
+      padding: 0.5rem 1rem;
+      background-color: $button-primary;
+      color: $text-button-primary;
+      border: $box-border-width solid $box-border-primary;
+      border-radius: $box-border-radius;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: $button-primary-hover;
+      }
+
+      .plus-icon {
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .list-container {
+    .loading {
+      text-align: center;
+      padding: 1rem;
+      color: $text-primary;
+      font-family: $primary-font;
+      font-style: italic;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #999;
+      font-family: $primary-font;
+      font-style: italic;
+      font-size: 0.875rem;
+    }
+
+    .items-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      .contraindication-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background-color: $main-background;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        color: $text-primary;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: #f5f5f5;
+        }
+
+        .item-name {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          .item-code {
+            color: #666;
+            font-weight: 600;
+            font-size: 0.75rem;
+          }
+        }
+
+        .delete-button {
+          background: none;
+          border: none;
+          color: #999;
+          font-size: 1.5rem;
+          cursor: pointer;
+          padding: 0;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s;
+
+          &:hover {
+            color: #c00;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,146 @@
+<header class="app-header">
+  <div class="header-left">
+    <img src="/images/Top_bar_logo.png" alt="Salvus Health" class="logo">
+    
+    @if (showPatientInfo) {
+      <!-- Patient icon -->
+      <div class="patient-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+
+      <!-- Patient info -->
+      <div class="patient-info">
+        <span class="patient-name">{{ patientName }}</span>
+        <span class="patient-details">
+          @if (patientAge !== null) {
+            <span>{{ patientAge }} {{ 'patient.age' | transloco }}</span>
+          }
+          @if (patientSex) {
+            <span class="separator">•</span>
+            <span>{{ patientSex }}</span>
+          }
+        </span>
+      </div>
+      
+      <!-- Contra-indications section -->
+      <div class="contraindications-section">
+        <div class="contraindications-header">
+          <span class="section-label">{{ 'header.contraindications' | transloco }}</span>
+          <button class="add-ci-button" (click)="addContraIndication()" [title]="'header.add_contraindication' | transloco">
+            +
+          </button>
+        </div>
+        <div class="contraindications-list">
+          @if (contraIndications.length === 0) {
+            <span class="no-ci-message">{{ 'common.no' | transloco }}</span>
+          } @else {
+            @for (ci of contraIndications; track ci.contraindicationId) {
+              <div class="ci-item">
+                <span class="ci-text">{{ ci.name || ci.contraindicationCode }}</span>
+                <button class="remove-ci-button" (click)="removeContraIndication(ci)" title="Remove">
+                  ×
+                </button>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+  
+  <!-- Center: Step indicator roadmap -->
+  @if (!isLoginPage) {
+    <div class="header-center">
+      <div class="step-indicator">
+        @for (step of steps; track step.number; let i = $index) {
+          @if (i > 0) {
+            <div class="step-connector" [class.completed]="isStepCompleted(step)"></div>
+          }
+          <div 
+            class="step-item" 
+            (click)="navigateToStep(step)"
+            [class.disabled]="false">
+            <div 
+              class="step-icon-wrapper"
+              [class.active]="isStepActive(step)"
+              [class.completed]="isStepCompleted(step)">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="getStepIcon(step.number)" />
+              </svg>
+            </div>
+            <span class="step-label">{{ step.label | transloco }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  
+  <div class="header-right">
+    @if (isAnalysisPage) {
+      <div class="separator"></div>
+    }
+    
+    @if (isAnalysisPage) {
+  <button class="icon-button conversation-button" (click)="openConversation()" [title]="'notes.notes_overview' | transloco" [class.animate-pop]="animateNotes">
+        <!-- Notepad / Notes icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 7h10" />
+          <path d="M7 11h10" />
+          <path d="M7 15h6" />
+          <path d="M17 3h-8a2 2 0 0 0-2 2v14l4-2h6a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
+        </svg>
+        @if (notesCount > 0) {
+          <span class="notes-badge">{{ notesCount }}</span>
+        }
+      </button>
+    }
+
+    @if (!isLoginPage) {
+      <button class="icon-button" (click)="save()" [title]="'header.save_progress' | transloco">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+      </button>
+    }
+
+    <button class="icon-button" (click)="navigateHome()" [title]="'common.home' | transloco">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+    </button>
+
+    <!-- Language selector -->
+    <div class="lang-selector" role="navigation" aria-label="Language selector">
+      <div class="lang-pill" tabindex="0" (click)="toggleLangDropdown()" (keydown.enter)="toggleLangDropdown()" aria-haspopup="true" [attr.aria-expanded]="langDropdownOpen">
+        <span class="lang-code">{{ activeLang.toUpperCase() }}</span>
+        <svg class="caret" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      @if (langDropdownOpen) {
+        <ul class="lang-dropdown" role="menu">
+          @for (l of supportedLangs; track l.code) {
+            <li role="menuitem" class="lang-item" (click)="changeLanguage(l.code); toggleLangDropdown();" [class.active]="l.code === activeLang" tabindex="0">
+              <span class="label">{{ l.label }}</span>
+              <span class="code">{{ l.code.toUpperCase() }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+</header>
+
+<!-- Contraindication Modal -->
+<app-contraindication-modal
+  *ngIf="showContraIndicationsModal"
+  (close)="closeContraIndicationsModal()"
+  (saved)="onContraIndicationsSaved()"
+></app-contraindication-modal>

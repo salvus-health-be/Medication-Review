@@ -1,0 +1,25 @@
+<div class="patient-details-box">
+  <h3 class="box-title">{{ 'patient.patient_details' | transloco }}</h3>
+  
+  <div class="fields-grid">
+    <div class="field-group">
+      <label for="firstName">{{ 'patient.name' | transloco }}</label>
+      <input type="text" id="firstName" [(ngModel)]="firstName" (ngModelChange)="onFirstNameChange()" [placeholder]="'patient.name' | transloco">
+    </div>
+    
+    <div class="field-group">
+      <label for="lastName">{{ 'patient.name' | transloco }}</label>
+      <input type="text" id="lastName" [(ngModel)]="lastName" (ngModelChange)="onLastNameChange()" [placeholder]="'patient.name' | transloco">
+    </div>
+    
+    <div class="field-group">
+      <label for="dateOfBirth">{{ 'patient.birth_date' | transloco }}</label>
+      <input type="date" id="dateOfBirth" [(ngModel)]="dateOfBirth" (ngModelChange)="onDateOfBirthChange()">
+    </div>
+    
+    <div class="field-group">
+      <label for="sex">{{ 'patient.sex' | transloco }}</label>
+      <input type="text" id="sex" [(ngModel)]="sex" (ngModelChange)="onSexChange()" [placeholder]="'patient.sex' | transloco">
+    </div>
+  </div>
+</div>

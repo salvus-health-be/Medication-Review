@@ -1,1 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
+@import './styles/colors';
+@import './styles/fonts';
+@import './styles/add-note-buttons';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $primary-font;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Make headers use the thin font weight by default */
+h1, h2, h3, h4, h5, h6 {
+  font-family: $primary-font;
+  font-weight: $font-weight-thin;
+}

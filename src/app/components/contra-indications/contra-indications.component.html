@@ -1,0 +1,36 @@
+<div class="contra-indications-box">
+  <div class="header">
+  <h3 class="box-title">{{ 'header.contraindications' | transloco }}</h3>
+  <button class="add-button" (click)="addContraIndication()" [title]="'header.add_contraindication' | transloco">
+      <span class="plus-icon">+</span> Add
+    </button>
+  </div>
+  
+  <div class="list-container">
+    <div *ngIf="isLoading" class="loading">Loading...</div>
+    
+    <ul class="items-list" *ngIf="!isLoading && contraIndications.length > 0">
+      <li *ngFor="let item of contraIndications" class="contraindication-item">
+        <span class="item-name">
+          <span class="item-code">[{{ item.contraindicationCode }}]</span>
+          {{ item.name }}
+        </span>
+        <button class="delete-button" (click)="deleteContraindication(item)" title="Delete">
+          &times;
+        </button>
+      </li>
+    </ul>
+
+    <div *ngIf="!isLoading && contraIndications.length === 0" class="empty-state">
+  {{ 'tools.no_data' | transloco }}. {{ 'ui.plus_add' | transloco }}
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<app-contraindication-modal 
+  *ngIf="showModal" 
+  (close)="onModalClose()" 
+  (saved)="onModalSaved()"
+></app-contraindication-modal>
+

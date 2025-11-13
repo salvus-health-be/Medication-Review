@@ -1,0 +1,53 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>{{ 'notes.add_note' | transloco }}</h2>
+
+    <div class="medication-info" *ngIf="medication">
+      <div class="info-row">
+        <span class="info-label">{{ 'patient.name' | transloco }}:</span>
+        <span class="info-value">{{ medication.name }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">{{ 'medication.cnk' | transloco }}:</span>
+        <span class="info-value">{{ medication.cnk ?? ('fallbacks.not_applicable' | transloco) }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">{{ 'medication.vmp' | transloco }}:</span>
+        <span class="info-value">{{ medication.vmp ?? ('fallbacks.not_applicable' | transloco) }}</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label for="note-text">{{ 'notes.note_text' | transloco }}:</label>
+      <textarea 
+        id="note-text"
+        [(ngModel)]="noteText"
+        [placeholder]="'notes.note_placeholder' | transloco"
+        rows="6"
+      ></textarea>
+    </div>
+
+    <div class="checkboxes-section">
+      <label class="checkbox-label">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="addToPatientConversation"
+        >
+        <span>{{ 'notes.add_to_patient_conversation' | transloco }}</span>
+      </label>
+
+      <label class="checkbox-label">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="addToGpReport"
+        >
+        <span>{{ 'notes.add_to_gp_report' | transloco }}</span>
+      </label>
+    </div>
+
+    <div class="button-row">
+      <button class="btn-secondary" (click)="onCancel()">{{ 'common.cancel' | transloco }}</button>
+      <button class="btn-primary" (click)="onAddToAnamnesis()">{{ 'notes.add_to_anamnesis' | transloco }}</button>
+    </div>
+  </div>
+</div>

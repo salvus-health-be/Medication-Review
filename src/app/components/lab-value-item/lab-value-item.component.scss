@@ -1,0 +1,75 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.lab-value-item {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background-color: $main-background;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: $text-primary;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  .lab-value-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    .lab-value-name {
+      font-weight: $font-weight-semibold;
+      min-width: 150px;
+    }
+
+    .lab-value-data {
+      display: flex;
+      align-items: baseline;
+      gap: 0.375rem;
+
+      .value {
+        font-weight: $font-weight-bold;
+        font-size: 1rem;
+      }
+
+      .unit {
+        font-weight: $font-weight-regular;
+        color: $text-secondary;
+      }
+    }
+  }
+
+  .delete-button {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    flex-shrink: 0;
+
+    &:hover {
+      color: #c00;
+    }
+
+    svg {
+      display: none;
+    }
+
+    &::before {
+      content: '×';
+    }
+  }
+}

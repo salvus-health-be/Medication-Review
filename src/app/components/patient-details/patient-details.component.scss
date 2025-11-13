@@ -1,0 +1,51 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.patient-details-box {
+  background-color: $box-background;
+  border: $box-border-width solid $box-border-primary;
+  border-radius: $box-border-radius;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  .box-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: $text-primary;
+  }
+
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+
+      label {
+        font-size: 0.875rem;
+        color: $text-secondary;
+        margin-bottom: 0.25rem;
+        font-weight: $font-weight-regular;
+      }
+
+      input {
+        padding: 0.5rem;
+        border: $box-border-width solid $box-border-primary;
+        border-radius: $box-border-radius;
+        font-family: $primary-font;
+        font-size: 0.875rem;
+        
+        &:focus {
+          outline: none;
+          border-color: $button-primary;
+        }
+
+        &::placeholder {
+          color: $text-muted;
+        }
+      }
+    }
+  }
+}

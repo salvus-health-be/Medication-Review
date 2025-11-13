@@ -64,7 +64,8 @@
               "buildTarget": "MVP-5:build:production"
             },
             "development": {
-              "buildTarget": "MVP-5:build:development"
+              "buildTarget": "MVP-5:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

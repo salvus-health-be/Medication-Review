@@ -1,0 +1,24 @@
+<div class="lab-value-item">
+  <div class="lab-value-content">
+    <div class="lab-value-name">{{ labValue.name || ('lab_values.unnamed' | transloco) }}</div>
+    <div class="lab-value-data">
+      <span class="value">{{ labValue.value }}</span>
+      @if (labValue.unit) {
+        <span class="unit">{{ labValue.unit }}</span>
+      }
+    </div>
+  </div>
+  <button class="delete-button" (click)="onDelete()" [title]="'common.delete' | transloco"></button>
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirmation) {
+  <app-confirmation-modal
+    [title]="'actions.delete_lab_values' | transloco"
+    [message]="('messages.confirm_delete_lab_value' | transloco)"
+    [confirmText]="'common.delete' | transloco"
+    [cancelText]="'common.cancel' | transloco"
+    (confirm)="onDeleteConfirm()"
+    (cancel)="onDeleteCancel()">
+  </app-confirmation-modal>
+}

@@ -1,0 +1,450 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.interactions-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// Loading and Error States
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background-color: $box-background;
+  border-radius: $box-border-radius;
+  border: $box-border-width solid $box-border;
+
+  p {
+    font-family: $primary-font;
+    font-size: 1.1rem;
+    color: $text-secondary;
+    margin: 0;
+  }
+
+  .error-message {
+    color: #dc2626;
+    margin-bottom: 1rem;
+  }
+
+  .retry-button {
+    padding: 0.5rem 1.5rem;
+    background-color: $button-primary-background;
+    color: $text-button-primary;
+    border: none;
+    border-radius: $box-border-radius;
+    font-family: $primary-font;
+    font-size: 0.95rem;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: $button-primary-hover;
+    }
+  }
+}
+
+.interactions-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding-top: 0.83rem; // Padding to account for section header
+  margin-top: 2.5rem; // Adjusted to align first box with medication boxes
+  overflow-y: auto;
+  padding-right: 0.5rem; // Small padding for scrollbar
+  position: relative;
+
+  // Floating general note button in top right
+  .floating-top-right {
+    position: absolute;
+    top: 0.5rem;
+    right: 2rem;
+    z-index: 10;
+  }
+}
+
+// Section Headers
+.interactions-section {
+  margin-bottom: 1rem;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    h2 {
+      margin: 0;
+      font-family: $primary-font;
+      font-size: 1.5rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+    }
+
+    .count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2rem;
+      height: 2rem;
+      padding: 0 0.75rem;
+      background-color: $button-primary-background;
+      color: white;
+      border-radius: 12px;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      font-weight: $font-weight-semibold;
+    }
+  }
+}
+
+// No Interactions Message
+.no-interactions {
+  background-color: lighten($medication-indication, 20%);
+  border: 2px solid $medication-indication;
+  border-radius: $box-border-radius;
+  padding: 2rem;
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-family: $primary-font;
+    font-size: 1.1rem;
+    color: darken($medication-indication, 30%);
+    font-weight: $font-weight-medium;
+  }
+}
+
+// Table Header (similar to schema header)
+.interactions-header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 0.5fr 0.5fr;
+  padding: 0.75rem 2rem;
+  background-color: #f8f9fa;
+  border: 1px solid $box-border-primary;
+  border-radius: $box-border-radius-small;
+  margin: 0 0 1rem 0;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  font-family: $primary-font;
+  text-align: center;
+  flex-shrink: 0; // Prevent header from shrinking
+
+  .header-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+  }
+
+  .left-header,
+  .right-header {
+    text-align: left;
+    justify-content: flex-start;
+  }
+}
+
+// Interactions List
+.interactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: visible; // Prevent nested scrollbar
+}
+
+// Interaction Row Wrapper
+.interaction-row-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+// Interaction Cards (matching medication box height)
+.interaction-card {
+  flex: 1;
+  background-color: $box-background;
+  border-radius: $box-border-radius;
+  border: $box-border-width solid $box-border;
+  transition: all 0.2s;
+  cursor: pointer;
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+
+  &.expanded {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Interaction Row (grid matching header)
+.interaction-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 0.5fr 0.5fr;
+  height: 4.5rem; // Match medication box height
+  align-items: center;
+  cursor: pointer;
+
+  .cell {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+
+    &.left-medication,
+    &.right-medication {
+      gap: 0.25rem;
+
+      .medication-name {
+        font-family: $primary-font;
+        font-size: 0.95rem;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .substance {
+        font-family: $primary-font;
+        font-size: 0.75rem;
+        color: $text-tertiary;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    &.severity-cell,
+    &.number-cell,
+    &.details-cell,
+    &.notes-cell {
+      align-items: center;
+      justify-content: center;
+    }
+
+    &.number-cell {
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      color: $text-tertiary;
+      font-weight: $font-weight-medium;
+    }
+
+    &.details-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      svg {
+        flex-shrink: 0;
+        color: $text-tertiary;
+      }
+    }
+
+    &.notes-cell {
+      cursor: default;
+      
+      // Note buttons use global styling from _add-note-buttons.scss
+    }
+  }
+}
+
+// Severity Badges
+.severity-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-family: $primary-font;
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+
+  &.severity-high {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+
+  &.severity-medium {
+    background-color: #fed7aa;
+    color: #9a3412;
+  }
+
+  &.severity-low {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+}
+
+// Interaction Details (Expandable)
+.interaction-details {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid $box-border;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: slideDown 0.2s ease-out;
+  background-color: $box-background;
+  cursor: default; // Reset cursor for detail area
+
+  .details-loading {
+    text-align: center;
+    font-family: $primary-font;
+    color: $text-secondary;
+    padding: 1rem;
+  }
+
+  .detail-group {
+    margin-bottom: 1rem;
+
+    .group-title {
+      font-family: $primary-font;
+      font-size: 1rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .detail-text {
+      margin-bottom: 0.75rem;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+
+      strong {
+        color: $text-primary;
+        font-weight: $font-weight-semibold;
+      }
+
+      p, div {
+        margin: 0.25rem 0 0 0;
+        color: $text-secondary;
+        line-height: 1.6;
+        
+        // Styling for formatted text
+        ::ng-deep {
+          sub {
+            font-size: 0.75em;
+            vertical-align: sub;
+          }
+          
+          strong {
+            font-weight: $font-weight-semibold;
+            color: $text-primary;
+          }
+          
+          .reference {
+            font-size: 0.75em;
+            color: $button-primary-background;
+            font-weight: $font-weight-semibold;
+            margin-left: 0.1rem;
+          }
+          
+          .literature-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid $box-border;
+            
+            strong {
+              display: block;
+              margin-bottom: 0.5rem;
+              color: $text-primary;
+              font-size: 0.95rem;
+            }
+            
+            .literature-list {
+              margin: 0;
+              padding-left: 1.5rem;
+              
+              li {
+                margin-bottom: 0.5rem;
+                color: $text-secondary;
+                font-size: 0.85rem;
+                line-height: 1.4;
+                
+                &:last-child {
+                  margin-bottom: 0;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .detail-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid $box-border;
+
+    .detail-row {
+      display: flex;
+      gap: 0.5rem;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+
+      .detail-label {
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        min-width: 140px;
+      }
+
+      .detail-value {
+        color: $text-secondary;
+      }
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+// Section Divider
+.section-divider {
+  display: none; // Removed as requested
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .interactions-container {
+    padding: 1rem;
+  }
+
+  .interactions-header {
+    font-size: 0.75rem;
+  }
+
+  .interaction-row {
+    grid-template-columns: 1.5fr 1.5fr 1fr 1fr 0.5fr;
+    
+    .cell {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
+
+  .section-header {
+    h2 {
+      font-size: 1.25rem;
+    }
+  }
+}

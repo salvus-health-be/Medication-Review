@@ -1,0 +1,191 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.gheops-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: $main-background;
+  overflow: hidden;
+  position: relative;
+
+  // Floating general note button in top right (below header to avoid overlap)
+  .floating-top-right {
+    position: absolute;
+    top: 5.5rem;
+    right: 1.5rem;
+    z-index: 10;
+  }
+
+  .document-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid $box-border;
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+
+    .header-left {
+      flex: 1;
+
+      h2 {
+        margin: 0 0 0.125rem 0;
+        font-family: $primary-font;
+        font-weight: $font-weight-semibold;
+        font-size: 1.125rem;
+        color: $text-primary;
+      }
+
+      .description {
+        margin: 0;
+        font-family: $primary-font;
+        font-size: 0.8125rem;
+        color: $text-secondary;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-shrink: 0;
+
+      button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.875rem;
+        border: none;
+        border-radius: 6px;
+        font-family: $primary-font;
+        font-size: 0.8125rem;
+        font-weight: $font-weight-medium;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+
+        svg {
+          flex-shrink: 0;
+        }
+
+        // Add note button uses global styling from _add-note-buttons.scss
+
+        &.btn-secondary {
+          background-color: transparent;
+          color: $button-primary-background;
+          border: 1px solid $button-primary-background;
+
+          &:hover {
+            background-color: rgba($button-primary-background, 0.1);
+          }
+        }
+      }
+    }
+  }
+
+  .info-banner {
+    padding: 0.625rem 1.5rem;
+    background-color: rgba($button-primary-background, 0.06);
+    border-bottom: 1px solid rgba($button-primary-background, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+
+    svg {
+      flex-shrink: 0;
+      color: $button-primary-background;
+      width: 18px;
+      height: 18px;
+    }
+
+    span {
+      font-family: $primary-font;
+      font-size: 0.8125rem;
+      color: $text-primary;
+      line-height: 1.4;
+    }
+  }
+
+  .loading-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: $text-secondary;
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid $box-border;
+      border-top-color: $button-primary-background;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    p {
+      margin: 0;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      color: $text-secondary;
+    }
+  }
+
+  .error-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    text-align: center;
+
+    svg {
+      color: #dc3545;
+      opacity: 0.5;
+    }
+
+    .error-message {
+      margin: 0;
+      font-family: $primary-font;
+      font-size: 1rem;
+      color: $text-primary;
+    }
+
+    .btn-primary {
+      margin-top: 1rem;
+    }
+  }
+
+  .iframe-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: white;
+    min-height: 0; // Important for flex child to shrink
+
+    &.loading {
+      opacity: 0;
+    }
+
+    iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

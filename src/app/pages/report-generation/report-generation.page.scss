@@ -1,0 +1,267 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.report-generation-page {
+  height: 93vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $main-background;
+  overflow: hidden;
+
+  .page-header {
+    background-color: transparent;
+    padding: 1.25rem 1.5rem;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-shrink: 0;
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: transparent;
+      border: 1px solid $box-border;
+      border-radius: 6px;
+      color: $text-secondary;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: $main-background;
+        border-color: $button-primary-background;
+        color: $button-primary-background;
+      }
+
+      svg {
+        flex-shrink: 0;
+      }
+    }
+
+    h1 {
+      flex: 1;
+      margin: 0;
+      font-family: $primary-font;
+      font-weight: $font-weight-semibold;
+      font-size: 1.5rem;
+      color: $text-primary;
+    }
+  }
+
+  .content-container {
+    flex: 1;
+    display: flex;
+    gap: 1.5rem;
+    padding: 0 1.5rem 1.5rem;
+    overflow: hidden;
+
+    .tools-sidebar {
+      flex: 0 0 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background-color: $box-background;
+      border: 1px solid $box-border;
+      border-radius: 8px;
+      overflow-y: auto;
+
+      .tool-button {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        padding: 1rem 1.25rem;
+        background-color: $main-background;
+        border: 2px solid $box-border;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: $primary-font;
+        font-size: 0.9375rem;
+        color: $text-primary;
+        font-weight: $font-weight-medium;
+
+        svg {
+          flex-shrink: 0;
+          color: $text-secondary;
+          transition: color 0.2s ease;
+        }
+
+        span {
+          flex: 1;
+        }
+
+        &:hover {
+          border-color: $button-primary-background;
+          background-color: rgba($button-primary-background, 0.05);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(69, 75, 96, 0.08);
+
+          svg {
+            color: $button-primary-background;
+          }
+        }
+
+        &.active {
+          border-color: $button-primary-background;
+          background-color: rgba($button-primary-background, 0.1);
+          box-shadow: 0 4px 12px rgba(69, 75, 96, 0.12);
+
+          svg {
+            color: $button-primary-background;
+          }
+
+          span {
+            color: $button-primary-background;
+            font-weight: $font-weight-semibold;
+          }
+        }
+      }
+    }
+
+    .pdf-preview-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: $box-background;
+      border: 1px solid $box-border;
+      border-radius: 8px;
+      overflow: hidden;
+
+      .empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+        gap: 1rem;
+
+        svg {
+          color: $text-muted;
+          opacity: 0.5;
+        }
+
+        p {
+          font-family: $primary-font;
+          font-size: 0.9375rem;
+          color: $text-muted;
+          text-align: center;
+          margin: 0;
+        }
+      }
+
+      .pdf-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        .pdf-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+          background-color: $box-background;
+          border-bottom: 1px solid $box-border;
+          flex-shrink: 0;
+
+          h3 {
+            margin: 0;
+            font-family: $primary-font;
+            font-weight: $font-weight-semibold;
+            font-size: 1.125rem;
+            color: $text-primary;
+          }
+
+          .btn-primary {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            background-color: $button-primary-background;
+            color: $text-button-primary;
+            border: none;
+            border-radius: $box-border-radius-small;
+            font-family: $primary-font;
+            font-size: 0.9rem;
+            font-weight: $font-weight-medium;
+            cursor: pointer;
+            transition: all 0.12s ease;
+
+            svg {
+              flex-shrink: 0;
+            }
+
+            &:hover {
+              background-color: darken($button-primary-background, 5%);
+              transform: translateY(-2px);
+              box-shadow: 0 6px 18px rgba(69, 75, 96, 0.12);
+            }
+
+            &:active {
+              transform: translateY(0);
+            }
+          }
+        }
+
+        .pdf-viewer {
+          flex: 1;
+          display: flex;
+          padding: 1.5rem;
+          overflow: hidden;
+          background-color: #525659;
+
+          iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: $box-border-radius-small;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+          }
+
+          .loading-state,
+          .error-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+
+            .spinner {
+              width: 40px;
+              height: 40px;
+              border: 4px solid rgba(255, 255, 255, 0.3);
+              border-top-color: white;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            }
+
+            p {
+              font-family: $primary-font;
+              font-size: 0.9375rem;
+              color: white;
+              margin: 0;
+            }
+          }
+
+          .error-state p {
+            color: #ff6b6b;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

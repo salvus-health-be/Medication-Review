@@ -1,0 +1,185 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+.modal-container {
+  background-color: $box-background;
+  border-radius: $box-border-radius;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 450px;
+  width: 90%;
+  animation: slideUp 0.2s ease;
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+.modal-header {
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    color: $text-secondary;
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $box-border-radius-small;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f3f4f6;
+      color: $text-primary;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-size: 0.875rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: $box-border-width solid #d1d5db;
+      border-radius: $box-border-radius-small;
+      font-family: $primary-font;
+      font-size: 0.9375rem;
+      color: $text-primary;
+      background-color: $input-background;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #9ca3af;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $button-primary-background;
+        box-shadow: 0 0 0 3px rgba(69, 75, 96, 0.1);
+      }
+
+      &::placeholder {
+        color: $text-tertiary;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .error-message {
+    padding: 0.75rem;
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: $box-border-radius-small;
+    color: #991b1b;
+    font-size: 0.875rem;
+    font-weight: $font-weight-medium;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+
+    .btn {
+      padding: 0.625rem 1.25rem;
+      border: none;
+      border-radius: $box-border-radius-small;
+      font-family: $primary-font;
+      font-size: 0.875rem;
+      font-weight: $font-weight-semibold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.btn-cancel {
+        background-color: #f3f4f6;
+        color: $text-primary;
+
+        &:hover {
+          background-color: #e5e7eb;
+        }
+
+        &:active {
+          background-color: #d1d5db;
+        }
+      }
+
+      &.btn-submit {
+        background-color: $button-primary-background;
+        color: white;
+
+        &:hover {
+          background-color: darken($button-primary-background, 5%);
+        }
+
+        &:active {
+          background-color: darken($button-primary-background, 10%);
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,173 @@
+<div class="therapy-adherence-container">
+  @if (loading) {
+    <div class="loading-state">
+      <p>{{ 'therapy_adherence.loading_history' | transloco }}</p>
+    </div>
+  } @else if (!uploadSuccess) {
+    <div class="upload-prompt">
+      <p class="prompt-text">Please upload dispensing history</p>
+      
+      <input 
+        type="file" 
+        id="file-input"
+        accept=".csv" 
+        (change)="onFileSelected($event)"
+        style="display: none;"
+      />
+      
+      <button 
+        class="upload-button" 
+        (click)="triggerFileInput()"
+        [disabled]="uploading"
+      >
+        @if (uploading) {
+          <span>{{ 'therapy_adherence.uploading' | transloco }}</span>
+        } @else {
+          <span>{{ 'therapy_adherence.choose_csv' | transloco }}</span>
+        }
+      </button>
+      
+      @if (uploadError) {
+        <p class="error-message">{{ uploadError }}</p>
+      }
+      
+      @if (queryError) {
+        <div class="error-message">
+          <p>{{ queryError }}</p>
+          <button class="retry-button" (click)="retryLoadFile()">{{ 'therapy_adherence.retry' | transloco }}</button>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="graphs-container">
+      <input 
+        type="file" 
+        id="file-input"
+        accept=".csv" 
+        (change)="onFileSelected($event)"
+        style="display: none;"
+      />
+
+      <div class="therapy-view">
+        <!-- General note button (top right) -->
+        <button class="add-note-button general-note floating-top-right" (click)="openNotesModal()" title="Add general note">
+          +
+        </button>
+        
+        <!-- Date filter controls -->
+        <div class="date-controls">
+          <div class="date-filter-group">
+            <label for="filter-start">From:</label>
+            <input 
+              type="date" 
+              id="filter-start" 
+              [(ngModel)]="filterStartDate"
+              (change)="onDateFilterChange()"
+              class="date-input"
+            />
+            
+            <label for="filter-end">Until:</label>
+            <input 
+              type="date" 
+              id="filter-end" 
+              [(ngModel)]="filterEndDate"
+              (change)="onDateFilterChange()"
+              class="date-input"
+            />
+            
+            <button class="control-button reset-button" (click)="resetDateFilter()" title="Reset filters">
+              <span>Reset</span>
+            </button>
+            
+            <!-- Pan slider (only visible when zoomed in) -->
+            @if (isPanEnabled()) {
+              <div class="pan-control-inline">
+                <label for="pan-slider">Pan:</label>
+                <input 
+                  type="range" 
+                  id="pan-slider" 
+                  min="0" 
+                  max="100" 
+                  step="1"
+                  [value]="panPosition"
+                  (input)="onPanChange($event)"
+                  class="pan-slider"
+                />
+              </div>
+            }
+          </div>
+          
+          <div class="zoom-controls">
+            <button class="control-button zoom-button" (click)="zoomOut()" [disabled]="zoomLevel >= 1" title="Zoom out">
+              <span>−</span>
+            </button>
+            <span class="zoom-label">Zoom: {{ (zoomLevel * 100).toFixed(0) }}%</span>
+            <button class="control-button zoom-button" (click)="zoomIn()" [disabled]="zoomLevel <= 0.1" title="Zoom in">
+              <span>+</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Header showing timeline (like medication schema header) -->
+
+        <!-- Graph rows (aligned with medication boxes on left) -->
+        <div class="graph-rows">
+          @for (item of medicationsWithData; track item.medication.medicationId) {
+            @if (item.medication.asNeeded) {
+              <div class="graph-row-wrapper">
+                <div class="graph-wrapper">
+                  <div class="no-data-compact">
+                    <span>Zo nodig medicatie</span>
+                  </div>
+                </div>
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                  +
+                </button>
+              </div>
+            } @else if (item.dispensingData) {
+              <div class="graph-row-wrapper">
+                <div class="graph-wrapper">
+                  <div class="graph-container">
+                    <canvas [id]="item.chartId"></canvas>
+                  </div>
+                </div>
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                  +
+                </button>
+              </div>
+            } @else {
+              <div class="graph-row-wrapper">
+                <div class="graph-wrapper">
+                  <div class="no-data-compact">
+                    <span>No dispensing data</span>
+                  </div>
+                </div>
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                  +
+                </button>
+              </div>
+            }
+          }
+          
+          @if (medicationsWithData.length === 0) {
+            <div class="no-medications">
+              <p>No medications in the medication review</p>
+            </div>
+          }
+        </div>
+        
+        <!-- Upload new file button at bottom -->
+        <div class="upload-footer">
+          <button 
+            class="upload-button secondary" 
+            (click)="triggerFileInput()"
+            [disabled]="uploading"
+          >
+            Upload New File
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

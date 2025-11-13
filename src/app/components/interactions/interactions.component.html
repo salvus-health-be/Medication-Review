@@ -1,0 +1,248 @@
+<div class="interactions-container">
+  @if (loading) {
+    <div class="loading-state">
+      <p>{{ 'interactions.checking' | transloco }}</p>
+    </div>
+  } @else if (error) {
+    <div class="error-state">
+      <p class="error-message">{{ error }}</p>
+      <button class="retry-button" (click)="loadMedications()">{{ 'common.retry' | transloco }}</button>
+    </div>
+  } @else {
+    <div class="interactions-content">
+      <!-- General note button (top right) -->
+      <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal()" title="Add general note">
+        +
+      </button>
+
+      <!-- Drug-Drug Interactions -->
+      <div class="interactions-section">
+          <div class="section-header">
+            <h2>{{ 'interactions.drug_drug_title' | transloco }}</h2>
+            <span class="count-badge">{{ getFilteredDrugDrugInteractions().length }}</span>
+          </div>
+
+        @if (getFilteredDrugDrugInteractions().length === 0) {
+          <div class="no-interactions">
+            <p>✓ {{ 'interactions.no_drug_drug' | transloco }}</p>
+          </div>
+        } @else {
+          <!-- Table Header -->
+          <div class="interactions-header">
+            <div class="header-cell left-header">{{ 'interactions.header_left' | transloco }}</div>
+            <div class="header-cell right-header">{{ 'interactions.header_right' | transloco }}</div>
+            <div class="header-cell severity-header">{{ 'interactions.header_severity' | transloco }}</div>
+            <div class="header-cell number-header">{{ 'interactions.header_number' | transloco }}</div>
+            <div class="header-cell details-header">{{ 'interactions.header_details' | transloco }}</div>
+            <div class="header-cell notes-header">{{ 'interactions.header_notes' | transloco }}</div>
+          </div>
+
+          <div class="interactions-list">
+            @for (interaction of getFilteredDrugDrugInteractions(); track interaction.interactionNumber) {
+              <div class="interaction-row-wrapper">
+                <div 
+                  class="interaction-card" 
+                  [class.expanded]="expandedInteraction === interaction.interactionNumber"
+                >
+                  <div class="interaction-row" (click)="toggleInteraction(interaction.interactionNumber)">
+                    <div class="cell left-medication">
+                      <div class="medication-name">{{ interaction.leftMedication }}</div>
+                      <div class="substance">{{ interaction.leftSubstance }}</div>
+                    </div>
+                    <div class="cell right-medication">
+                      <div class="medication-name">{{ interaction.rightMedication }}</div>
+                      <div class="substance">{{ interaction.rightSubstance }}</div>
+                    </div>
+                    <div class="cell severity-cell">
+                      <span class="severity-badge" [class]="getSeverityClass(interaction.severityCode)">
+                        {{ interaction.severity }}
+                      </span>
+                    </div>
+                    <div class="cell number-cell">
+                      #{{ interaction.interactionNumber }}
+                    </div>
+                    <div class="cell details-cell">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+                    <div class="cell notes-cell" (click)="$event.stopPropagation()">
+                      <button class="add-note-button" (click)="openNotesModal(interaction)" title="Add notes">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  
+                  @if (expandedInteraction === interaction.interactionNumber) {
+                    <div class="interaction-details" (click)="$event.stopPropagation()">
+                      @if (loadingDetails) {
+                        <div class="details-loading">{{ 'interactions.loading_details' | transloco }}</div>
+                      } @else if (interactionDetails) {
+                        @if (interactionDetails.textGroups && interactionDetails.textGroups.length > 0) {
+                          @for (group of interactionDetails.textGroups; track group.groupTitle) {
+                            <div class="detail-group">
+                              <h4 class="group-title">{{ group.groupTitle }}</h4>
+                              @for (text of group.texts; track text.title.code) {
+                                <div class="detail-text">
+                                  <strong>{{ text.title.description }}:</strong>
+                                  <div [innerHTML]="formatText(text.text)"></div>
+                                </div>
+                              }
+                            </div>
+                          }
+                        }
+                        @if (interactionDetails.details) {
+                          <div class="detail-metadata">
+                            @if (interactionDetails.details.direction && interactionDetails.details.direction.description !== 'fallbacks.no_direction') {
+                              <div class="detail-row">
+                                <span class="detail-label">{{ 'interactions.detail_direction' | transloco }}</span>
+                                <span class="detail-value">{{ interactionDetails.details.direction.description }}</span>
+                              </div>
+                            }
+                            @if (interactionDetails.details.plausibility) {
+                              <div class="detail-row">
+                                <span class="detail-label">{{ 'interactions.detail_plausibility' | transloco }}</span>
+                                <span class="detail-value">{{ interactionDetails.details.plausibility.description }}</span>
+                              </div>
+                            }
+                            @if (interactionDetails.details.frequency) {
+                              <div class="detail-row">
+                                <span class="detail-label">{{ 'interactions.detail_frequency' | transloco }}</span>
+                                <span class="detail-value">{{ interactionDetails.details.frequency.description }}</span>
+                              </div>
+                            }
+                            @if (interactionDetails.details.sourceAssessment) {
+                              <div class="detail-row">
+                                <span class="detail-label">{{ 'interactions.detail_source' | transloco }}</span>
+                                <span class="detail-value">{{ interactionDetails.details.sourceAssessment.description }}</span>
+                              </div>
+                            }
+                          </div>
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Drug-Food Interactions -->
+      <div class="interactions-section">
+        <div class="section-header">
+          <h2>Drug-Food Interactions</h2>
+          <span class="count-badge">{{ getFilteredDrugFoodInteractions().length }}</span>
+        </div>
+
+        @if (getFilteredDrugFoodInteractions().length === 0) {
+          <div class="no-interactions">
+            <p>✓ No drug-food interactions found</p>
+          </div>
+        } @else {
+          <!-- Table Header -->
+          <div class="interactions-header">
+            <div class="header-cell left-header">Medication</div>
+            <div class="header-cell right-header">Food</div>
+            <div class="header-cell severity-header">Severity</div>
+            <div class="header-cell number-header">Number</div>
+            <div class="header-cell details-header">Details</div>
+            <div class="header-cell notes-header">Notes</div>
+          </div>
+
+          <div class="interactions-list">
+            @for (interaction of getFilteredDrugFoodInteractions(); track interaction.interactionNumber) {
+              <div class="interaction-row-wrapper">
+                <div 
+                  class="interaction-card" 
+                  [class.expanded]="expandedInteraction === interaction.interactionNumber"
+                >
+                  <div class="interaction-row" (click)="toggleInteraction(interaction.interactionNumber)">
+                    <div class="cell left-medication">
+                      <div class="medication-name">{{ interaction.medication }}</div>
+                      <div class="substance">{{ interaction.substance }}</div>
+                    </div>
+                    <div class="cell right-medication">
+                      <div class="medication-name">{{ interaction.food }}</div>
+                    </div>
+                    <div class="cell severity-cell">
+                      <span class="severity-badge" [class]="getSeverityClass(interaction.severityCode)">
+                        {{ interaction.severity }}
+                      </span>
+                    </div>
+                    <div class="cell number-cell">
+                      #{{ interaction.interactionNumber }}
+                    </div>
+                    <div class="cell details-cell">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+                    <div class="cell notes-cell" (click)="$event.stopPropagation()">
+                      <button class="add-note-button" (click)="openNotesModal(interaction)" title="Add notes">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  
+                  @if (expandedInteraction === interaction.interactionNumber) {
+                    <div class="interaction-details" (click)="$event.stopPropagation()">
+                      @if (loadingDetails) {
+                        <div class="details-loading">{{ 'interactions.loading_details' | transloco }}</div>
+                      } @else if (interactionDetails) {
+                        @if (interactionDetails.textGroups && interactionDetails.textGroups.length > 0) {
+                          @for (group of interactionDetails.textGroups; track group.groupTitle) {
+                            <div class="detail-group">
+                              <h4 class="group-title">{{ group.groupTitle }}</h4>
+                              @for (text of group.texts; track text.title.code) {
+                                <div class="detail-text">
+                                  <strong>{{ text.title.description }}:</strong>
+                                  <div [innerHTML]="formatText(text.text)"></div>
+                                </div>
+                              }
+                            </div>
+                          }
+                        }
+                        @if (interactionDetails.details) {
+                          <div class="detail-metadata">
+                            @if (interactionDetails.details.direction && interactionDetails.details.direction.description !== 'fallbacks.no_direction') {
+                              <div class="detail-row">
+                                <span class="detail-label">{{ 'interactions.detail_direction' | transloco }}</span>
+                                <span class="detail-value">{{ interactionDetails.details.direction.description }}</span>
+                              </div>
+                            }
+                            @if (interactionDetails.details.plausibility) {
+                              <div class="detail-row">
+                                <span class="detail-label">Plausibility:</span>
+                                <span class="detail-value">{{ interactionDetails.details.plausibility.description }}</span>
+                              </div>
+                            }
+                            @if (interactionDetails.details.frequency) {
+                              <div class="detail-row">
+                                <span class="detail-label">Frequency:</span>
+                                <span class="detail-value">{{ interactionDetails.details.frequency.description }}</span>
+                              </div>
+                            }
+                            @if (interactionDetails.details.sourceAssessment) {
+                              <div class="detail-row">
+                                <span class="detail-label">Source:</span>
+                                <span class="detail-value">{{ interactionDetails.details.sourceAssessment.description }}</span>
+                              </div>
+                            }
+                          </div>
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,159 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h1>Note Overview</h1>
+      <div class="header-actions">
+        <div class="notes-count">{{ notes.length }} note{{ notes.length !== 1 ? 's' : '' }}</div>
+        <button class="btn-primary" (click)="generatePatientConversation()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Create patient conversation
+        </button>
+        <button class="close-button" (click)="close()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      @if (notes.length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <h2>No notes yet</h2>
+          <p>Add notes from the analysis page using the "Add Note" buttons on each tool.</p>
+        </div>
+      } @else {
+        <div class="notes-list">
+          @for (note of notes; track note.rowKey) {
+            <div class="note-card">
+              <!-- Note content -->
+              <div class="note-content">
+                <div class="note-header">
+                  @if (note.medicationName) {
+                    <div class="medication-flag">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                      {{ note.medicationName }}
+                    </div>
+                  } @else {
+                    <div class="medication-flag general">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      General
+                    </div>
+                  }
+                  @if (note.category) {
+                    <span class="note-category">{{ note.category }}</span>
+                  }
+                </div>
+
+                @if (isEditing(note)) {
+                  <textarea 
+                    class="note-edit-input"
+                    [(ngModel)]="editingNoteText"
+                    rows="3"
+                  ></textarea>
+                } @else {
+                  <p class="note-text">{{ note.text }}</p>
+                }
+                
+                @if (note.timestamp) {
+                  <div class="note-timestamp">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    {{ formatTimestamp(note.timestamp) }}
+                  </div>
+                }
+              </div>
+
+              <!-- Note actions -->
+              <div class="note-actions">
+                @if (isEditing(note)) {
+                  <div class="edit-actions">
+                    <button class="btn-save" (click)="saveEdit(note)" [title]="'note_modal.save_changes' | transloco">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      {{ 'note_modal.save' | transloco }}
+                    </button>
+                    <button class="btn-cancel" (click)="cancelEditing()" [title]="'note_modal.cancel_editing' | transloco">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                      {{ 'note_modal.cancel' | transloco }}
+                    </button>
+                  </div>
+                } @else {
+                  <div class="toggle-buttons">
+                    <button 
+                      class="toggle-btn"
+                      [class.active]="note.discussWithPatient"
+                      (click)="toggleDiscussWithPatient(note)"
+                      title="Include in patient conversation">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      Patient
+                    </button>
+                    <button 
+                      class="toggle-btn"
+                      [class.active]="note.communicateToDoctor"
+                      (click)="toggleCommunicateToDoctor(note)"
+                      title="Include in GP report">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                      </svg>
+                      GP
+                    </button>
+                  </div>
+                  <div class="action-buttons">
+                    <button class="btn-edit" (click)="startEditing(note)" [title]="'note_modal.edit_note' | transloco">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-delete" (click)="deleteNote(note)" [title]="'note_modal.delete_note' | transloco">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Delete confirmation modal -->
+    @if (showDeleteConfirmation) {
+      <app-confirmation-modal
+        [title]="'messages.delete_note_title' | transloco"
+        [message]="'messages.confirm_delete_note' | transloco"
+        [confirmText]="'common.delete' | transloco"
+        [cancelText]="'common.cancel' | transloco"
+        (confirm)="onConfirmDelete()"
+        (cancel)="onCancelDelete()"
+      ></app-confirmation-modal>
+    }
+  </div>
+</div>

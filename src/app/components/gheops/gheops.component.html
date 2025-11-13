@@ -1,0 +1,69 @@
+<div class="gheops-container">
+  <!-- General note button (top right) -->
+  <button class="add-note-button general-note floating-top-right" (click)="onAddGeneralNote()" title="Add general note">
+    +
+  </button>
+
+  <div class="document-header">
+    <div class="header-left">
+      <h2>{{ 'tools.gheops' | transloco }}</h2>
+      <p class="description">{{ 'tools.gheops_description' | transloco }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="openInNewTab()" [title]="'tools.open_in_new_tab' | transloco">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        {{ 'tools.open_in_new_tab' | transloco }}
+      </button>
+    </div>
+  </div>
+
+  <div class="info-banner">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="16" x2="12" y2="12"></line>
+      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+    <span>{{ 'tools.gheops_help' | transloco }}</span>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>{{ 'common.loading' | transloco }}</p>
+    </div>
+  }
+
+  @if (error) {
+    <div class="error-state">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <p class="error-message">{{ error }}</p>
+      <button class="btn-primary" (click)="openInNewTab()">{{ 'tools.open_in_new_tab' | transloco }}</button>
+    </div>
+  }
+
+  <div class="iframe-container" [class.loading]="isLoading">
+    <iframe
+      #pdfFrame
+      [src]="documentUrl"
+      (load)="onIframeLoad()"
+      (error)="onIframeError($event)"
+      frameborder="0"
+  title="GheOPS Tool Document">
+    </iframe>
+  </div>
+  
+  @if (isLoading) {
+    <div class="debug-info" style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-size: 11px; border-radius: 4px; max-width: 400px; z-index: 1000;">
+      <div>{{ 'common.loading' | transloco }}</div>
+      <div style="margin-top: 5px; font-size: 10px; opacity: 0.7;">Check browser console for more details</div>
+    </div>
+  }
+</div>

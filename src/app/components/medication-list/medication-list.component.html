@@ -1,0 +1,28 @@
+<div class="medication-list-container">
+  <div class="header">
+    <h2 class="title">{{ 'medication.medication_list' | transloco }}</h2>
+    <div class="actions">
+      <button class="import-button" (click)="importMedications()">{{ 'common.import' | transloco }}</button>
+      <button class="add-button" (click)="addMedication()">
+        <span class="plus-icon">+</span> {{ 'common.add' | transloco }}
+      </button>
+    </div>
+  </div>
+
+  <div class="medications-scroll">
+    <app-medication-item 
+      *ngFor="let medication of medications" 
+      [medication]="medication"
+      (medicationDeleted)="onMedicationDeleted($event)"
+      (editRequested)="onEditRequested($event)">
+    </app-medication-item>
+  </div>
+</div>
+
+<!-- Medication Search Modal -->
+<app-medication-search-modal 
+  *ngIf="showSearchModal" 
+  [isEditMode]="editingMedication !== null"
+  (close)="onModalClose()" 
+  (medicationSelected)="onMedicationSelected($event)"
+></app-medication-search-modal>

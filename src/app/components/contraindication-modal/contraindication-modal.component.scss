@@ -1,0 +1,259 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  border: $box-border-width solid $box-border-primary;
+  border-radius: $box-border-radius;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: $box-border-width solid $box-border-primary;
+
+  h2 {
+    margin: 0;
+    font-family: $primary-font;
+    font-weight: $font-weight-thin;
+    font-size: 24px;
+    color: $button-primary;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: $button-primary;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: $button-primary;
+  font-family: $primary-font;
+}
+
+.error-message {
+  background-color: #fee;
+  border: $box-border-width solid #fcc;
+  border-radius: $box-border-radius;
+  padding: 15px;
+  color: #c00;
+  font-family: $primary-font;
+  margin-bottom: 20px;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+
+  .search-input {
+    width: 100%;
+    padding: 10px;
+    border: $box-border-width solid $box-border-primary;
+    border-radius: $box-border-radius;
+    font-family: $primary-font;
+    font-size: 14px;
+    margin-bottom: 15px;
+
+    &:focus {
+      outline: none;
+      border-color: $button-primary;
+    }
+  }
+
+  .category-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .filter-button {
+      padding: 8px 16px;
+      border: $box-border-width solid $box-border-primary;
+      border-radius: $box-border-radius;
+      background-color: white;
+      color: $button-primary;
+      font-family: $primary-font;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+
+      &.active {
+        background-color: $button-primary;
+        color: white;
+        border-color: $button-primary;
+      }
+    }
+  }
+}
+
+.contraindications-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: $box-border-width solid $box-border-primary;
+  border-radius: $box-border-radius;
+  padding: 10px;
+
+  .contraindication-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: $box-border-width solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: #f9f9f9;
+    }
+
+    &.selected {
+      background-color: #e8f4f8;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 12px;
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+
+    .item-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .item-name {
+        font-family: $primary-font;
+        font-weight: $font-weight-regular;
+        color: $button-primary;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .item-code {
+          color: #666;
+          font-weight: $font-weight-semibold;
+          font-size: 12px;
+          flex-shrink: 0;
+        }
+      }
+
+      .item-category {
+        font-family: $primary-font;
+        font-size: 12px;
+        color: #666;
+        font-style: italic;
+      }
+    }
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-family: $primary-font;
+    font-style: italic;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-top: $box-border-width solid $box-border-primary;
+
+  .selected-count {
+    font-family: $primary-font;
+    color: $button-primary;
+    font-weight: $font-weight-medium;
+  }
+
+  .footer-buttons {
+    display: flex;
+    gap: 10px;
+
+    button {
+      padding: 10px 20px;
+      border: $box-border-width solid $box-border-primary;
+      border-radius: $box-border-radius;
+      font-family: $primary-font;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .cancel-button {
+      background-color: white;
+      color: $button-primary;
+
+      &:hover:not(:disabled) {
+        background-color: #f5f5f5;
+      }
+    }
+
+    .save-button {
+      background-color: $button-primary;
+      color: white;
+      border-color: $button-primary;
+
+      &:hover:not(:disabled) {
+        opacity: 0.9;
+      }
+    }
+  }
+}

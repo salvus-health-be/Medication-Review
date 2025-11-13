@@ -1,0 +1,91 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+
+.medication-list-container {
+  background-color: $box-background;
+  border: $box-border-width solid $box-border-primary;
+  border-radius: $box-border-radius;
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    .title {
+      font-size: 1.5rem;
+      color: $text-primary;
+      margin: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+
+      button {
+        padding: 0.5rem 1rem;
+        border: $box-border-width solid $box-border-primary;
+        border-radius: $box-border-radius;
+        font-family: $primary-font;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .import-button {
+        background-color: $button-secondary;
+        color: $text-button-secondary;
+        border: 1px solid $box-border;
+
+        &:hover {
+          background-color: $button-secondary-hover;
+        }
+      }
+
+      .add-button {
+        background-color: $button-primary;
+        color: $text-button-primary;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &:hover {
+          background-color: $button-primary-hover;
+        }
+
+        .plus-icon {
+          font-size: 1.2rem;
+          font-weight: bold;
+        }
+      }
+    }
+  }
+
+  .medications-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: $main-background;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $box-border;
+      border-radius: 3px;
+
+      &:hover {
+        background: $text-muted;
+      }
+    }
+  }
+}
