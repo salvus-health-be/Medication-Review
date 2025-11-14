@@ -5,3 +5,4 @@
 export const environment = {
   production: true,
   apiBaseUrl: 'https://medication-review-dev-ckg0gbg2bufhgwcp.westeurope-01.azurewebsites.net/api'
+}
