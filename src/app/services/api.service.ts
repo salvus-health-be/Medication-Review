@@ -33,14 +33,16 @@ import {
   UpdateQuestionAnswerRequest,
   QuestionAnswerResponse
 } from '../models/api.models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  // In development, requests to /api/* are proxied to http://localhost:7071/api
-  // In production, update this to the actual API base URL
-  private readonly API_BASE_URL = '/api';
+  // API base URL is now configured via environment files
+  // Development: Uses '/api' with proxy to http://localhost:7071/api
+  // Production: Update environment.prod.ts with the production API URL
+  private readonly API_BASE_URL = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 
