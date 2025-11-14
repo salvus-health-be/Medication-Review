@@ -34,12 +34,30 @@ export class AnamnesisePdfService {
     return s;
   }
 
+  private formatSpecialFrequency(specialFrequency: number): string {
+    const frequencyMap: Record<number, string> = {
+      1: 'daily',
+      2: 'twice weekly',
+      3: 'three times weekly',
+      4: 'weekly',
+      5: 'every 2 weeks',
+      6: 'every 3 weeks',
+      7: 'every 4 weeks',
+      8: 'monthly',
+      9: 'every 2 months',
+      10: 'quarterly',
+      11: 'annually'
+    };
+    return frequencyMap[specialFrequency] || `frequency code ${specialFrequency}`;
+  }
+
   generatePDF(
     generalSections: { title: string; questions: { text: string; type: string }[] }[],
     medications: any[],
     adherenceNotesByMedication: Record<string, ReviewNote[]>,
     effectivenessNotesByMedication: Record<string, ReviewNote[]>,
-    previewMode: boolean = false
+    previewMode: boolean = false,
+    partTitles?: { part1: string; part2: string; part3: string; part4: string }
   ): Blob | void {
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -52,6 +70,14 @@ export class AnamnesisePdfService {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
+
+    // Set default part titles if not provided
+    const titles = partTitles || {
+      part1: 'Part 1: General Questions',
+      part2: 'Part 2: Current Medication Scheme',
+      part3: 'Part 3: Therapy Adherence',
+      part4: 'Part 4: Effectiveness & Side-Effects'
+    };
 
     // Title
     doc.setFontSize(20);
@@ -67,7 +93,7 @@ export class AnamnesisePdfService {
     // Part 1: General Questions
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf('Part 1: General Questions'), margin, yPosition);
+  doc.text(this.sanitizeForPdf(titles.part1), margin, yPosition);
     yPosition += 8;
 
     generalSections.forEach(section => {
@@ -143,7 +169,100 @@ export class AnamnesisePdfService {
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf('Part 2: Therapy Adherence'), margin, yPosition);
+  doc.text(this.sanitizeForPdf(titles.part2), margin, yPosition);
+    yPosition += 8;
+
+    // Add medication scheme table
+    if (medications.length > 0) {
+      const tableData = medications.map(med => {
+        // Check for special frequency first
+        if (med.specialFrequency && med.specialDescription) {
+          const freqText = this.formatSpecialFrequency(med.specialFrequency);
+          return [
+            this.sanitizeForPdf(med.name || 'Unnamed'),
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            this.sanitizeForPdf(`${med.specialDescription} (${freqText})`)
+          ];
+        } else if (med.asNeeded) {
+          // As needed medication
+          return [
+            this.sanitizeForPdf(med.name || 'Unnamed'),
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            this.sanitizeForPdf('As needed')
+          ];
+        } else {
+          // Standard daily schedule with intake moments
+          return [
+            this.sanitizeForPdf(med.name || 'Unnamed'),
+            this.sanitizeForPdf(med.unitsBeforeBreakfast || ''),
+            this.sanitizeForPdf(med.unitsDuringBreakfast || ''),
+            this.sanitizeForPdf(med.unitsBeforeLunch || ''),
+            this.sanitizeForPdf(med.unitsDuringLunch || ''),
+            this.sanitizeForPdf(med.unitsBeforeDinner || ''),
+            this.sanitizeForPdf(med.unitsDuringDinner || ''),
+            this.sanitizeForPdf(med.unitsAtBedtime || '')
+          ];
+        }
+      });
+
+      autoTable(doc, {
+        head: [['Medication', 'Before\nBreakfast', 'During\nBreakfast', 'Before\nLunch', 'During\nLunch', 'Before\nDinner', 'During\nDinner', 'Bedtime']],
+        body: tableData,
+        startY: yPosition,
+        margin: margin,
+        columnStyles: {
+          0: { cellWidth: 50, halign: 'left' },
+          1: { cellWidth: 15 },
+          2: { cellWidth: 15 },
+          3: { cellWidth: 15 },
+          4: { cellWidth: 15 },
+          5: { cellWidth: 15 },
+          6: { cellWidth: 15 },
+          7: { cellWidth: 30 }
+        },
+        headStyles: {
+          fillColor: [69, 75, 96],
+          textColor: 255,
+          fontSize: 8,
+          fontStyle: 'bold',
+          halign: 'center',
+          valign: 'middle'
+        },
+        bodyStyles: {
+          fontSize: 9,
+          textColor: 0,
+          halign: 'center',
+          valign: 'middle'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        }
+      });
+
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
+    }
+
+    // Part 3: Therapy Adherence
+    if (yPosition > pageHeight - 50) {
+      doc.addPage();
+      yPosition = 20;
+    } else {
+      yPosition += 5;
+    }
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+  doc.text(this.sanitizeForPdf(titles.part3), margin, yPosition);
     yPosition += 8;
 
     // Render general notes first (if any)
@@ -249,7 +368,7 @@ export class AnamnesisePdfService {
       yPosition += 3;
     });
 
-    // Part 3: Effectiveness & Side-Effects
+    // Part 4: Effectiveness & Side-Effects
     if (yPosition > pageHeight - 50) {
       doc.addPage();
       yPosition = 20;
@@ -259,7 +378,7 @@ export class AnamnesisePdfService {
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf('Part 3: Effectiveness & Side-Effects'), margin, yPosition);
+  doc.text(this.sanitizeForPdf(titles.part4), margin, yPosition);
     yPosition += 8;
 
     // Render general notes first (if any)

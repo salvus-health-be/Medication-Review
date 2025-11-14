@@ -21,5 +21,10 @@
       <label for="sex">{{ 'patient.sex' | transloco }}</label>
       <input type="text" id="sex" [(ngModel)]="sex" (ngModelChange)="onSexChange()" [placeholder]="'patient.sex' | transloco">
     </div>
+    
+    <div class="field-group">
+      <label for="renalFunction">{{ 'patient.renal_function' | transloco }}</label>
+      <input type="text" id="renalFunction" [(ngModel)]="renalFunction" (ngModelChange)="onRenalFunctionChange()" [placeholder]="'patient.renal_function_placeholder' | transloco">
+    </div>
   </div>
 </div>

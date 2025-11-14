@@ -65,11 +65,21 @@ export class LoginPage {
     this.apiService.login(request).subscribe({
       next: (response) => {
         console.log('Login successful:', response);
-        // Store session data including the apbNumber from the request
-        this.stateService.setSessionData({
+        // Get existing session data to preserve values like renalFunction if backend didn't return them
+        const existingSession = this.stateService.getSessionData();
+        const newSession = {
           ...response,
           apbNumber: request.apbNumber
-        });
+        };
+        
+        // Preserve renalFunction from existing session if backend returned null
+        if (existingSession?.patient?.renalFunction && !newSession.patient.renalFunction) {
+          console.log('[LoginPage] Preserving renalFunction from existing session:', existingSession.patient.renalFunction);
+          newSession.patient.renalFunction = existingSession.patient.renalFunction;
+        }
+        
+        console.log('[LoginPage] Final session data to store:', newSession);
+        this.stateService.setSessionData(newSession);
         this.router.navigate(['/input']);
       },
       error: (error) => {

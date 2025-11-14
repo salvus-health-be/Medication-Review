@@ -25,16 +25,16 @@
 
         @if (getFilteredMatches().length === 0) {
           <div class="no-contraindications">
-            <p>✓ No contraindications found for patient conditions</p>
+            <p>✓ {{ 'contraindications.no_contraindications_found' | transloco }}</p>
           </div>
         } @else {
           <!-- Table Header -->
           <div class="contraindications-header">
-            <div class="header-cell medication-header">Medication</div>
-            <div class="header-cell condition-header">Condition</div>
-            <div class="header-cell severity-header">Type</div>
-            <div class="header-cell description-header">Details</div>
-            <div class="header-cell notes-header">Notes</div>
+            <div class="header-cell medication-header">{{ 'interactions.header_medication' | transloco }}</div>
+            <div class="header-cell condition-header">{{ 'interactions.header_condition' | transloco }}</div>
+            <div class="header-cell severity-header">{{ 'interactions.header_type' | transloco }}</div>
+            <div class="header-cell description-header">{{ 'interactions.header_details' | transloco }}</div>
+            <div class="header-cell notes-header">{{ 'interactions.header_notes' | transloco }}</div>
           </div>
 
           <div class="contraindications-list">
@@ -108,11 +108,11 @@
         } @else {
           <!-- Table Header -->
           <div class="contraindications-header">
-            <div class="header-cell medication-header">Medication</div>
-            <div class="header-cell condition-header">Condition</div>
-            <div class="header-cell severity-header">Type</div>
-            <div class="header-cell description-header">Details</div>
-            <div class="header-cell notes-header">Notes</div>
+            <div class="header-cell medication-header">{{ 'interactions.header_medication' | transloco }}</div>
+            <div class="header-cell condition-header">{{ 'interactions.header_condition' | transloco }}</div>
+            <div class="header-cell severity-header">{{ 'interactions.header_type' | transloco }}</div>
+            <div class="header-cell description-header">{{ 'interactions.header_details' | transloco }}</div>
+            <div class="header-cell notes-header">{{ 'interactions.header_notes' | transloco }}</div>
           </div>
 
           <div class="contraindications-list">

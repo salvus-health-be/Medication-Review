@@ -29,24 +29,46 @@
         placeholder="Enter your note about this interaction..."
         rows="6"
       ></textarea>
+      
+      <!-- Preset buttons -->
+      <div class="preset-buttons">
+        <button 
+          type="button"
+          class="preset-btn"
+          (click)="addPresetText('notes.preset_advice_alternative')"
+        >
+          {{ 'notes.preset_advice_alternative' | transloco }}
+        </button>
+        <button 
+          type="button"
+          class="preset-btn"
+          (click)="addPresetText('notes.preset_inform_patient')"
+        >
+          {{ 'notes.preset_inform_patient' | transloco }}
+        </button>
+      </div>
     </div>
 
-    <div class="checkboxes-section">
-      <label class="checkbox-label">
-        <input 
-          type="checkbox" 
-          [(ngModel)]="addToPatientConversation"
-        >
-        <span>Add to patient conversation</span>
-      </label>
+    <div class="toggle-section">
+      <button 
+        type="button"
+        class="toggle-button"
+        [class.active]="addToPatientConversation"
+        (click)="addToPatientConversation = !addToPatientConversation"
+      >
+        <span class="toggle-icon">{{ addToPatientConversation ? '✓' : '' }}</span>
+        <span class="toggle-text">Add to patient conversation</span>
+      </button>
 
-      <label class="checkbox-label">
-        <input 
-          type="checkbox" 
-          [(ngModel)]="addToGpReport"
-        >
-        <span>Add to GP report</span>
-      </label>
+      <button 
+        type="button"
+        class="toggle-button"
+        [class.active]="addToGpReport"
+        (click)="addToGpReport = !addToGpReport"
+      >
+        <span class="toggle-icon">{{ addToGpReport ? '✓' : '' }}</span>
+        <span class="toggle-text">Add to GP report</span>
+      </button>
     </div>
 
     <div class="button-row">

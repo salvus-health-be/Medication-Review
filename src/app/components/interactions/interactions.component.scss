@@ -324,59 +324,14 @@
         font-weight: $font-weight-semibold;
       }
 
-      p, div {
+      p {
         margin: 0.25rem 0 0 0;
         color: $text-secondary;
         line-height: 1.6;
-        
-        // Styling for formatted text
-        ::ng-deep {
-          sub {
-            font-size: 0.75em;
-            vertical-align: sub;
-          }
-          
-          strong {
-            font-weight: $font-weight-semibold;
-            color: $text-primary;
-          }
-          
-          .reference {
-            font-size: 0.75em;
-            color: $button-primary-background;
-            font-weight: $font-weight-semibold;
-            margin-left: 0.1rem;
-          }
-          
-          .literature-section {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid $box-border;
-            
-            strong {
-              display: block;
-              margin-bottom: 0.5rem;
-              color: $text-primary;
-              font-size: 0.95rem;
-            }
-            
-            .literature-list {
-              margin: 0;
-              padding-left: 1.5rem;
-              
-              li {
-                margin-bottom: 0.5rem;
-                color: $text-secondary;
-                font-size: 0.85rem;
-                line-height: 1.4;
-                
-                &:last-child {
-                  margin-bottom: 0;
-                }
-              }
-            }
-          }
-        }
+        white-space: pre-wrap;
+        font-family: $primary-font;
+        white-space: pre-wrap;
+        font-family: $primary-font;
       }
     }
   }

@@ -86,7 +86,7 @@
                               @for (text of group.texts; track text.title.code) {
                                 <div class="detail-text">
                                   <strong>{{ text.title.description }}:</strong>
-                                  <div [innerHTML]="formatText(text.text)"></div>
+                                  <p>{{ text.text }}</p>
                                 </div>
                               }
                             </div>
@@ -133,23 +133,23 @@
       <!-- Drug-Food Interactions -->
       <div class="interactions-section">
         <div class="section-header">
-          <h2>Drug-Food Interactions</h2>
+          <h2>{{ 'interactions.drug_food_title' | transloco }}</h2>
           <span class="count-badge">{{ getFilteredDrugFoodInteractions().length }}</span>
         </div>
 
         @if (getFilteredDrugFoodInteractions().length === 0) {
           <div class="no-interactions">
-            <p>✓ No drug-food interactions found</p>
+            <p>✓ {{ 'interactions.no_drug_food' | transloco }}</p>
           </div>
         } @else {
           <!-- Table Header -->
           <div class="interactions-header">
-            <div class="header-cell left-header">Medication</div>
-            <div class="header-cell right-header">Food</div>
-            <div class="header-cell severity-header">Severity</div>
-            <div class="header-cell number-header">Number</div>
-            <div class="header-cell details-header">Details</div>
-            <div class="header-cell notes-header">Notes</div>
+            <div class="header-cell left-header">{{ 'interactions.header_medication' | transloco }}</div>
+            <div class="header-cell right-header">{{ 'interactions.header_food' | transloco }}</div>
+            <div class="header-cell severity-header">{{ 'interactions.header_severity' | transloco }}</div>
+            <div class="header-cell number-header">{{ 'interactions.header_number' | transloco }}</div>
+            <div class="header-cell details-header">{{ 'interactions.header_details' | transloco }}</div>
+            <div class="header-cell notes-header">{{ 'interactions.header_notes' | transloco }}</div>
           </div>
 
           <div class="interactions-list">
@@ -200,7 +200,7 @@
                               @for (text of group.texts; track text.title.code) {
                                 <div class="detail-text">
                                   <strong>{{ text.title.description }}:</strong>
-                                  <div [innerHTML]="formatText(text.text)"></div>
+                                  <p>{{ text.text }}</p>
                                 </div>
                               }
                             </div>

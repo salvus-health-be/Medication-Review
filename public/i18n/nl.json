@@ -15,7 +15,7 @@
     "warning": "Waarschuwing",
     "info": "Info",
     "yes": "Ja",
-    "no": "Geen",
+    "no": "Nee",
     "search": "Zoeken",
     "filter": "Filter",
     "clear": "Wissen",
@@ -25,6 +25,7 @@
     "import": "Importeren",
     "download": "Downloaden",
     "upload": "Uploaden",
+    "or": "of",
     "home": "Home",
     "settings": "Instellingen",
     "help": "Help",
@@ -67,7 +68,9 @@
     "birth_date": "Geboortedatum",
     "patient_id": "Patiëntnummer",
     "patient_info": "Patiëntinformatie",
-    "patient_details": "Patiëntgegevens"
+    "patient_details": "Patiëntgegevens",
+    "renal_function": "Nierfunctie (eGFR)",
+    "renal_function_placeholder": "Voer eGFR in mL/min in"
   },
   "actions": {
     "edit_medication": "Medicatie bewerken",
@@ -107,6 +110,7 @@
     "at_bedtime": "Bij het slapengaan",
     "units": "Eenheden",
     "times_per_day": "{{count}}x/dag",
+    "per_day": "/dag",
     "one_per_day": "1x/dag",
     "two_per_day": "2x/dag",
     "three_per_day": "3x/dag",
@@ -117,7 +121,21 @@
     "replace_medication": "Medicatie vervangen",
     "search_placeholder": "Typ om medicatie te zoeken...",
     "no_results": "Geen medicatie gevonden voor \"{{term}}\"",
-    "search_hint": "Begin met typen om medicatie te zoeken (minimaal 2 tekens)"
+    "search_hint": "Begin met typen om medicatie te zoeken (minimaal 2 tekens)",
+    "not_daily": "Niet dagelijks",
+    "period": "Periode",
+    "select_period": "Selecteer periode",
+    "period_weekly": "wekelijks",
+    "period_biweekly": "om de 2 weken",
+    "period_monthly": "maandelijks",
+    "period_quarterly": "driemaandelijks",
+    "period_yearly": "jaarlijks"
+    ,"delete_all": "Verwijder alles",
+    "select_cnk": "Selecteer Medicatie CNK",
+    "select_cnk_instruction": "Meerdere medicijnen komen overeen met deze naam. Selecteer de juiste:",
+    "skip_medication": "Deze Medicatie Overslaan",
+    "matching_cnk": "Medicatie koppelen aan CNK...",
+    "cnk_match_failed": "Kon medicatie niet automatisch koppelen aan CNK"
   },
   "modals": {
     "add_contraindications": "Contra-indicaties toevoegen",
@@ -143,6 +161,15 @@
     "gheops": "GheOPS",
     "gheops_description": "Ghent Older People's Prescriptions - Community Pharmacy Screening Tool",
     "gheops_help": "Deze tool helpt bij het optimaliseren van medicatievoorschriften voor oudere patiënten. Gebruik het om potentieel ongeschikte medicatie en doseringsaanbevelingen te identificeren.",
+    "questionnaire_upload": "Upload Vragenlijst",
+    "questionnaire_drag_drop": "Sleep & Plaats PDF Vragenlijst",
+    "questionnaire_drop_here": "Plaats PDF hier",
+    "questionnaire_browse": "Bestanden Bladeren",
+    "questionnaire_file_hint": "Maximale bestandsgrootte: 50MB",
+    "questionnaire_invalid_pdf": "Selecteer een PDF-bestand",
+    "questionnaire_file_too_large": "Bestandsgrootte moet kleiner zijn dan 50MB",
+    "questionnaire_remove": "Verwijder PDF",
+    "questionnaire_description": "Upload een PDF-vragenlijst om deze hier weer te geven en te beoordelen. Gebruik de notitieknop om observaties toe te voegen die worden opgeslagen in Deel 1: Algemene vragen.",
     "start_stop": "START-STOP",
     "start_stop_description": "Screening Tool to Alert to Right Treatment - Screening Tool of Older Persons' Prescriptions",
     "start_stop_help": "Deze tool biedt criteria voor potentieel onjuist voorschrijven bij ouderen. START-criteria identificeren medicijnen die overwogen moeten worden, terwijl STOPP-criteria medicijnen identificeren die vermeden moeten worden.",
@@ -249,13 +276,40 @@
     "existing_notes": "Bestaande notities",
     "medication_note": "Medicatienotitie",
     "save_note": "Notitie opslaan",
-    "cancel_note": "Annuleren"
+    "cancel_note": "Annuleren",
+    "preset_reduce_intake": "Innamemomenten verminderen",
+    "preset_move_intake": "Innamemoment verplaatsen",
+    "preset_too_few_units": "Patiënt had te weinig eenheden",
+    "preset_too_many_units": "Patiënt had te veel eenheden",
+    "preset_advice_alternative": "Alternatief adviseren",
+    "preset_inform_patient": "Patiënt informeren",
+    "preset_dose_too_high": "Dosis is te hoog",
+    "preset_dose_too_low": "Dosis is te laag",
+    "preset_dosing_adjustment": "Dosering vereist aanpassingen",
+    "preset_renal_followup": "Nierfunctie-opvolging"
+  },
+  "frequency": {
+    "daily": "dagelijks",
+    "twice_weekly": "tweemaal per week",
+    "three_times_weekly": "driemaal per week",
+    "weekly": "wekelijks",
+    "every_2_weeks": "elke 2 weken",
+    "every_3_weeks": "elke 3 weken",
+    "every_4_weeks": "elke 4 weken",
+    "monthly": "maandelijks",
+    "every_2_months": "elke 2 maanden",
+    "quarterly": "driemaandelijks",
+    "annually": "jaarlijks"
   },
   "pdf": {
     "preview": "Pdf-voorbeeld",
     "download": "Pdf downloaden",
     "print": "Afdrukken",
     "generating": "Pdf genereren...",
+    "part_1_title": "Deel 1: Algemene vragen",
+    "part_2_title": "Deel 2: Huidige medicatieschema",
+    "part_3_title": "Deel 3: Therapietrouw",
+    "part_4_title": "Deel 4: Effectiviteit & bijwerkingen",
     "part_1": "Deel 1: Algemene informatie",
     "part_2": "Deel 2: Therapietrouw",
     "part_3": "Deel 3: Effectiviteit & bijwerkingen",
@@ -371,10 +425,11 @@
     "action_for_side_effects": "Actie voor bijwerkingen"
   },
   "therapy_adherence": {
-    "loading_history": "Afleveringsgeschiedenis laden...",
+    "loading_history": "Afleverhistoriek laden...",
     "uploading": "Uploaden...",
     "retry": "Opnieuw proberen",
-    "choose_csv": "CSV-bestand kiezen"
+    "choose_csv": "CSV-bestand kiezen",
+    "upload_dispensing_history": "Upload afleveringhistoriek"
   },
   "posology": {
     "loading_info": "Doseringsinfo laden...",
@@ -393,7 +448,21 @@
   },
   "interactions": {
     "loading_details": "Details laden...",
-    "checking": "Controleren op interacties..."
+    "checking": "Controleren op interacties...",
+    "drug_drug_title": "Geneesmiddel-geneesmiddelinteracties",
+    "drug_food_title": "Geneesmiddel-voedselinteracties",
+    "header_left": "Links",
+    "header_right": "Rechts",
+    "header_severity": "Ernst",
+    "header_number": "Nummer",
+    "header_details": "Details",
+    "header_notes": "Notities",
+    "header_medication": "Geneesmiddel",
+    "header_condition": "Aandoening",
+    "header_type": "Type",
+    "header_food": "Voedsel",
+    "no_drug_drug": "Geen geneesmiddel-geneesmiddelinteracties gevonden!",
+    "no_drug_food": "Geen geneesmiddel-voedselinteracties gevonden!"
   },
   "note_modal": {
     "save_changes": "Wijzigingen opslaan",
@@ -404,7 +473,8 @@
     "cancel": "Annuleren"
   },
   "contraindications": {
-    "checking": "Contra-indicaties controleren..."
+    "checking": "Contra-indicaties controleren...",
+    "no_contraindications_found": "Geen contra-indicaties gevonden voor de patiëntcondities"
   },
   "fallbacks": {
     "not_applicable": "N/A",

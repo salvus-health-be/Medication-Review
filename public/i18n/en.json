@@ -25,6 +25,7 @@
     "import": "Import",
     "download": "Download",
     "upload": "Upload",
+    "or": "or",
     "home": "Home",
     "settings": "Settings",
     "help": "Help",
@@ -67,7 +68,9 @@
     "birth_date": "Birth Date",
     "patient_id": "Patient ID",
     "patient_info": "Patient Information",
-    "patient_details": "Patient Details"
+    "patient_details": "Patient Details",
+    "renal_function": "Renal Function (eGFR)",
+    "renal_function_placeholder": "Enter eGFR in mL/min"
   },
   "actions": {
     "edit_medication": "Edit Medication",
@@ -107,6 +110,7 @@
     "at_bedtime": "At Bedtime",
     "units": "Units",
     "times_per_day": "{{count}}x/day",
+    "per_day": "/day",
     "one_per_day": "1x/day",
     "two_per_day": "2x/day",
     "three_per_day": "3x/day",
@@ -117,7 +121,21 @@
     "replace_medication": "Replace Medication",
     "search_placeholder": "Type to search medications...",
     "no_results": "No medications found for \"{{term}}\"",
-    "search_hint": "Start typing to search medications (minimum 2 characters)"
+    "search_hint": "Start typing to search medications (minimum 2 characters)",
+    "not_daily": "Not Daily",
+    "period": "Period",
+    "select_period": "Select period",
+    "period_weekly": "weekly",
+    "period_biweekly": "every 2 weeks",
+    "period_monthly": "monthly",
+    "period_quarterly": "quarterly",
+    "period_yearly": "yearly"
+    ,"delete_all": "Delete all",
+    "select_cnk": "Select Medication CNK",
+    "select_cnk_instruction": "Multiple medications match this name. Please select the correct one:",
+    "skip_medication": "Skip This Medication",
+    "matching_cnk": "Matching medication to CNK...",
+    "cnk_match_failed": "Could not automatically match medication to CNK"
   },
   "modals": {
     "add_contraindications": "Add Contraindications",
@@ -139,10 +157,19 @@
     "contraindications": "Contra-indications",
     "lab_values": "Lab Values",
     "posology": "Posology",
-    "renadaptor": "Renal Adaptation",
+    "renadaptor": "Renadaptor",
     "gheops": "GheOPS",
     "gheops_description": "Ghent Older People's Prescriptions - Community Pharmacy Screening Tool",
     "gheops_help": "This tool helps optimize medication prescriptions for elderly patients. Use it to identify potentially inappropriate medications and dosing recommendations.",
+    "questionnaire_upload": "Upload Questionnaire",
+    "questionnaire_drag_drop": "Drag & Drop PDF Questionnaire",
+    "questionnaire_drop_here": "Drop PDF here",
+    "questionnaire_browse": "Browse Files",
+    "questionnaire_file_hint": "Maximum file size: 50MB",
+    "questionnaire_invalid_pdf": "Please select a PDF file",
+    "questionnaire_file_too_large": "File size must be less than 50MB",
+    "questionnaire_remove": "Remove PDF",
+    "questionnaire_description": "Upload a PDF questionnaire to display and review it here. Use the note button to add observations saved to Part 1: General Questions.",
     "start_stop": "START-STOP",
     "start_stop_description": "Screening Tool to Alert to Right Treatment - Screening Tool of Older Persons' Prescriptions",
     "start_stop_help": "This tool provides criteria for potentially inappropriate prescribing in older adults. START criteria identify medications that should be considered, while STOPP criteria identify medications that should be avoided.",
@@ -249,13 +276,40 @@
     "existing_notes": "Existing Notes",
     "medication_note": "Medication Note",
     "save_note": "Save Note",
-    "cancel_note": "Cancel"
+    "cancel_note": "Cancel",
+    "preset_reduce_intake": "Reduce intake moments",
+    "preset_move_intake": "Move intake moment",
+    "preset_too_few_units": "Patient had too few units",
+    "preset_too_many_units": "Patient had too many units",
+    "preset_advice_alternative": "Advice alternative",
+    "preset_inform_patient": "Inform patient",
+    "preset_dose_too_high": "Dose is too high",
+    "preset_dose_too_low": "Dose is too low",
+    "preset_dosing_adjustment": "Dosing needs adjustments",
+    "preset_renal_followup": "Renal function follow-up"
+  },
+  "frequency": {
+    "daily": "daily",
+    "twice_weekly": "twice weekly",
+    "three_times_weekly": "three times weekly",
+    "weekly": "weekly",
+    "every_2_weeks": "every 2 weeks",
+    "every_3_weeks": "every 3 weeks",
+    "every_4_weeks": "every 4 weeks",
+    "monthly": "monthly",
+    "every_2_months": "every 2 months",
+    "quarterly": "quarterly",
+    "annually": "annually"
   },
   "pdf": {
     "preview": "PDF Preview",
     "download": "Download PDF",
     "print": "Print",
     "generating": "Generating PDF...",
+    "part_1_title": "Part 1: General Questions",
+    "part_2_title": "Part 2: Current Medication Scheme",
+    "part_3_title": "Part 3: Therapy Adherence",
+    "part_4_title": "Part 4: Effectiveness & Side Effects",
     "part_1": "Part 1: General Information",
     "part_2": "Part 2: Therapy Adherence",
     "part_3": "Part 3: Effectiveness & Side Effects",
@@ -374,7 +428,8 @@
     "loading_history": "Loading dispensing history...",
     "uploading": "Uploading...",
     "retry": "Retry",
-    "choose_csv": "Choose CSV File"
+    "choose_csv": "Choose CSV File",
+    "upload_dispensing_history": "Please upload dispensing history"
   },
   "posology": {
     "loading_info": "Loading dosage information...",
@@ -393,7 +448,21 @@
   },
   "interactions": {
     "loading_details": "Loading details...",
-    "checking": "Checking for interactions..."
+    "checking": "Checking for interactions...",
+    "drug_drug_title": "Drug-Drug Interactions",
+	"drug_food_title": "Drug-Food Interactions",
+    "header_left": "Left",
+    "header_right": "Right",
+    "header_severity": "Severity",
+    "header_number": "Number",
+    "header_details": "Details",
+    "header_notes": "Notes",
+	"header_medication": "Medication",
+	"header_condition": "Condition",
+	"header_type": "Type",
+	"header_food": "Food",
+	"no_drug_drug": "No drug-drug interactions found!",
+	"no_drug_food": "No drug-food interactions found!"
   },
   "note_modal": {
     "save_changes": "Save changes",
@@ -404,7 +473,8 @@
     "cancel": "Cancel"
   },
   "contraindications": {
-    "checking": "Checking contraindications..."
+    "checking": "Checking contraindications...",
+    "no_contraindications_found": "No contraindications found for patient conditions"
   },
   "fallbacks": {
     "not_applicable": "N/A",

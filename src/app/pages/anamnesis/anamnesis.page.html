@@ -12,6 +12,7 @@
       (click)="switchPart('part1')">
       <span class="tab-number">1</span>
       <span class="tab-label">{{ 'anamnesis.general_questions' | transloco }}</span>
+      <span class="tab-percentage">{{ getPartProgress('part1') }}%</span>
     </button>
     <button 
       class="part-tab" 
@@ -19,6 +20,7 @@
       (click)="switchPart('part2')">
       <span class="tab-number">2</span>
       <span class="tab-label">{{ 'anamnesis.therapy_adherence' | transloco }}</span>
+      <span class="tab-percentage">{{ getPartProgress('part2') }}%</span>
     </button>
     <button 
       class="part-tab" 
@@ -26,6 +28,7 @@
       (click)="switchPart('part3')">
       <span class="tab-number">3</span>
       <span class="tab-label">{{ 'anamnesis.effectiveness_side_effects' | transloco }}</span>
+      <span class="tab-percentage">{{ getPartProgress('part3') }}%</span>
     </button>
   </div>
 
@@ -51,6 +54,9 @@
             <div class="box-title">{{ box.title }}</div>
             <div class="box-description">{{ box.description }}</div>
             <div class="box-count">{{ getVisibleQuestionCount(box) }} questions</div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getQuestionProgress(box)"></div>
+            </div>
           </div>
         }
       </div>
@@ -141,7 +147,7 @@
                             [value]="option"
                             [(ngModel)]="question.value"
                             (ngModelChange)="onQuestionChange(question.name, $event)">
-                          <span>{{ option === 'Yes' ? ('anamnesis_dynamic.yes' | transloco) : (option === 'No' ? ('anamnesis_dynamic.no' | transloco) : option) }}</span>
+                          <span>{{ option === true ? ('common.yes' | transloco) : (option === false ? ('common.no' | transloco) : (option === 'Yes' ? ('anamnesis_dynamic.yes' | transloco) : (option === 'No' ? ('anamnesis_dynamic.no' | transloco) : option))) }}</span>
                         </label>
                       }
                     </div>

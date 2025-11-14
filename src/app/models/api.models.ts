@@ -1,6 +1,7 @@
 export interface Patient {
   dateOfBirth: string | null;
   sex: string | null;
+  renalFunction?: string | null;
 }
 
 export interface MedicationReview {
@@ -51,12 +52,14 @@ export interface UpdatePatientRequest {
   patientId: string;
   dateOfBirth?: string | null;
   sex?: string | null;
+  renalFunction?: string | null;
 }
 
 export interface UpdatePatientResponse {
   patientId: string;
   dateOfBirth: string | null;
   sex: string | null;
+  renalFunction?: string | null;
   updated: boolean;
 }
 
@@ -155,6 +158,8 @@ export interface Medication {
   routeOfAdministration?: string | null;
   indication?: string | null;
   asNeeded?: boolean | null;
+  specialFrequency?: number | null;
+  specialDescription?: string | null;
   unitsBeforeBreakfast?: number | null;
   unitsDuringBreakfast?: number | null;
   unitsBeforeLunch?: number | null;
@@ -175,6 +180,8 @@ export interface AddMedicationRequest {
   routeOfAdministration?: string;
   indication?: string;
   asNeeded?: boolean;
+  specialFrequency?: number;
+  specialDescription?: string;
   unitsBeforeBreakfast?: number;
   unitsDuringBreakfast?: number;
   unitsBeforeLunch?: number;
@@ -195,6 +202,8 @@ export interface UpdateMedicationRequest {
   routeOfAdministration?: string | null;
   indication?: string | null;
   asNeeded?: boolean | null;
+  specialFrequency?: number | null;
+  specialDescription?: string | null;
   unitsBeforeBreakfast?: number | null;
   unitsDuringBreakfast?: number | null;
   unitsBeforeLunch?: number | null;
@@ -213,6 +222,9 @@ export interface MedicationResponse {
   dosageMg?: number | null;
   routeOfAdministration?: string | null;
   indication?: string | null;
+  asNeeded?: boolean | null;
+  specialFrequency?: number | null;
+  specialDescription?: string | null;
   unitsBeforeBreakfast?: number | null;
   unitsDuringBreakfast?: number | null;
   unitsBeforeLunch?: number | null;

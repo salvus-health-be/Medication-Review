@@ -17,12 +17,15 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
   lastName: string = '';
   dateOfBirth: string = '';
   sex: string = '';
+  // Renal function is stored as a textual summary per API docs (e.g., "eGFR: 45 mL/min/1.73m2")
+  renalFunction: string | null = null;
 
   private destroy$ = new Subject<void>();
   private dateOfBirthChanged$ = new Subject<string>();
   private sexChanged$ = new Subject<string>();
   private firstNameChanged$ = new Subject<string>();
   private lastNameChanged$ = new Subject<string>();
+  private renalFunctionChanged$ = new Subject<string | null>();
 
   constructor(
     private stateService: StateService,
@@ -30,9 +33,11 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    console.log('[PatientDetails] ngOnInit - loading from session');
     // Prepopulate from session data
     const sessionData = this.stateService.getSessionData();
     if (sessionData) {
+      console.log('[PatientDetails] Session data:', JSON.stringify(sessionData.patient, null, 2));
       // Populate from review (first/last name)
       if (sessionData.review.firstNameAtTimeOfReview) {
         this.firstName = sessionData.review.firstNameAtTimeOfReview;
@@ -41,7 +46,7 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
         this.lastName = sessionData.review.lastNameAtTimeOfReview;
       }
 
-      // Populate from patient (dateOfBirth, sex)
+      // Populate from patient (dateOfBirth, sex, renalFunction)
       if (sessionData.patient.dateOfBirth) {
         // Convert ISO 8601 to YYYY-MM-DD format for date input
         this.dateOfBirth = sessionData.patient.dateOfBirth.split('T')[0];
@@ -49,6 +54,27 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
       if (sessionData.patient.sex) {
         this.sex = sessionData.patient.sex;
       }
+      // renalFunction may be provided under sessionData.patient.renalFunction or at top-level sessionData.renalFunction
+      let rf: any = undefined;
+      let rfFound = false;
+      if (sessionData.patient && sessionData.patient.renalFunction !== undefined) {
+        rf = sessionData.patient.renalFunction;
+        rfFound = true;
+        console.log('[PatientDetails] Found renalFunction under sessionData.patient:', rf);
+      } else if ((sessionData as any).renalFunction !== undefined) {
+        rf = (sessionData as any).renalFunction;
+        rfFound = true;
+        console.log('[PatientDetails] Found renalFunction at top-level sessionData:', rf);
+      }
+
+      if (rfFound) {
+        this.renalFunction = rf === null ? null : String(rf);
+        console.log('[PatientDetails] Loaded renal function assigned to field:', this.renalFunction);
+      } else {
+        console.log('[PatientDetails] No renalFunction found in session data');
+      }
+    } else {
+      console.warn('[PatientDetails] No session data available');
     }
 
     // Set up auto-save for dateOfBirth changes (debounced)
@@ -86,6 +112,15 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(value => this.saveMedicationReviewData());
+
+    // Set up auto-save for renal function changes (debounced)
+    this.renalFunctionChanged$
+      .pipe(
+        debounceTime(1000),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(value => this.savePatientData());
   }
 
   ngOnDestroy() {
@@ -107,6 +142,10 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
 
   onLastNameChange() {
     this.lastNameChanged$.next(this.lastName);
+  }
+
+  onRenalFunctionChange() {
+    this.renalFunctionChanged$.next(this.renalFunction);
   }
 
   private savePatientData() {
@@ -135,9 +174,15 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
     if (this.sex) {
       request.sex = this.sex;
     }
+    
+    // The API accepts renalFunction as string | null per documentation
+    if (this.renalFunction !== null && this.renalFunction !== undefined) {
+      request.renalFunction = this.renalFunction;
+    }
 
     // Only save if we have at least one field to update
-    if (request.dateOfBirth || request.sex) {
+    // Save if at least one updatable field is present. Note: renalFunction may be an empty string to clear the field.
+    if (request.dateOfBirth || request.sex || request.hasOwnProperty('renalFunction')) {
       console.log('[PatientDetails] === SAVING PATIENT DATA ===');
       console.log('[PatientDetails] Request payload:', JSON.stringify(request, null, 2));
       
@@ -149,7 +194,13 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
           if (sessionData.patient) {
             sessionData.patient.dateOfBirth = response.dateOfBirth;
             sessionData.patient.sex = response.sex;
+            sessionData.patient.renalFunction = response.renalFunction ?? null;
+            // Also set top-level renalFunction for compatibility with different session shapes
+            (sessionData as any).renalFunction = response.renalFunction ?? null;
+            console.log('[PatientDetails] Updated session data - patient.renalFunction:', sessionData.patient.renalFunction);
+            console.log('[PatientDetails] Updated session data - top-level renalFunction:', (sessionData as any).renalFunction);
             this.stateService.setSessionData(sessionData);
+            console.log('[PatientDetails] Session data has been set with renalFunction');
           }
         },
         error: (error) => {

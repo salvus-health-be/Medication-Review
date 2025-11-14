@@ -17,6 +17,7 @@ import { PosologyComponent } from '../../components/posology/posology.component'
 import { RenadaptorComponent } from '../../components/renadaptor/renadaptor.component';
 import { GheopsComponent } from '../../components/gheops/gheops.component';
 import { StartStopComponent } from '../../components/start-stop/start-stop.component';
+import { QuestionnaireComponent } from '../../components/questionnaire/questionnaire.component';
 import { MedicationSearchResult, Medication as ApiMedication } from '../../models/api.models';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
@@ -25,7 +26,7 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-analysis',
-  imports: [CommonModule, FormsModule, TranslocoModule, AnalysisMedicationItemComponent, AnalysisToolbarComponent, MedicationSearchModalComponent, MedicationNotesModalComponent, InteractionNotesModalComponent, NoteOverviewModalComponent, TherapyAdherenceComponent, InteractionsComponent, ContraindicationsComponent, PosologyComponent, RenadaptorComponent, GheopsComponent, StartStopComponent],
+  imports: [CommonModule, FormsModule, TranslocoModule, AnalysisMedicationItemComponent, AnalysisToolbarComponent, MedicationSearchModalComponent, MedicationNotesModalComponent, InteractionNotesModalComponent, NoteOverviewModalComponent, TherapyAdherenceComponent, InteractionsComponent, ContraindicationsComponent, PosologyComponent, RenadaptorComponent, GheopsComponent, StartStopComponent, QuestionnaireComponent],
   templateUrl: './analysis.page.html',
   styleUrls: ['./analysis.page.scss']
 })
@@ -136,6 +137,8 @@ export class AnalysisPage implements OnInit, OnDestroy {
       routeOfAdministration: medication.route || null,
       indication: medication.indication ? medication.indication : null,
       asNeeded: medication.asNeeded ?? false,
+      specialFrequency: parseNumber(medication.specialFrequency),
+      specialDescription: medication.specialDescription || null,
       unitsBeforeBreakfast: parseNumber(medication.unitsBeforeBreakfast),
       unitsDuringBreakfast: parseNumber(medication.unitsDuringBreakfast),
       unitsBeforeLunch: parseNumber(medication.unitsBeforeLunch),
@@ -256,6 +259,43 @@ export class AnalysisPage implements OnInit, OnDestroy {
     this.showNotesModal = true;
   }
 
+  openQuestionnaireNotesModal() {
+    console.log('[AnalysisPage] Opening questionnaire notes modal - general notes for Step 1');
+    
+    // Set category to map to Part 1 general questions in the actions page
+    this.noteCategory = 'General';
+    this.selectedMedicationForNotes = null as any; // General note, no specific medication
+    this.showNotesModal = true;
+  }
+
+  openContraindicationNotesModal(data: { type: 'match' | 'product' | 'general', contraindication: any }) {
+    console.log('[AnalysisPage] Opening contraindication notes modal:', data);
+    
+    // Handle general notes separately
+    if (data.type === 'general' || !data.contraindication) {
+      this.noteCategory = 'Contraindications';
+      this.selectedMedicationForNotes = null as any; // General note, no specific medication
+      this.showNotesModal = true;
+      return;
+    }
+    
+    // For specific contraindication notes, create a medication context
+    const cnk = data.contraindication.medicationCnk || data.contraindication.cnk;
+    const medName = data.contraindication.medication || data.contraindication.medicationName || 'Unknown Medication';
+    
+    this.noteCategory = 'Contraindications';
+    this.selectedMedicationForNotes = {
+      medicationId: `contraindication-${cnk}`,
+      name: `${medName} - ${data.contraindication.condition}`,
+      dosage: '',
+      route: '',
+      cnk: cnk ? parseInt(cnk) : null,
+      vmp: null,
+      indication: data.contraindication.condition
+    };
+    this.showNotesModal = true;
+  }
+
   loadMedications() {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
@@ -276,9 +316,12 @@ export class AnalysisPage implements OnInit, OnDestroy {
           dosage: med.dosageMg ? `${med.dosageMg}mg` : '',
           route: med.routeOfAdministration || '',
           cnk: med.cnk ?? null,
-          asNeeded: med.asNeeded ?? false,
           vmp: med.vmp ?? null,
+          packageSize: med.packageSize ?? null,
           indication: med.indication ?? null,
+          asNeeded: med.asNeeded ?? false,
+          specialFrequency: med.specialFrequency ?? null,
+          specialDescription: med.specialDescription ?? null,
           unitsBeforeBreakfast: med.unitsBeforeBreakfast ?? null,
           unitsDuringBreakfast: med.unitsDuringBreakfast ?? null,
           unitsBeforeLunch: med.unitsBeforeLunch ?? null,
@@ -315,6 +358,12 @@ export class AnalysisPage implements OnInit, OnDestroy {
 
   getToolTitle(): string {
     return this.activeTool ? this.transloco.translate(this.toolTitles[this.activeTool]) : '';
+  }
+
+  getLocalizedPeriod(specialDescription: string): string {
+    if (!specialDescription) return '';
+    const key = `medication.period_${specialDescription}`;
+    return this.transloco.translate(key);
   }
 
   onMedicationBoxClick(medication: Medication) {

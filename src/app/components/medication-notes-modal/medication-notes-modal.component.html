@@ -7,13 +7,9 @@
         <span class="info-label">{{ 'patient.name' | transloco }}:</span>
         <span class="info-value">{{ medication.name }}</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">{{ 'medication.cnk' | transloco }}:</span>
-        <span class="info-value">{{ medication.cnk ?? ('fallbacks.not_applicable' | transloco) }}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">{{ 'medication.vmp' | transloco }}:</span>
-        <span class="info-value">{{ medication.vmp ?? ('fallbacks.not_applicable' | transloco) }}</span>
+      <div class="info-row" *ngIf="getFrequencyDisplay()">
+        <span class="info-label">{{ 'medication.frequency' | transloco }}:</span>
+        <span class="info-value">{{ getFrequencyDisplay() }}</span>
       </div>
     </div>
 
@@ -25,24 +21,40 @@
         [placeholder]="'notes.note_placeholder' | transloco"
         rows="6"
       ></textarea>
+      
+      <!-- Preset buttons -->
+      <div class="preset-buttons" *ngIf="presetButtons.length > 0">
+        <button 
+          *ngFor="let preset of presetButtons" 
+          type="button"
+          class="preset-btn"
+          (click)="addPresetText(preset)"
+        >
+          {{ preset | transloco }}
+        </button>
+      </div>
     </div>
 
-    <div class="checkboxes-section">
-      <label class="checkbox-label">
-        <input 
-          type="checkbox" 
-          [(ngModel)]="addToPatientConversation"
-        >
-        <span>{{ 'notes.add_to_patient_conversation' | transloco }}</span>
-      </label>
+    <div class="toggle-section">
+      <button 
+        type="button"
+        class="toggle-button"
+        [class.active]="addToPatientConversation"
+        (click)="addToPatientConversation = !addToPatientConversation"
+      >
+        <span class="toggle-icon">{{ addToPatientConversation ? '✓' : '' }}</span>
+        <span class="toggle-text">{{ 'notes.add_to_patient_conversation' | transloco }}</span>
+      </button>
 
-      <label class="checkbox-label">
-        <input 
-          type="checkbox" 
-          [(ngModel)]="addToGpReport"
-        >
-        <span>{{ 'notes.add_to_gp_report' | transloco }}</span>
-      </label>
+      <button 
+        type="button"
+        class="toggle-button"
+        [class.active]="addToGpReport"
+        (click)="addToGpReport = !addToGpReport"
+      >
+        <span class="toggle-icon">{{ addToGpReport ? '✓' : '' }}</span>
+        <span class="toggle-text">{{ 'notes.add_to_gp_report' | transloco }}</span>
+      </button>
     </div>
 
     <div class="button-row">

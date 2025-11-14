@@ -169,7 +169,7 @@ export class PdfGenerationService {
     if (data.medications.length > 0) {
       content.push(this.createSectionTitle(this.transloco.translate('pdf.current_medications')));
       content.push(this.createSpacer(10));
-      content.push(this.createMedicationTable(data.medications));
+      content.push(this.createMedicationScheduleTable(data.medications));
       content.push(this.createSpacer(15));
     }
 
@@ -202,7 +202,7 @@ export class PdfGenerationService {
     const content: Content[] = [];
 
     // Header
-    content.push(this.createHeader('Pharmacy Summary'));
+    content.push(this.createHeader(this.transloco.translate('pdf.pharmacy_summary')));
     content.push(this.createSpacer(20));
 
     // Patient Info
@@ -211,7 +211,7 @@ export class PdfGenerationService {
 
     // Medications with Schema
     if (data.medications.length > 0) {
-      content.push(this.createSectionTitle('Medication Schedule'));
+      content.push(this.createSectionTitle(this.transloco.translate('pdf.current_medications')));
       content.push(this.createSpacer(10));
       content.push(this.createMedicationScheduleTable(data.medications));
       content.push(this.createSpacer(15));
@@ -219,7 +219,7 @@ export class PdfGenerationService {
 
     // Contraindications
     if (data.contraindications.length > 0) {
-      content.push(this.createSectionTitle('Contraindications'));
+      content.push(this.createSectionTitle(this.transloco.translate('tools.contraindications')));
       content.push(this.createSpacer(10));
       data.contraindications.forEach(ci => {
         content.push({
@@ -255,20 +255,20 @@ export class PdfGenerationService {
   }
 
   private addPart1QuestionsToPharmacySummary(content: Content[], data: ReportData) {
-    content.push(this.createSectionTitle('Part 1: Anamnesis'));
+    content.push(this.createSectionTitle(this.transloco.translate('pdf.part_1')));
     content.push(this.createSpacer(10));
 
     // Patient Concerns
     const concernsAnswers = this.getAnswersForSection(data.questionAnswers, 'p1_concerns_');
     if (concernsAnswers.length > 0) {
-      content.push({ text: 'Patient Concerns', style: 'subsectionTitle' });
+      content.push({ text: this.transloco.translate('pdf.patient_concerns') || 'Patient Concerns', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
       this.addQuestionAnswerPairs(content, concernsAnswers, [
-        { key: 'tooMany', label: 'Does the patient feel they take too many medications?' },
-        { key: 'financialBurden', label: 'Is there a financial burden?' },
-        { key: 'anxiety', label: 'Does the patient have anxiety about medications?' },
-        { key: 'untreatedComplaints', label: 'Are there untreated complaints?' },
-        { key: 'other', label: 'Other concerns?' }
+        { key: 'tooMany', label: this.transloco.translate('pdf.patient_concern_tooMany') },
+        { key: 'financialBurden', label: this.transloco.translate('pdf.patient_concern_financialBurden') },
+        { key: 'anxiety', label: this.transloco.translate('pdf.patient_concern_anxiety') },
+        { key: 'untreatedComplaints', label: this.transloco.translate('pdf.patient_concern_untreatedComplaints') },
+        { key: 'other', label: this.transloco.translate('pdf.patient_concern_other') }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -276,11 +276,11 @@ export class PdfGenerationService {
     // Medication Assistance
     const helpAnswers = this.getAnswersForSection(data.questionAnswers, 'p1_help_');
     if (helpAnswers.length > 0) {
-      content.push({ text: 'Medication Assistance', style: 'subsectionTitle' });
+      content.push({ text: this.transloco.translate('pdf.medication_assistance') || 'Medication Assistance', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
       this.addQuestionAnswerPairs(content, helpAnswers, [
-        { key: 'hasAssistance', label: 'Does the patient receive assistance with medications?' },
-        { key: 'additionalNeededQuestion', label: 'Is additional assistance needed?' }
+        { key: 'hasAssistance', label: this.transloco.translate('pdf.medication_help_hasAssistance') },
+        { key: 'additionalNeededQuestion', label: this.transloco.translate('pdf.medication_help_additionalNeeded') }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -288,16 +288,16 @@ export class PdfGenerationService {
     // Practical Problems
     const practicalAnswers = this.getAnswersForSection(data.questionAnswers, 'p1_practical_');
     if (practicalAnswers.length > 0) {
-      content.push({ text: 'Practical Problems', style: 'subsectionTitle' });
+      content.push({ text: this.transloco.translate('pdf.practical_problems') || 'Practical Problems', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
       this.addQuestionAnswerPairs(content, practicalAnswers, [
-        { key: 'swallowing', label: 'Swallowing difficulties?' },
-        { key: 'movement', label: 'Movement limitations?' },
-        { key: 'vision', label: 'Vision problems?' },
-        { key: 'hearing', label: 'Hearing problems?' },
-        { key: 'cognitive', label: 'Cognitive impairment?' },
-        { key: 'dexterity', label: 'Dexterity issues?' },
-        { key: 'other', label: 'Other practical problems?' }
+        { key: 'swallowing', label: this.transloco.translate('pdf.practical_problem_swallowing') },
+        { key: 'movement', label: this.transloco.translate('pdf.practical_problem_movement') },
+        { key: 'vision', label: this.transloco.translate('pdf.practical_problem_vision') },
+        { key: 'hearing', label: this.transloco.translate('pdf.practical_problem_hearing') },
+        { key: 'cognitive', label: this.transloco.translate('pdf.practical_problem_cognitive') },
+        { key: 'dexterity', label: this.transloco.translate('pdf.practical_problem_dexterity') },
+        { key: 'other', label: this.transloco.translate('pdf.practical_problem_other') }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -305,12 +305,12 @@ export class PdfGenerationService {
     // Incidents
     const incidentAnswers = this.getAnswersForSection(data.questionAnswers, 'p1_incidents_');
     if (incidentAnswers.length > 0) {
-      content.push({ text: 'Incidents', style: 'subsectionTitle' });
+      content.push({ text: this.transloco.translate('pdf.incidents') || 'Incidents', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
       this.addQuestionAnswerPairs(content, incidentAnswers, [
-        { key: 'falls', label: 'Number of falls in past 6 months' },
-        { key: 'hospitalizations', label: 'Number of hospitalizations in past year' },
-        { key: 'actionNeeded', label: 'Is pharmacist action needed?' }
+        { key: 'falls', label: this.transloco.translate('pdf.incidents_falls') },
+        { key: 'hospitalizations', label: this.transloco.translate('pdf.incidents_hospitalizations') },
+        { key: 'actionNeeded', label: this.transloco.translate('pdf.incidents_actionNeeded') }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -318,12 +318,12 @@ export class PdfGenerationService {
     // Follow-up/Monitoring
     const followupAnswers = this.getAnswersForSection(data.questionAnswers, 'p1_followup_');
     if (followupAnswers.length > 0) {
-      content.push({ text: 'Follow-up and Monitoring', style: 'subsectionTitle' });
+      content.push({ text: this.transloco.translate('pdf.follow_up_monitoring') || 'Follow-up and Monitoring', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
       this.addQuestionAnswerPairs(content, followupAnswers, [
-        { key: 'careProviders', label: 'Which healthcare providers follow the patient?' },
-        { key: 'parameterMonitoring', label: 'Which providers monitor parameters?' },
-        { key: 'actionNeeded', label: 'Is pharmacist action needed?' }
+        { key: 'careProviders', label: this.transloco.translate('pdf.followup_careProviders') },
+        { key: 'parameterMonitoring', label: this.transloco.translate('pdf.followup_parameterMonitoring') },
+        { key: 'actionNeeded', label: this.transloco.translate('pdf.followup_actionNeeded') }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -333,7 +333,7 @@ export class PdfGenerationService {
     const part2Answers = data.questionAnswers.filter(qa => qa.questionName.startsWith('p2_med_'));
     if (part2Answers.length === 0) return;
 
-    content.push(this.createSectionTitle('Part 2: Medication Adherence'));
+    content.push(this.createSectionTitle(this.transloco.translate('pdf.part_2')));
     content.push(this.createSpacer(10));
 
     // Group by medication
@@ -344,10 +344,10 @@ export class PdfGenerationService {
       content.push(this.createSpacer(5));
       
       this.addQuestionAnswerPairs(content, group.answers, [
-        { key: 'adherence', label: 'Does the patient take this medication as prescribed?' },
-        { key: 'frequency', label: 'How often is it forgotten?' },
-        { key: 'barriers', label: 'What are the barriers to adherence?' },
-        { key: 'notes', label: 'Pharmacist notes' }
+        { key: 'adherence', label: this.transloco.translate('pdf.adherence_takes_as_prescribed') },
+        { key: 'frequency', label: this.transloco.translate('pdf.adherence_frequency_forgotten') },
+        { key: 'barriers', label: this.transloco.translate('pdf.adherence_problems') },
+        { key: 'notes', label: this.transloco.translate('pdf.pharmacist_notes') }
       ]);
       
       content.push(this.createSpacer(10));
@@ -358,7 +358,7 @@ export class PdfGenerationService {
     const part3Answers = data.questionAnswers.filter(qa => qa.questionName.startsWith('p3_med_'));
     if (part3Answers.length === 0) return;
 
-    content.push(this.createSectionTitle('Part 3: Medication Effectiveness & Side Effects'));
+    content.push(this.createSectionTitle(this.transloco.translate('pdf.part_3')));
     content.push(this.createSpacer(10));
 
     // Group by medication
@@ -369,10 +369,10 @@ export class PdfGenerationService {
       content.push(this.createSpacer(5));
       
       this.addQuestionAnswerPairs(content, group.answers, [
-        { key: 'effective', label: 'Is the medication working as expected?' },
-        { key: 'effectiveAction', label: 'Pharmacist action for effectiveness concerns' },
-        { key: 'hasSideEffects', label: 'Is the patient experiencing side effects?' },
-        { key: 'sideEffectsAction', label: 'Pharmacist action for side effects' }
+        { key: 'effective', label: this.transloco.translate('pdf.effectiveness_is_effective') },
+        { key: 'effectiveAction', label: this.transloco.translate('pdf.pharmacist_notes') },
+        { key: 'hasSideEffects', label: this.transloco.translate('pdf.effectiveness_has_side_effects') },
+        { key: 'sideEffectsAction', label: this.transloco.translate('pdf.pharmacist_notes') }
       ]);
       
       content.push(this.createSpacer(10));
@@ -445,7 +445,7 @@ export class PdfGenerationService {
       const name = [data.review.firstNameAtTimeOfReview, data.review.lastNameAtTimeOfReview]
         .filter(Boolean)
         .join(' ');
-      items.push({ text: 'Patient:', style: 'infoLabel', width: 80 });
+      items.push({ text: this.transloco.translate('patient.name') + ':', style: 'infoLabel', width: 80 });
       items.push({ text: name, style: 'infoValue', width: '*' });
     }
 
@@ -453,15 +453,17 @@ export class PdfGenerationService {
       if (items.length > 0) {
         items.push({ text: '', width: 20 }); // Spacer
       }
-      items.push({ text: 'DOB:', style: 'infoLabel', width: 60 });
-      items.push({ text: data.patient.dateOfBirth, style: 'infoValue', width: 'auto' });
+      items.push({ text: this.transloco.translate('patient.birth_date') + ':', style: 'infoLabel', width: 60 });
+      // Format date: extract date part only (YYYY-MM-DD)
+      const formattedDate = data.patient.dateOfBirth.split('T')[0];
+      items.push({ text: formattedDate, style: 'infoValue', width: 'auto' });
     }
 
     if (data.patient?.sex) {
       if (items.length > 0) {
         items.push({ text: '', width: 20 }); // Spacer
       }
-      items.push({ text: 'Sex:', style: 'infoLabel', width: 60 });
+      items.push({ text: this.transloco.translate('patient.sex') + ':', style: 'infoLabel', width: 60 });
       items.push({ text: data.patient.sex, style: 'infoValue', width: 'auto' });
     }
 
@@ -594,15 +596,15 @@ export class PdfGenerationService {
   private createMedicationTable(medications: Medication[]): Content {
     const tableBody: any[] = [
       [
-        { text: 'Medication', style: 'tableHeader' },
-        { text: 'Frequency/Day', style: 'tableHeader' },
-        { text: 'Indication', style: 'tableHeader' }
+        { text: this.transloco.translate('pdf.medication'), style: 'tableHeader' },
+        { text: this.transloco.translate('pdf.frequency_per_day'), style: 'tableHeader' },
+        { text: this.transloco.translate('pdf.indication'), style: 'tableHeader' }
       ]
     ];
 
     medications.forEach(med => {
       tableBody.push([
-        { text: med.name || 'Unknown', style: 'tableCell' },
+        { text: med.name || this.transloco.translate('pdf.no_medication'), style: 'tableCell' },
         { text: this.formatFrequency(med), style: 'tableCell' },
         { text: med.indication || '-', style: 'tableCell' }
       ]);
@@ -630,41 +632,71 @@ export class PdfGenerationService {
   private createMedicationScheduleTable(medications: Medication[]): Content {
     const tableBody: any[] = [
       [
-        { text: 'Medication', style: 'tableHeader' },
-        { text: 'Morning', style: 'tableHeader' },
-        { text: 'Noon', style: 'tableHeader' },
-        { text: 'Evening', style: 'tableHeader' },
-        { text: 'Bedtime', style: 'tableHeader' }
+        { text: this.transloco.translate('pdf.medication'), style: 'tableHeader' },
+        { text: this.transloco.translate('medication.breakfast'), style: 'tableHeader' },
+        { text: this.transloco.translate('medication.lunch'), style: 'tableHeader' },
+        { text: this.transloco.translate('medication.dinner'), style: 'tableHeader' },
+        { text: this.transloco.translate('medication.bedtime'), style: 'tableHeader' }
       ]
     ];
 
     medications.forEach(med => {
-      const morning = [med.unitsBeforeBreakfast, med.unitsDuringBreakfast]
-        .filter(u => u && u > 0)
-        .map(u => String(u))
-        .join('+') || '-';
-      
-      const noon = [med.unitsBeforeLunch, med.unitsDuringLunch]
-        .filter(u => u && u > 0)
-        .map(u => String(u))
-        .join('+') || '-';
-      
-      const evening = [med.unitsBeforeDinner, med.unitsDuringDinner]
-        .filter(u => u && u > 0)
-        .map(u => String(u))
-        .join('+') || '-';
-      
-      const bedtime = med.unitsAtBedtime && med.unitsAtBedtime > 0 
-        ? String(med.unitsAtBedtime) 
-        : '-';
+      // Check for special frequency (non-daily)
+      if (med.specialFrequency && med.specialDescription) {
+        const frequencyMap: Record<number, string> = {
+          1: 'daily',
+          2: 'twice weekly',
+          3: 'three times weekly',
+          4: 'weekly',
+          5: 'every 2 weeks',
+          6: 'every 3 weeks',
+          7: 'every 4 weeks',
+          8: 'monthly',
+          9: 'every 2 months',
+          10: 'quarterly',
+          11: 'annually'
+        };
+        const freqText = frequencyMap[med.specialFrequency] || `code ${med.specialFrequency}`;
+        tableBody.push([
+          { text: med.name || 'Unknown', style: 'tableCell' },
+          { text: `${med.specialDescription}`, style: 'tableCell', alignment: 'center' },
+          { text: `(${freqText})`, style: 'tableCell', alignment: 'center', colSpan: 3 }
+        ]);
+      } else if (med.asNeeded) {
+        // As needed medication
+        tableBody.push([
+          { text: med.name || 'Unknown', style: 'tableCell' },
+          { text: 'As needed', style: 'tableCell', alignment: 'center', colSpan: 4 }
+        ]);
+      } else {
+        // Standard daily schedule
+        const morning = [med.unitsBeforeBreakfast, med.unitsDuringBreakfast]
+          .filter(u => u && u > 0)
+          .map(u => String(u))
+          .join('+') || '-';
+        
+        const noon = [med.unitsBeforeLunch, med.unitsDuringLunch]
+          .filter(u => u && u > 0)
+          .map(u => String(u))
+          .join('+') || '-';
+        
+        const evening = [med.unitsBeforeDinner, med.unitsDuringDinner]
+          .filter(u => u && u > 0)
+          .map(u => String(u))
+          .join('+') || '-';
+        
+        const bedtime = med.unitsAtBedtime && med.unitsAtBedtime > 0 
+          ? String(med.unitsAtBedtime) 
+          : '-';
 
-      tableBody.push([
-        { text: med.name || 'Unknown', style: 'tableCell' },
-        { text: morning, style: 'tableCell', alignment: 'center' },
-        { text: noon, style: 'tableCell', alignment: 'center' },
-        { text: evening, style: 'tableCell', alignment: 'center' },
-        { text: bedtime, style: 'tableCell', alignment: 'center' }
-      ]);
+        tableBody.push([
+          { text: med.name || 'Unknown', style: 'tableCell' },
+          { text: morning, style: 'tableCell', alignment: 'center' },
+          { text: noon, style: 'tableCell', alignment: 'center' },
+          { text: evening, style: 'tableCell', alignment: 'center' },
+          { text: bedtime, style: 'tableCell', alignment: 'center' }
+        ]);
+      }
     });
 
     return {
@@ -744,14 +776,14 @@ export class PdfGenerationService {
     const timesPerDay = doses.filter(d => d > 0).length;
     
     if (totalPerDay === 0) {
-      return med.asNeeded ? 'As needed' : '-';
+      return med.asNeeded ? (this.transloco.translate('pdf.as_needed') || 'As needed') : '-';
     }
     
     if (timesPerDay === 1) {
-      return `${totalPerDay}x daily`;
+      return this.transloco.translate('pdf.x_daily', { count: totalPerDay }) || `${totalPerDay}x daily`;
     }
     
-    return `${totalPerDay} units, ${timesPerDay}x daily`;
+    return this.transloco.translate('pdf.units_x_daily', { units: totalPerDay, count: timesPerDay }) || `${totalPerDay} units, ${timesPerDay}x daily`;
   }
 
   private createSpacer(height: number): Content {

@@ -6,6 +6,9 @@
       <button class="add-button" (click)="addMedication()">
         <span class="plus-icon">+</span> {{ 'common.add' | transloco }}
       </button>
+      <button class="delete-all-button" (click)="deleteAllMedications()">
+        {{ 'medication.delete_all' | transloco }}
+      </button>
     </div>
   </div>
 
@@ -26,3 +29,12 @@
   (close)="onModalClose()" 
   (medicationSelected)="onMedicationSelected($event)"
 ></app-medication-search-modal>
+
+<!-- CNK Selection Modal -->
+<app-cnk-selection-modal
+  *ngIf="showCnkSelectionModal && currentMedicationForCnkSelection"
+  [medication]="currentMedicationForCnkSelection"
+  (close)="onCnkSelectionCancelled()"
+  (medicationSelected)="onCnkSelected($event)"
+  (skip)="onCnkSkipped()"
+></app-cnk-selection-modal>

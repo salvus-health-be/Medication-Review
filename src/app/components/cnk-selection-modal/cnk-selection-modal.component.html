@@ -1,0 +1,40 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'medication.select_cnk' | transloco }}</h2>
+      <button class="close-button" (click)="onCancel()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="medication-info">
+        <strong>{{ medication.medicationName }}</strong>
+        <span *ngIf="medication.indication" class="indication">{{ medication.indication }}</span>
+      </div>
+
+      <p class="instruction">{{ 'medication.select_cnk_instruction' | transloco }}</p>
+
+      <div class="matches-list">
+        <div 
+          *ngFor="let match of medication.matches" 
+          class="match-item"
+          (click)="selectMedication(match)">
+          <div class="match-name">{{ match.benaming }}</div>
+          <div class="match-details">
+            <span class="cnk-badge">CNK: {{ match.cnk }}</span>
+            <span class="package-info">{{ match.verpakking }}</span>
+            <span *ngIf="match.vmp" class="vmp-info">VMP: {{ match.vmp }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="skip-button" (click)="skipMedication()">
+        {{ 'medication.skip_medication' | transloco }}
+      </button>
+      <button class="cancel-button" (click)="onCancel()">
+        {{ 'common.cancel' | transloco }}
+      </button>
+    </div>
+  </div>
+</div>

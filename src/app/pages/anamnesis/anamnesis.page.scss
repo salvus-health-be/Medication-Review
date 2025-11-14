@@ -195,6 +195,24 @@
         transition: all 0.2s ease;
         white-space: nowrap;
       }
+
+      .tab-percentage {
+        margin-left: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        background-color: rgba($button-primary-background, 0.1);
+        color: $text-secondary;
+        border-radius: 4px;
+        font-size: 0.8125rem;
+        font-weight: $font-weight-semibold;
+        transition: all 0.2s ease;
+        min-width: 3rem;
+        text-align: center;
+      }
+
+      &.active .tab-percentage {
+        background-color: rgba($button-primary-background, 0.15);
+        color: $button-primary-background;
+      }
     }
   }
 
@@ -325,6 +343,22 @@
             font-size: 0.75rem;
             color: $text-muted;
             font-style: italic;
+          }
+
+          .progress-bar {
+            width: 100%;
+            height: 3px;
+            background-color: rgba($box-border, 0.3);
+            border-radius: 2px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+
+            .progress-fill {
+              height: 100%;
+              background: linear-gradient(90deg, $medication-indication 0%, darken($medication-indication, 15%) 100%);
+              transition: width 0.3s ease;
+              border-radius: 2px;
+            }
           }
         }
       }

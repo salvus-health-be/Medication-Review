@@ -56,8 +56,27 @@ export class ApiService {
   login(request: LoginRequest): Observable<LoginResponse> {
     const headers = this.getHeaders();
 
-    return this.http.post<LoginResponse>(`${this.API_BASE_URL}/login`, request, { headers })
-      .pipe(tap(response => console.log('[ApiService] Login response:', response)));
+    return this.http.post<any>(`${this.API_BASE_URL}/login`, request, { headers })
+      .pipe(
+        tap(rawResponse => console.log('[ApiService] RAW Login response:', rawResponse)),
+        map(response => ({
+          patientCreated: response.patientCreated ?? response.PatientCreated ?? false,
+          reviewCreated: response.reviewCreated ?? response.ReviewCreated ?? false,
+          patientId: response.patientId ?? response.PatientId ?? '',
+          medicationReviewId: response.medicationReviewId ?? response.MedicationReviewId ?? '',
+          patient: {
+            dateOfBirth: response.patient?.dateOfBirth ?? response.patient?.DateOfBirth ?? response.Patient?.dateOfBirth ?? response.Patient?.DateOfBirth ?? null,
+            sex: response.patient?.sex ?? response.patient?.Sex ?? response.Patient?.sex ?? response.Patient?.Sex ?? null,
+            renalFunction: response.patient?.renalFunction ?? response.patient?.RenalFunction ?? response.Patient?.renalFunction ?? response.Patient?.RenalFunction ?? null
+          },
+          review: {
+            reviewDate: response.review?.reviewDate ?? response.review?.ReviewDate ?? response.Review?.reviewDate ?? response.Review?.ReviewDate ?? null,
+            firstNameAtTimeOfReview: response.review?.firstNameAtTimeOfReview ?? response.review?.FirstNameAtTimeOfReview ?? response.Review?.firstNameAtTimeOfReview ?? response.Review?.FirstNameAtTimeOfReview ?? null,
+            lastNameAtTimeOfReview: response.review?.lastNameAtTimeOfReview ?? response.review?.LastNameAtTimeOfReview ?? response.Review?.lastNameAtTimeOfReview ?? response.Review?.LastNameAtTimeOfReview ?? null
+          }
+        })),
+        tap(mappedResponse => console.log('[ApiService] Mapped Login response:', mappedResponse))
+      );
   }
 
   updatePatient(request: UpdatePatientRequest): Observable<UpdatePatientResponse> {
@@ -205,6 +224,8 @@ export class ApiService {
             dosageMg: item.dosageMg ?? item.DosageMg ?? null,
             routeOfAdministration: item.routeOfAdministration ?? item.RouteOfAdministration ?? null,
             indication: item.indication ?? item.Indication ?? null,
+            specialFrequency: item.specialFrequency ?? item.SpecialFrequency ?? null,
+            specialDescription: item.specialDescription ?? item.SpecialDescription ?? null,
             unitsBeforeBreakfast: item.unitsBeforeBreakfast ?? item.UnitsBeforeBreakfast ?? null,
             unitsDuringBreakfast: item.unitsDuringBreakfast ?? item.UnitsDuringBreakfast ?? null,
             unitsBeforeLunch: item.unitsBeforeLunch ?? item.UnitsBeforeLunch ?? null,
@@ -242,6 +263,8 @@ export class ApiService {
           dosageMg: item.dosageMg ?? item.DosageMg ?? null,
           routeOfAdministration: item.routeOfAdministration ?? item.RouteOfAdministration ?? null,
           indication: item.indication ?? item.Indication ?? null,
+          specialFrequency: item.specialFrequency ?? item.SpecialFrequency ?? null,
+          specialDescription: item.specialDescription ?? item.SpecialDescription ?? null,
           unitsBeforeBreakfast: item.unitsBeforeBreakfast ?? item.UnitsBeforeBreakfast ?? null,
           unitsDuringBreakfast: item.unitsDuringBreakfast ?? item.UnitsDuringBreakfast ?? null,
           unitsBeforeLunch: item.unitsBeforeLunch ?? item.UnitsBeforeLunch ?? null,
@@ -281,6 +304,8 @@ export class ApiService {
           dosageMg: item.dosageMg ?? item.DosageMg ?? null,
           routeOfAdministration: item.routeOfAdministration ?? item.RouteOfAdministration ?? null,
           indication: item.indication ?? item.Indication ?? null,
+          specialFrequency: item.specialFrequency ?? item.SpecialFrequency ?? null,
+          specialDescription: item.specialDescription ?? item.SpecialDescription ?? null,
           unitsBeforeBreakfast: item.unitsBeforeBreakfast ?? item.UnitsBeforeBreakfast ?? null,
           unitsDuringBreakfast: item.unitsDuringBreakfast ?? item.UnitsDuringBreakfast ?? null,
           unitsBeforeLunch: item.unitsBeforeLunch ?? item.UnitsBeforeLunch ?? null,

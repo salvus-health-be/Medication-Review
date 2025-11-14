@@ -18,6 +18,8 @@ export interface Medication {
   packageSize?: number | null;
   indication?: string | null;
   asNeeded?: boolean | null;
+  specialFrequency?: number | null;
+  specialDescription?: string | null;
   unitsBeforeBreakfast?: number | null;
   unitsDuringBreakfast?: number | null;
   unitsBeforeLunch?: number | null;
@@ -41,6 +43,7 @@ export class MedicationItemComponent implements OnInit {
   @Output() editRequested = new EventEmitter<Medication>();
   isExpanded = false;
   showDeleteConfirmation = false;
+  notDaily = false;
 
   private destroy$ = new Subject<void>();
   private valueChanged$ = new Subject<void>();
@@ -52,6 +55,20 @@ export class MedicationItemComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    console.log('[MedicationItem] ngOnInit for medication:', this.medication.name);
+    console.log('[MedicationItem] asNeeded:', this.medication.asNeeded);
+    console.log('[MedicationItem] specialFrequency:', this.medication.specialFrequency);
+    console.log('[MedicationItem] specialDescription:', this.medication.specialDescription);
+    
+    // Initialize notDaily based on whether special frequency is set
+    this.notDaily = !!(this.medication.specialFrequency || this.medication.specialDescription);
+    console.log('[MedicationItem] Initialized notDaily to:', this.notDaily);
+    
+    // Ensure asNeeded is a boolean, not null/undefined
+    if (this.medication.asNeeded === null || this.medication.asNeeded === undefined) {
+      this.medication.asNeeded = false;
+    }
+    
     // Set up auto-save with debounce
     this.valueChanged$
       .pipe(
@@ -80,6 +97,25 @@ export class MedicationItemComponent implements OnInit {
     this.valueChanged$.next();
   }
 
+  onNotDailyChange() {
+    console.log('[MedicationItem] notDaily changed to:', this.notDaily);
+    if (!this.notDaily) {
+      // Clear special frequency fields when unchecked
+      this.medication.specialFrequency = null;
+      this.medication.specialDescription = null;
+      this.onValueChange();
+    } else {
+      // Set default values when checked
+      if (!this.medication.specialFrequency) {
+        this.medication.specialFrequency = 1;
+      }
+      if (!this.medication.specialDescription) {
+        this.medication.specialDescription = 'weekly';
+      }
+      this.onValueChange();
+    }
+  }
+
   get dosesPerDay(): number {
     if (!this.medication) return 0;
     const doses = [
@@ -92,6 +128,12 @@ export class MedicationItemComponent implements OnInit {
       this.medication.unitsAtBedtime
     ];
     return doses.reduce((sum: number, d) => sum + (d ?? 0), 0);
+  }
+
+  getLocalizedPeriod(): string {
+    if (!this.medication.specialDescription) return '';
+    const key = `medication.period_${this.medication.specialDescription}`;
+    return this.transloco.translate(key);
   }
 
   saveToBackend() {
@@ -126,6 +168,8 @@ export class MedicationItemComponent implements OnInit {
       routeOfAdministration: this.medication.route || null,
       indication: this.medication.indication ? this.medication.indication : null,
       asNeeded: this.medication.asNeeded ?? false,
+      specialFrequency: parseNumber(this.medication.specialFrequency),
+      specialDescription: this.medication.specialDescription || null,
       unitsBeforeBreakfast: parseNumber(this.medication.unitsBeforeBreakfast),
       unitsDuringBreakfast: parseNumber(this.medication.unitsDuringBreakfast),
       unitsBeforeLunch: parseNumber(this.medication.unitsBeforeLunch),
@@ -137,6 +181,8 @@ export class MedicationItemComponent implements OnInit {
 
     console.log('[MedicationItem] === SAVING TO BACKEND ===');
     console.log('[MedicationItem] Medication:', this.medication.name);
+    console.log('[MedicationItem] Special Frequency:', this.medication.specialFrequency);
+    console.log('[MedicationItem] Special Description:', this.medication.specialDescription);
     console.log('[MedicationItem] Package Size:', this.medication.packageSize);
     console.log('[MedicationItem] Current medication object:', JSON.stringify(this.medication, null, 2));
     console.log('[MedicationItem] Update request payload:', JSON.stringify(updateData, null, 2));

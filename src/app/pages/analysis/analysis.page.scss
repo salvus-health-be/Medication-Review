@@ -205,6 +205,26 @@
       }
     }
 
+    .schema-special-frequency {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(#10b981, 0.08);
+      border: 1px solid rgba(#10b981, 0.3);
+      border-radius: $box-border-radius;
+      margin-left: 2rem;
+      height: 4.5rem;
+      flex: 1;
+
+      .special-frequency-text {
+        font-family: $primary-font;
+        font-size: 0.95rem;
+        font-weight: $font-weight-semibold;
+        color: #059669;
+        font-style: italic;
+      }
+    }
+
     .schema-medication-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 0.5fr;

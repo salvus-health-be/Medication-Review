@@ -1,9 +1,4 @@
 <div class="renadaptor-container">
-  <!-- Note button (top right) - attaches to selected medication or general if none selected -->
-  <button class="add-note-button floating-top-right" (click)="openNotesModal()" title="Add note">
-    +
-  </button>
-
   @if (medications.length === 0) {
     <div class="no-medications">
       <p>No medications with CNK codes found</p>
@@ -53,6 +48,23 @@
               </svg>
               Refresh
             </button>
+            <button class="add-note-button" (click)="openNotesModal()" title="Add note" aria-label="Add note">
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Renal Function Section -->
+        <div class="renal-function-section">
+          <label for="renalFunctionInput">{{ 'patient.renal_function' | transloco }}</label>
+          <div class="renal-function-input-wrapper">
+            <input 
+              type="text" 
+              id="renalFunctionInput"
+              [(ngModel)]="renalFunction" 
+              (ngModelChange)="onRenalFunctionChange()"
+              [placeholder]="'patient.renal_function_placeholder' | transloco">
+            <span class="unit-label">mL/min (optional)</span>
           </div>
         </div>
 

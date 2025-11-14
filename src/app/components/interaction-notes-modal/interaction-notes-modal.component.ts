@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ReviewNotesService } from '../../services/review-notes.service';
 import { StateService } from '../../services/state.service';
 
@@ -18,14 +18,24 @@ export class InteractionNotesModalComponent {
   @Output() close = new EventEmitter<void>();
 
   noteText = '';
-  addToPatientConversation = false;
-  addToGpReport = false;
+  addToPatientConversation = true;
+  addToGpReport = true;
   isSubmitting = false;
 
   constructor(
     private reviewNotesService: ReviewNotesService,
-    private stateService: StateService
+    private stateService: StateService,
+    private transloco: TranslocoService
   ) {}
+
+  addPresetText(presetKey: string) {
+    const presetText = this.transloco.translate(presetKey);
+    if (this.noteText.trim()) {
+      this.noteText += '\n' + presetText;
+    } else {
+      this.noteText = presetText;
+    }
+  }
 
   onCancel() {
     this.close.emit();
@@ -79,8 +89,8 @@ export class InteractionNotesModalComponent {
 
   private resetForm() {
     this.noteText = '';
-    this.addToPatientConversation = false;
-    this.addToGpReport = false;
+    this.addToPatientConversation = true;
+    this.addToGpReport = true;
     this.isSubmitting = false;
   }
 

@@ -65,6 +65,10 @@
             <div class="schema-as-needed">
               <span class="as-needed-text">{{ 'medication.as_needed_short' | transloco }}</span>
             </div>
+          } @else if (medication.specialFrequency && medication.specialDescription) {
+            <div class="schema-special-frequency">
+              <span class="special-frequency-text">{{ medication.specialFrequency }}x {{ getLocalizedPeriod(medication.specialDescription) }}</span>
+            </div>
           } @else {
             <div class="schema-medication-row">
               <div class="schema-cell">
@@ -165,7 +169,7 @@
     } @else if (activeTool === 'interactions') {
       <app-interactions (openNotes)="openInteractionNotesModal($event)"></app-interactions>
     } @else if (activeTool === 'contra-indications') {
-      <app-contraindications></app-contraindications>
+      <app-contraindications (openNotes)="openContraindicationNotesModal($event)"></app-contraindications>
     } @else if (activeTool === 'posology') {
       <app-posology (openNotes)="openNotesModal($event.medication)"></app-posology>
     } @else if (activeTool === 'renadapter') {
@@ -174,6 +178,8 @@
       <app-gheops (openNotes)="openReferenceNotesModal('gheops')"></app-gheops>
     } @else if (activeTool === 'start-stop-nl') {
       <app-start-stop (openNotes)="openReferenceNotesModal('start-stop-nl')"></app-start-stop>
+    } @else if (activeTool === 'questionnaire') {
+      <app-questionnaire (openNotes)="openQuestionnaireNotesModal()"></app-questionnaire>
     } @else if (activeTool) {
       <div class="tool-content">
         <h2>{{ getToolTitle() }}</h2>

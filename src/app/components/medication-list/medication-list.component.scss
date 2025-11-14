@@ -62,30 +62,24 @@
           font-weight: bold;
         }
       }
+
+      .delete-all-button {
+        background-color: transparent;
+        color: #dc2626; /* red */
+        border: 1px solid rgba(220, 38, 38, 0.12);
+        padding: 0.5rem 0.75rem;
+        border-radius: $box-border-radius;
+
+        &:hover {
+          background-color: rgba(220, 38, 38, 0.06);
+        }
+      }
     }
   }
 
   .medications-scroll {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: visible; // Let parent handle scrolling
     padding-right: 0.5rem;
-
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: $main-background;
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: $box-border;
-      border-radius: 3px;
-
-      &:hover {
-        background: $text-muted;
-      }
-    }
   }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
@@ -29,6 +29,7 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
     private reviewNotesService: ReviewNotesService,
     private stateService: StateService,
     private apiService: ApiService,
+    private transloco: TranslocoService,
     private sanitizer: DomSanitizer,
     private router: Router
   ) {}
@@ -92,21 +93,30 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
         const generalSections = this.prepareGeneralSections(notes);
         const { adherenceNotes, effectivenessNotes } = this.prepareGroupedNotes(notes);
 
+        // Get translated part titles
+        const partTitles = {
+          part1: this.transloco.translate('pdf.part_1_title'),
+          part2: this.transloco.translate('pdf.part_2_title'),
+          part3: this.transloco.translate('pdf.part_3_title'),
+          part4: this.transloco.translate('pdf.part_4_title')
+        };
+
         // Generate PDF blob
         const blob = this.anamnesisePdfService.generatePDF(
           generalSections,
           this.medications,
           adherenceNotes as Record<string, ReviewNote[]>,
           effectivenessNotes as Record<string, ReviewNote[]>,
-          true // preview mode
+          true, // preview mode
+          partTitles
         );
 
         if (blob) {
           console.log('[PdfPreviewPage] PDF blob generated, size:', blob.size);
           const url = URL.createObjectURL(blob);
           console.log('[PdfPreviewPage] Blob URL created:', url);
-          // Add #toolbar=0 to hide PDF toolbar and ensure it displays properly
-          this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url + '#toolbar=0');
+          // Bypass security without adding fragments that might break iframe rendering
+          this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
           this.isLoading = false;
         } else {
           console.error('[PdfPreviewPage] No blob returned from PDF service');
@@ -127,13 +137,22 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
     const generalSections = this.prepareGeneralSections(notes);
     const { adherenceNotes, effectivenessNotes } = this.prepareGroupedNotes(notes);
 
+    // Get translated part titles
+    const partTitles = {
+      part1: this.transloco.translate('pdf.part_1_title'),
+      part2: this.transloco.translate('pdf.part_2_title'),
+      part3: this.transloco.translate('pdf.part_3_title'),
+      part4: this.transloco.translate('pdf.part_4_title')
+    };
+
     // Generate PDF and trigger download
     this.anamnesisePdfService.generatePDF(
       generalSections,
       this.medications,
       adherenceNotes as Record<string, ReviewNote[]>,
       effectivenessNotes as Record<string, ReviewNote[]>,
-      false // download mode
+      false, // download mode
+      partTitles
     );
   }
 

@@ -1,8 +1,5 @@
 <div class="gheops-container">
-  <!-- General note button (top right) -->
-  <button class="add-note-button general-note floating-top-right" (click)="onAddGeneralNote()" title="Add general note">
-    +
-  </button>
+  <!-- General note button moved into header actions -->
 
   <div class="document-header">
     <div class="header-left">
@@ -17,6 +14,9 @@
           <line x1="10" y1="14" x2="21" y2="3"></line>
         </svg>
         {{ 'tools.open_in_new_tab' | transloco }}
+      </button>
+      <button class="add-note-button general-note" (click)="onAddGeneralNote()" title="Add general note" aria-label="Add general note">
+        +
       </button>
     </div>
   </div>

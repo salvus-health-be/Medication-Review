@@ -1,0 +1,96 @@
+<div class="questionnaire-container">
+  <!-- Note button (top right) - creates general notes for Step 1 -->
+  <button class="add-note-button general-note floating-top-right" (click)="openNotesModal()" title="Add note to Step 1: General Questions">
+      <button class="add-note-button general-note floating-top-right" (click)="openNotesModal()" [title]="'anamnesis.part_1' | transloco">
+      </button>
+  </button>
+
+  @if (!pdfUrl) {
+    <!-- Upload/Drop Zone -->
+    <div 
+      class="upload-zone"
+      [class.dragging]="isDragging"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)">
+      
+      <div class="upload-content">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <line x1="9" y1="15" x2="15" y2="15"></line>
+        </svg>
+        
+        @if (isDragging) {
+            <h3>{{ 'tools.questionnaire_drop_here' | transloco }}</h3>
+        } @else {
+            <h3>{{ 'tools.questionnaire_drag_drop' | transloco }}</h3>
+          <p>or</p>
+          <label class="file-input-label">
+            <input 
+              type="file" 
+              accept="application/pdf"
+              (change)="onFileSelected($event)"
+              style="display: none;">
+              <span class="btn-primary">{{ 'tools.questionnaire_browse' | transloco }}</span>
+          </label>
+            <p class="file-hint">{{ 'tools.questionnaire_file_hint' | transloco }}</p>
+        }
+        
+        @if (error) {
+          <div class="error-message">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+              {{ error }}
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Info section -->
+    <div class="info-section">
+      <div class="info-card">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 16v-4M12 8h.01"></path>
+        </svg>
+        <div>
+            <h4>{{ 'tools.questionnaire' | transloco }}</h4>
+            <p>{{ 'tools.questionnaire_description' | transloco }}</p>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- PDF Viewer -->
+    <div class="pdf-viewer">
+      <div class="pdf-header">
+        <div class="pdf-info">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span class="pdf-name">{{ pdfFileName }}</span>
+        </div>
+        <button class="btn-secondary" (click)="removePdf()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+            {{ 'tools.questionnaire_remove' | transloco }}
+        </button>
+      </div>
+      
+      <div class="pdf-frame">
+        <iframe 
+          [src]="pdfUrl" 
+          frameborder="0"
+          title="Questionnaire PDF">
+        </iframe>
+      </div>
+    </div>
+  }
+</div>

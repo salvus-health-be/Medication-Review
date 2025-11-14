@@ -2,8 +2,11 @@
   <div class="medication-header" (click)="toggleExpand()">
     <div class="header-content">
       <div class="medication-name">{{ medication.name }}</div>
-      @if (!medication.asNeeded) {
-        <div class="header-frequency">{{ dosesPerDay }}x/day</div>
+      @if (!medication.asNeeded && !notDaily) {
+        <div class="header-frequency">{{ dosesPerDay }}x{{ 'medication.per_day' | transloco }}</div>
+      }
+      @if (!medication.asNeeded && notDaily && medication.specialFrequency && medication.specialDescription) {
+        <div class="header-frequency">{{ medication.specialFrequency }}x {{ getLocalizedPeriod() }}</div>
       }
       <div class="medication-codes"><!-- metadata --></div>
 
@@ -62,9 +65,52 @@
           />
           <span>{{ 'ui.as_needed_with_translation' | transloco }}</span>
         </label>
+        
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="notDaily"
+            (ngModelChange)="onNotDailyChange()"
+          />
+          <span>{{ 'medication.not_daily' | transloco }}</span>
+        </label>
       </div>
 
-      @if (!medication.asNeeded) {
+      @if (notDaily && !medication.asNeeded) {
+        <div class="special-frequency-section">
+          <div class="field-group">
+            <label for="special-frequency-{{ medication.medicationId }}">{{ 'medication.frequency' | transloco }}</label>
+            <input
+              type="number"
+              id="special-frequency-{{ medication.medicationId }}"
+              [(ngModel)]="medication.specialFrequency"
+              (ngModelChange)="onValueChange()"
+              min="1"
+              step="1"
+              placeholder="1"
+              class="frequency-input"
+            />
+          </div>
+          <div class="field-group">
+            <label for="special-description-{{ medication.medicationId }}">{{ 'medication.period' | transloco }}</label>
+            <select
+              id="special-description-{{ medication.medicationId }}"
+              [(ngModel)]="medication.specialDescription"
+              (ngModelChange)="onValueChange()"
+              class="period-select"
+            >
+              <option value="">{{ 'medication.select_period' | transloco }}</option>
+              <option value="weekly">{{ 'medication.period_weekly' | transloco }}</option>
+              <option value="biweekly">{{ 'medication.period_biweekly' | transloco }}</option>
+              <option value="monthly">{{ 'medication.period_monthly' | transloco }}</option>
+              <option value="quarterly">{{ 'medication.period_quarterly' | transloco }}</option>
+              <option value="yearly">{{ 'medication.period_yearly' | transloco }}</option>
+            </select>
+          </div>
+        </div>
+      }
+
+      @if (!medication.asNeeded && !notDaily) {
         <table class="intake-schedule">
           <thead>
             <tr>

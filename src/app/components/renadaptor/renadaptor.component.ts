@@ -1,5 +1,6 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../services/api.service';
@@ -20,7 +21,7 @@ interface RenadaptorData {
 @Component({
   selector: 'app-renadaptor',
   standalone: true,
-  imports: [CommonModule, TranslocoModule],
+  imports: [CommonModule, FormsModule, TranslocoModule],
   templateUrl: './renadaptor.component.html',
   styleUrls: ['./renadaptor.component.scss']
 })
@@ -30,6 +31,8 @@ export class RenadaptorComponent implements OnInit {
   medications: Medication[] = [];
   renadaptorData: Map<string, RenadaptorData> = new Map();
   selectedMedicationId: string | null = null;
+  // Renal function stored as a textual summary per backend API
+  renalFunction: string | null = null;
   loading = false;
   error: string | null = null;
 
@@ -43,6 +46,7 @@ export class RenadaptorComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.loadRenalFunction();
     this.loadMedications();
   }
 
@@ -183,5 +187,63 @@ export class RenadaptorComponent implements OnInit {
 
     const elapsed = Date.now() - data.lastGenerated.getTime();
     return elapsed > this.URL_EXPIRY_MS;
+  }
+
+  loadRenalFunction() {
+    const sessionData = this.stateService.getSessionData();
+    if (!sessionData) return;
+
+    let rf: any = undefined;
+    if (sessionData.patient && sessionData.patient.renalFunction !== undefined) {
+      rf = sessionData.patient.renalFunction;
+      console.log('[Renadaptor] Found renalFunction under sessionData.patient');
+    } else if ((sessionData as any).renalFunction !== undefined) {
+      rf = (sessionData as any).renalFunction;
+      console.log('[Renadaptor] Found renalFunction at top-level sessionData');
+    }
+
+    if (rf !== null && rf !== undefined) {
+      this.renalFunction = rf === null ? null : String(rf);
+      console.log('[Renadaptor] Loaded renal function:', this.renalFunction);
+    }
+  }
+
+  onRenalFunctionChange() {
+    console.log('[Renadaptor] Renal function changed to:', this.renalFunction);
+    this.saveRenalFunction();
+  }
+
+  private saveRenalFunction() {
+    const sessionData = this.stateService.getSessionData();
+    if (!sessionData) {
+      console.warn('[Renadaptor] No session data available, cannot save renal function');
+      return;
+    }
+
+    const apbNumber = this.stateService.apbNumber;
+    const patientId = this.stateService.patientId;
+
+    const request: any = {
+      apbNumber: apbNumber,
+      patientId: patientId,
+      renalFunction: this.renalFunction
+    };
+
+    console.log('[Renadaptor] Saving renal function:', this.renalFunction);
+    this.apiService.updatePatient(request).subscribe({
+      next: (response) => {
+        console.log('[Renadaptor] Renal function updated successfully');
+        // Update session data
+        if (sessionData.patient) {
+          sessionData.patient.renalFunction = response.renalFunction ?? null;
+          // Also set top-level renalFunction for compatibility
+          (sessionData as any).renalFunction = response.renalFunction ?? null;
+          this.stateService.setSessionData(sessionData);
+        }
+      },
+      error: (error) => {
+        console.error('[Renadaptor] Failed to update renal function:', error);
+      }
+    });
   }
 }
