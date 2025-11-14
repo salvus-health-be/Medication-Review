@@ -60,6 +60,7 @@ jobs:
         with:
           app-name: 'mvp-medication-review'
           slot-name: 'Production'
-          package: .
+          package: './dist/MVP-5/browser'
 
           
+
