@@ -60,8 +60,9 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   }
 
   generatePatientConversation() {
-    // Emit event to parent, which will close modal and navigate to anamnesis
-    this.createConversation.emit();
+    // Close modal and navigate directly to anamnesis page
+    this.closeModal.emit();
+    this.router.navigate(['/anamnesis']);
   }
 
   deleteNote(note: ReviewNote) {

@@ -11,25 +11,45 @@ export class AnamnesisePdfService {
   private sanitizeForPdf(input: string | undefined | null): string {
     if (input == null) return '';
     let s = String(input);
+    const original = s;
 
-    // Remove control characters
-    s = s.replace(/\x00-\x1F|\x7F/g, '');
+    console.log('[Sanitize] Original string:', s);
 
-    // Replace smart single quotes with ASCII apostrophe
-    s = s.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'");
-    // Replace smart double quotes
-    s = s.replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g, '"');
-    // Replace various dashes with hyphen
-    s = s.replace(/[\u2013\u2014\u2015\u2212\u2012]/g, '-');
+    s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+    // Collapse standard whitespace
+    s = s.replace(/\s+/g, ' ');
+
+    // Replace curly quotes → straight
+    s = s.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+         .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g, '"');
+
+    // Replace dash variants
+    s = s.replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u058A]/g, '-');
+
+    // Replace bullets
+    s = s.replace(/[\u2022\u2023\u2043\u00B7]/g, '-');
+
     // Ellipsis
     s = s.replace(/\u2026/g, '...');
-    // Non-breaking space
-    s = s.replace(/\u00A0/g, ' ');
-    // Hyphenation char
-    s = s.replace(/\u2010/g, '-');
 
-    // Collapse excessive whitespace
-    s = s.replace(/\s+/g, ' ').trim();
+    // Remove zero-width and invisible chars
+    s = s.replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, '');
+
+    // Normalize tricky spaces → plain space
+    s = s.replace(/[\u00A0\u202F\u2000-\u200A]/g, ' ');
+
+    // Remove control characters (keeps \n)
+    s = s.replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F\u007F-\u009F]/g, '');
+
+    s = s.replace("↔", "<>");
+
+    s = s.trim();
+    
+    // Log if characters were changed (for debugging)
+    if (original !== s) {
+      console.log('Sanitized text:', { original: JSON.stringify(original), sanitized: JSON.stringify(s) });
+    }
 
     return s;
   }
@@ -51,14 +71,56 @@ export class AnamnesisePdfService {
     return frequencyMap[specialFrequency] || `frequency code ${specialFrequency}`;
   }
 
-  generatePDF(
+  private async loadLogoAsBase64(): Promise<string | null> {
+    try {
+      const response = await fetch('/images/Top_bar_logo.png');
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Failed to load logo:', error);
+      return null;
+    }
+  }
+
+  private async getLogoImageWithAspectRatio(): Promise<{ data: string; width: number; height: number } | null> {
+    const logoBase64 = await this.loadLogoAsBase64();
+    if (!logoBase64) return null;
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({
+          data: logoBase64,
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        });
+      };
+      img.onerror = () => {
+        resolve(null);
+      };
+      img.src = logoBase64;
+    });
+  }
+
+  async generatePDF(
     generalSections: { title: string; questions: { text: string; type: string }[] }[],
     medications: any[],
     adherenceNotesByMedication: Record<string, ReviewNote[]>,
     effectivenessNotesByMedication: Record<string, ReviewNote[]>,
     previewMode: boolean = false,
     partTitles?: { part1: string; part2: string; part3: string; part4: string }
-  ): Blob | void {
+  ): Promise<Blob | void> {
+    // Console log all notes for debugging
+    console.log('=== PDF Generation Debug ===');
+    console.log('Adherence Notes:', adherenceNotesByMedication);
+    console.log('Effectiveness Notes:', effectivenessNotesByMedication);
+    
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -71,12 +133,28 @@ export class AnamnesisePdfService {
     const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
 
+    // Add logo to top right with proper aspect ratio
+    const logoInfo = await this.getLogoImageWithAspectRatio();
+    if (logoInfo) {
+      try {
+        const maxLogoHeight = 15; // Maximum height in mm
+        const aspectRatio = logoInfo.width / logoInfo.height;
+        const logoHeight = maxLogoHeight;
+        const logoWidth = logoHeight * aspectRatio; // Calculate width to maintain aspect ratio
+        const logoX = pageWidth - margin - logoWidth; // Right aligned
+        const logoY = margin; // Top aligned
+        doc.addImage(logoInfo.data, 'PNG', logoX, logoY, logoWidth, logoHeight);
+      } catch (error) {
+        console.warn('Failed to add logo to PDF:', error);
+      }
+    }
+
     // Set default part titles if not provided
     const titles = partTitles || {
       part1: 'Part 1: General Questions',
-      part2: 'Part 2: Current Medication Scheme',
-      part3: 'Part 3: Therapy Adherence',
-      part4: 'Part 4: Effectiveness & Side-Effects'
+      part2: 'Medication Scheme',
+      part3: 'Part 2: Therapy Adherence',
+      part4: 'Part 3: Effectiveness & Side-Effects'
     };
 
     // Title
@@ -90,83 +168,7 @@ export class AnamnesisePdfService {
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
     yPosition += 8;
 
-    // Part 1: General Questions
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf(titles.part1), margin, yPosition);
-    yPosition += 8;
-
-    generalSections.forEach(section => {
-      // Check if we need a new page
-      if (yPosition > pageHeight - 40) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf(section.title), margin, yPosition);
-      yPosition += 6;
-
-      section.questions.forEach(q => {
-        if (yPosition > pageHeight - 30) {
-          doc.addPage();
-          yPosition = 20;
-        }
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-
-        // Draw checkbox or text field based on type
-        if (q.type === 'checkbox' || q.type === 'checkbox-text') {
-          // Draw checkbox
-          doc.rect(margin, yPosition - 3, 4, 4);
-          const lines = doc.splitTextToSize(this.sanitizeForPdf(q.text), contentWidth - 10);
-          doc.text(lines, margin + 6, yPosition);
-          yPosition += Math.max(6, lines.length * 5);
-
-          // Add text field if checkbox-text
-          if (q.type === 'checkbox-text') {
-            doc.setDrawColor(200, 200, 200);
-            doc.line(margin + 6, yPosition, pageWidth - margin, yPosition);
-            yPosition += 8;
-          }
-        } else if (q.type === 'number') {
-          const lines = doc.splitTextToSize(this.sanitizeForPdf(q.text), contentWidth - 25);
-          doc.text(lines, margin, yPosition);
-          const textHeight = lines.length * 5;
-          // Draw number field box
-          doc.setDrawColor(150, 150, 150);
-          doc.rect(pageWidth - margin - 20, yPosition - 4, 20, 6);
-          yPosition += Math.max(8, textHeight + 2);
-        } else if (q.type === 'text' || q.type === 'text-small') {
-          const lines = doc.splitTextToSize(this.sanitizeForPdf(q.text), contentWidth);
-          doc.text(lines, margin, yPosition);
-          yPosition += lines.length * 5 + 2;
-          
-          // Draw text field lines
-          const lineCount = q.type === 'text' ? 2 : 1;
-          doc.setDrawColor(200, 200, 200);
-          for (let i = 0; i < lineCount; i++) {
-            doc.line(margin, yPosition, pageWidth - margin, yPosition);
-            yPosition += 6;
-          }
-        }
-
-        yPosition += 2;
-      });
-
-      yPosition += 4;
-    });
-
-    // Part 2: Therapy Adherence
-    if (yPosition > pageHeight - 50) {
-      doc.addPage();
-      yPosition = 20;
-    } else {
-      yPosition += 5;
-    }
-
+    // Medication Schema (not numbered as a part)
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
   doc.text(this.sanitizeForPdf(titles.part2), margin, yPosition);
@@ -220,6 +222,7 @@ export class AnamnesisePdfService {
         body: tableData,
         startY: yPosition,
         margin: margin,
+        theme: 'grid',
         columnStyles: {
           0: { cellWidth: 50, halign: 'left' },
           1: { cellWidth: 15 },
@@ -236,13 +239,19 @@ export class AnamnesisePdfService {
           fontSize: 8,
           fontStyle: 'bold',
           halign: 'center',
-          valign: 'middle'
+          valign: 'middle',
+          cellPadding: 3,
+          lineWidth: 0.5,
+          lineColor: [0, 0, 0]
         },
         bodyStyles: {
           fontSize: 9,
           textColor: 0,
           halign: 'center',
-          valign: 'middle'
+          valign: 'middle',
+          cellPadding: 4,
+          lineWidth: 0.3,
+          lineColor: [100, 100, 100]
         },
         alternateRowStyles: {
           fillColor: [245, 245, 245]
@@ -252,236 +261,312 @@ export class AnamnesisePdfService {
       yPosition = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    // Part 3: Therapy Adherence
-    if (yPosition > pageHeight - 50) {
-      doc.addPage();
-      yPosition = 20;
-    } else {
-      yPosition += 5;
-    }
+    // Start a new page for the parts
+    doc.addPage();
+    yPosition = 20;
 
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf(titles.part3), margin, yPosition);
-    yPosition += 8;
-
-    // Render general notes first (if any)
-    const generalAdherenceNotes = adherenceNotesByMedication['general'] || [];
-    if (generalAdherenceNotes.length > 0) {
+    // Part 1: General Questions
+    generalSections.forEach(section => {
+      // Check if we need a new page
       if (yPosition > pageHeight - 40) {
         doc.addPage();
         yPosition = 20;
       }
 
-      // General notes header
-      doc.setFillColor(240, 240, 240);
-      doc.rect(margin, yPosition - 5, contentWidth, 10, 'F');
-      doc.setFontSize(11);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text(this.sanitizeForPdf('General Notes'), margin + 2, yPosition);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      yPosition += 12;
+      doc.text(this.sanitizeForPdf(section.title), margin, yPosition);
+      yPosition += 6;
 
-      // Render each general note
-      generalAdherenceNotes.forEach(note => {
-        if (yPosition > pageHeight - 35) {
+      section.questions.forEach(q => {
+        if (yPosition > pageHeight - 30) {
           doc.addPage();
           yPosition = 20;
         }
 
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        const noteLines = doc.splitTextToSize(this.sanitizeForPdf(`• ${note.text}`), contentWidth - 4);
-        doc.text(noteLines, margin + 2, yPosition);
-        yPosition += noteLines.length * 4 + 2;
+        doc.setDrawColor(100, 100, 100);
+        doc.setLineWidth(0.3);
 
-        // Add text field for pharmacist notes
-        doc.setDrawColor(200, 200, 200);
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin + 2, yPosition, contentWidth - 4, 15, 'FD');
-        doc.setFontSize(7);
-        doc.setTextColor(150, 150, 150);
-        doc.text(this.sanitizeForPdf('Notities:'), margin + 4, yPosition + 3);
-        doc.setTextColor(0, 0, 0);
-        yPosition += 18;
-      });
+        // Draw checkbox or text field based on type
+        if (q.type === 'checkbox' || q.type === 'checkbox-text') {
+          // Draw checkbox with consistent border
+          const checkboxSize = 4;
+          doc.rect(margin, yPosition - 3, checkboxSize, checkboxSize); // Empty checkbox with border
+          const lines = doc.splitTextToSize(this.sanitizeForPdf(q.text), contentWidth - 10);
+          doc.text(lines, margin + 7, yPosition);
+          yPosition += Math.max(6, lines.length * 5);
 
-      yPosition += 3;
-    }
-
-    medications.forEach(med => {
-      const cnk = med.cnk != null ? String(med.cnk) : 'uncategorized';
-      const notes = adherenceNotesByMedication[cnk] || [];
-
-      if (yPosition > pageHeight - 40) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      // Medication header
-      doc.setFillColor(240, 240, 240);
-      doc.rect(margin, yPosition - 5, contentWidth, 10, 'F');
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf(med.name || 'Unnamed medication'), margin + 2, yPosition);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-      yPosition += 12;
-
-      // Notes
-      if (notes.length === 0) {
-        // Add placeholder space for pharmacist to write notes
-        doc.setDrawColor(200, 200, 200);
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin + 2, yPosition, contentWidth - 4, 20, 'FD');
-        doc.setFontSize(7);
-        doc.setTextColor(150, 150, 150);
-  doc.text(this.sanitizeForPdf('Notities:'), margin + 4, yPosition + 3);
-        doc.setTextColor(0, 0, 0);
-        yPosition += 23;
-      }
-
-      notes.forEach(note => {
-        if (yPosition > pageHeight - 35) {
-          doc.addPage();
-          yPosition = 20;
+          // Add text field if checkbox-text
+          if (q.type === 'checkbox-text') {
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin + 7, yPosition, pageWidth - margin, yPosition);
+            yPosition += 8;
+          }
+        } else if (q.type === 'number') {
+          const lines = doc.splitTextToSize(this.sanitizeForPdf(q.text), contentWidth - 25);
+          doc.text(lines, margin, yPosition);
+          const textHeight = lines.length * 5;
+          // Draw number field box
+          doc.setDrawColor(150, 150, 150);
+          doc.rect(pageWidth - margin - 20, yPosition - 4, 20, 6);
+          yPosition += Math.max(8, textHeight + 2);
+        } else if (q.type === 'text' || q.type === 'text-small') {
+          const lines = doc.splitTextToSize(this.sanitizeForPdf(q.text), contentWidth);
+          doc.text(lines, margin, yPosition);
+          yPosition += lines.length * 5 + 2;
+          
+          // Draw text field lines
+          const lineCount = q.type === 'text' ? 2 : 1;
+          doc.setDrawColor(200, 200, 200);
+          for (let i = 0; i < lineCount; i++) {
+            doc.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += 6;
+          }
         }
 
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-  const noteLines = doc.splitTextToSize(this.sanitizeForPdf(`• ${note.text}`), contentWidth - 4);
-  doc.text(noteLines, margin + 2, yPosition);
-        yPosition += noteLines.length * 4 + 2;
-
-        // Add text field for pharmacist notes
-        doc.setDrawColor(200, 200, 200);
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin + 2, yPosition, contentWidth - 4, 15, 'FD');
-        doc.setFontSize(7);
-        doc.setTextColor(150, 150, 150);
-  doc.text(this.sanitizeForPdf('Notities:'), margin + 4, yPosition + 3);
-        doc.setTextColor(0, 0, 0);
-        yPosition += 18;
+        yPosition += 2;
       });
 
-      yPosition += 3;
+      yPosition += 4;
     });
 
-    // Part 4: Effectiveness & Side-Effects
-    if (yPosition > pageHeight - 50) {
-      doc.addPage();
-      yPosition = 20;
-    } else {
-      yPosition += 5;
-    }
+    // Combined Parts 2 & 3: Therapy Adherence and Effectiveness
+    // Use landscape orientation for better space
+    doc.addPage('a4', 'landscape');
+    
+    // Get landscape dimensions
+    const landscapeWidth = doc.internal.pageSize.getWidth();
+    const landscapeHeight = doc.internal.pageSize.getHeight();
+    const landscapeMargin = 10; // Reduced from 15 to 10
+    
+    yPosition = landscapeMargin;
 
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf(titles.part4), margin, yPosition);
-    yPosition += 8;
-
-    // Render general notes first (if any)
-    const generalEffectivenessNotes = effectivenessNotesByMedication['general'] || [];
-    if (generalEffectivenessNotes.length > 0) {
-      if (yPosition > pageHeight - 40) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      // General notes header
-      doc.setFillColor(240, 240, 240);
-      doc.rect(margin, yPosition - 5, contentWidth, 10, 'F');
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text(this.sanitizeForPdf('General Notes'), margin + 2, yPosition);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      yPosition += 12;
-
-      // Render each general note
-      generalEffectivenessNotes.forEach(note => {
-        if (yPosition > pageHeight - 35) {
-          doc.addPage();
-          yPosition = 20;
+    // Prepare table data combining both parts with separate note fields
+    const combinedTableData: any[] = [];
+    
+    // Add general notes row if they exist
+    const generalAdherenceNotes = adherenceNotesByMedication['General'] || adherenceNotesByMedication['general'] || [];
+    const generalEffectivenessNotes = effectivenessNotesByMedication['General'] || effectivenessNotesByMedication['general'] || [];
+    
+    if (generalAdherenceNotes.length > 0 || generalEffectivenessNotes.length > 0) {
+      combinedTableData.push([
+        this.sanitizeForPdf('General Notes'),
+        { 
+          adherenceNotes: generalAdherenceNotes, 
+          effectivenessNotes: [], 
+          isGeneral: true,
+          maxNoteCount: Math.max(generalAdherenceNotes.length, generalEffectivenessNotes.length)
+        },
+        { 
+          adherenceNotes: [], 
+          effectivenessNotes: generalEffectivenessNotes, 
+          isGeneral: true,
+          maxNoteCount: Math.max(generalAdherenceNotes.length, generalEffectivenessNotes.length)
         }
-
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        const noteLines = doc.splitTextToSize(this.sanitizeForPdf(`• ${note.text}`), contentWidth - 4);
-        doc.text(noteLines, margin + 2, yPosition);
-        yPosition += noteLines.length * 4 + 2;
-
-        // Add text field for pharmacist notes
-        doc.setDrawColor(200, 200, 200);
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin + 2, yPosition, contentWidth - 4, 15, 'FD');
-        doc.setFontSize(7);
-        doc.setTextColor(150, 150, 150);
-        doc.text(this.sanitizeForPdf('Notities:'), margin + 4, yPosition + 3);
-        doc.setTextColor(0, 0, 0);
-        yPosition += 18;
-      });
-
-      yPosition += 3;
+      ]);
     }
 
+    // Add rows for each medication
     medications.forEach(med => {
-      const cnk = med.cnk != null ? String(med.cnk) : 'uncategorized';
-      const notes = effectivenessNotesByMedication[cnk] || [];
+      const medName = med.name || 'Unnamed medication';
+      const adherenceNotes = adherenceNotesByMedication[medName] || [];
+      const effectivenessNotes = effectivenessNotesByMedication[medName] || [];
+      const maxNoteCount = Math.max(adherenceNotes.length, effectivenessNotes.length);
+      
+      combinedTableData.push([
+        this.sanitizeForPdf(medName),
+        { adherenceNotes, effectivenessNotes: [], isGeneral: false, maxNoteCount },
+        { adherenceNotes: [], effectivenessNotes, isGeneral: false, maxNoteCount }
+      ]);
+    });
 
-      if (yPosition > pageHeight - 40) {
-        doc.addPage();
-        yPosition = 20;
-      }
-
-      // Medication header
-      doc.setFillColor(240, 240, 240);
-      doc.rect(margin, yPosition - 5, contentWidth, 10, 'F');
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-  doc.text(this.sanitizeForPdf(med.name || 'Unnamed medication'), margin + 2, yPosition);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-      yPosition += 12;
-
-      // Notes
-      if (notes.length === 0) {
-        // Add placeholder space for pharmacist to write notes
-        doc.setDrawColor(200, 200, 200);
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin + 2, yPosition, contentWidth - 4, 20, 'FD');
-        doc.setFontSize(7);
-        doc.setTextColor(150, 150, 150);
-  doc.text(this.sanitizeForPdf('Notities:'), margin + 4, yPosition + 3);
-        doc.setTextColor(0, 0, 0);
-        yPosition += 23;
-      }
-
-      notes.forEach(note => {
-        if (yPosition > pageHeight - 35) {
-          doc.addPage();
-          yPosition = 20;
+    // Create the combined table with custom cell rendering
+    autoTable(doc, {
+      head: [[
+        this.sanitizeForPdf('Medication'),
+        this.sanitizeForPdf(titles.part3),
+        this.sanitizeForPdf(titles.part4)
+      ]],
+      body: combinedTableData,
+      startY: yPosition,
+      margin: landscapeMargin,
+      theme: 'grid',
+      columnStyles: {
+        0: { cellWidth: 65, halign: 'left', valign: 'middle' },
+        1: { cellWidth: 100, halign: 'left', valign: 'top' },
+        2: { cellWidth: 100, halign: 'left', valign: 'top' }
+      },
+      headStyles: {
+        fillColor: [69, 75, 96],
+        textColor: 255,
+        fontSize: 10,
+        fontStyle: 'bold',
+        halign: 'center',
+        valign: 'middle',
+        cellPadding: 5,
+        lineWidth: 0.5,
+        lineColor: [0, 0, 0]
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: 0,
+        halign: 'left',
+        valign: 'top',
+        cellPadding: 5,
+        minCellHeight: 55, // Default to ~1/3 of landscape page height
+        lineWidth: 0.3,
+        lineColor: [80, 80, 80]
+      },
+      rowPageBreak: 'avoid',
+      alternateRowStyles: {
+        fillColor: [250, 250, 250]
+      },
+      didParseCell: (data: any) => {
+        // Set row height early in the process based on max note count
+        if (data.section === 'body') {
+          const cellData = data.row.raw[1]; // Check column 1 for maxNoteCount
+          if (typeof cellData === 'object' && cellData !== null && cellData.maxNoteCount) {
+            const maxNoteCount = cellData.maxNoteCount;
+            
+            // Calculate height dynamically based on note count
+            // Each note needs space for text + at least 2 writing lines
+            // Use a more conservative formula to avoid huge rows
+            let dynamicHeight = 55; // Minimum height for 1-3 notes
+            
+            if (maxNoteCount > 3) {
+              // For each note beyond 3, add 20mm (not 26mm)
+              dynamicHeight = 55 + ((maxNoteCount - 3) * 20);
+            }
+            
+            // Set the row's minCellHeight
+            data.row.height = dynamicHeight;
+            data.cell.styles.minCellHeight = dynamicHeight;
+          }
         }
-
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-  const noteLines = doc.splitTextToSize(this.sanitizeForPdf(`• ${note.text}`), contentWidth - 4);
-  doc.text(noteLines, margin + 2, yPosition);
-        yPosition += noteLines.length * 4 + 2;
-
-        // Add text field for pharmacist notes
-        doc.setDrawColor(200, 200, 200);
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin + 2, yPosition, contentWidth - 4, 15, 'FD');
-        doc.setFontSize(7);
-        doc.setTextColor(150, 150, 150);
-  doc.text(this.sanitizeForPdf('Notities:'), margin + 4, yPosition + 3);
-        doc.setTextColor(0, 0, 0);
-        yPosition += 18;
-      });
-
-      yPosition += 3;
+      },
+      willDrawCell: (data: any) => {
+        // Prevent default text rendering for columns 1 and 2 (notes columns)
+        if (data.section === 'body' && (data.column.index === 1 || data.column.index === 2)) {
+          data.cell.text = ''; // Clear the text so it doesn't render [object Object]
+        }
+      },
+      didDrawCell: (data: any) => {
+        // Custom rendering for notes columns with separate text fields
+        if (data.section === 'body' && (data.column.index === 1 || data.column.index === 2)) {
+          const cell = data.cell;
+          const cellData = data.row.raw[data.column.index];
+          
+          if (typeof cellData === 'object' && cellData !== null) {
+            const notes = data.column.index === 1 ? cellData.adherenceNotes : cellData.effectivenessNotes;
+            const cellPadding = 3;
+            let currentY = cell.y + cellPadding;
+            
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            
+            // Calculate available space - distribute equally among all notes
+            const availableWidth = cell.width - (cellPadding * 2);
+            const availableHeight = cell.height - (cellPadding * 2);
+            const displayNotes = notes; // Use all notes, don't limit them
+            const noteCount = displayNotes.length > 0 ? displayNotes.length : 3; // Default to 3 empty sections
+            const noteHeight = availableHeight / noteCount;
+            
+            // If no notes, create equal sections with lines for writing
+            if (displayNotes.length === 0) {
+              for (let section = 0; section < 3; section++) {
+                const sectionY = currentY + (section * noteHeight);
+                
+                // Draw separator line between sections
+                if (section > 0) {
+                  doc.setDrawColor(150, 150, 150);
+                  doc.setLineWidth(0.3);
+                  doc.line(
+                    cell.x + cellPadding,
+                    sectionY,
+                    cell.x + cell.width - cellPadding,
+                    sectionY
+                  );
+                }
+                
+                // Draw horizontal lines for writing
+                doc.setDrawColor(200, 200, 200);
+                doc.setLineWidth(0.15);
+                const lineSpacing = 6;
+                const startY = sectionY + 3;
+                const sectionHeight = noteHeight - 3;
+                const lineCount = Math.floor(sectionHeight / lineSpacing);
+                
+                for (let i = 0; i < lineCount; i++) {
+                  const lineY = startY + (i * lineSpacing);
+                  if (lineY < sectionY + noteHeight - 1) {
+                    doc.line(
+                      cell.x + cellPadding + 2,
+                      lineY,
+                      cell.x + cell.width - cellPadding - 2,
+                      lineY
+                    );
+                  }
+                }
+              }
+            } else {
+              // Draw each note in its own section - all notes get equal space
+              displayNotes.forEach((note: ReviewNote, index: number) => {
+                const fieldY = currentY + (index * noteHeight);
+                
+                // Draw separator line between notes
+                if (index > 0) {
+                  doc.setDrawColor(150, 150, 150);
+                  doc.setLineWidth(0.3);
+                  doc.line(
+                    cell.x + cellPadding,
+                    fieldY,
+                    cell.x + cell.width - cellPadding,
+                    fieldY
+                  );
+                }
+                
+                // Draw the note text at the top of the section
+                const noteText = this.sanitizeForPdf(note.text);
+                doc.setFontSize(7.5);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(40, 40, 40);
+                
+                // Use a simple bullet character that works in PDF
+                const bulletText = '- ' + noteText;
+                const textLines = doc.splitTextToSize(bulletText, availableWidth - 6);
+                const maxLines = 2; // Limit to 2 lines for the note itself
+                const displayLines = textLines.slice(0, maxLines);
+                
+                doc.text(displayLines, cell.x + cellPadding + 3, fieldY + 4);
+                
+                // Add horizontal lines for writing below the note - use ALL remaining space
+                doc.setDrawColor(200, 200, 200);
+                doc.setLineWidth(0.15);
+                const textHeight = displayLines.length * 3;
+                const startLineY = fieldY + 4 + textHeight + 2;
+                const remainingHeight = noteHeight - (4 + textHeight + 2);
+                const lineSpacing = 6;
+                const lineCount = Math.floor(remainingHeight / lineSpacing);
+                
+                for (let j = 0; j < lineCount; j++) {
+                  const lineY = startLineY + (j * lineSpacing);
+                  if (lineY < fieldY + noteHeight - 1) {
+                    doc.line(
+                      cell.x + cellPadding + 2,
+                      lineY,
+                      cell.x + cell.width - cellPadding - 2,
+                      lineY
+                    );
+                  }
+                }
+              });
+            }
+          }
+        }
+      }
     });
 
     if (previewMode) {

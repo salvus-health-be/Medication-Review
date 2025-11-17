@@ -102,26 +102,29 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
         };
 
         // Generate PDF blob
-        const blob = this.anamnesisePdfService.generatePDF(
+        this.anamnesisePdfService.generatePDF(
           generalSections,
           this.medications,
           adherenceNotes as Record<string, ReviewNote[]>,
           effectivenessNotes as Record<string, ReviewNote[]>,
           true, // preview mode
           partTitles
-        );
-
-        if (blob) {
-          console.log('[PdfPreviewPage] PDF blob generated, size:', blob.size);
-          const url = URL.createObjectURL(blob);
-          console.log('[PdfPreviewPage] Blob URL created:', url);
-          // Bypass security without adding fragments that might break iframe rendering
-          this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        ).then(blob => {
+          if (blob) {
+            console.log('[PdfPreviewPage] PDF blob generated, size:', blob.size);
+            const url = URL.createObjectURL(blob);
+            console.log('[PdfPreviewPage] Blob URL created:', url);
+            // Bypass security without adding fragments that might break iframe rendering
+            this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+            this.isLoading = false;
+          } else {
+            console.error('[PdfPreviewPage] No blob returned from PDF service');
+            this.isLoading = false;
+          }
+        }).catch(error => {
+          console.error('[PdfPreviewPage] Error generating PDF:', error);
           this.isLoading = false;
-        } else {
-          console.error('[PdfPreviewPage] No blob returned from PDF service');
-          this.isLoading = false;
-        }
+        });
       });
   }
 
@@ -153,7 +156,9 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
       effectivenessNotes as Record<string, ReviewNote[]>,
       false, // download mode
       partTitles
-    );
+    ).catch(error => {
+      console.error('Error generating PDF:', error);
+    });
   }
 
   navigateToAnamnesis() {

@@ -9,6 +9,7 @@ import { ReviewNotesService, ReviewNote } from '../../services/review-notes.serv
 import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { QuestionAnswer } from '../../models/api.models';
+import { AnamnesisePdfService } from '../../services/anamnesis-pdf.service';
 
 interface Question {
   name: string;
@@ -17,6 +18,7 @@ interface Question {
   value: any;
   options?: (string | boolean)[]; // For radio button options - can be strings or booleans
   hidden?: boolean; // To conditionally show/hide questions
+  originallyHidden?: boolean; // Original hidden state (never changes for PDF filtering)
   shareWithPatient?: boolean; // For pharmacist notes - share with patient
   shareWithDoctor?: boolean; // For pharmacist notes - share with doctor
 }
@@ -57,7 +59,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     private reviewNotesService: ReviewNotesService,
     private stateService: StateService,
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private anamnesisePdfService: AnamnesisePdfService
   ) {}
 
   goToDocumentation() {
@@ -171,15 +174,15 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         description: this.transloco.translate('anamnesis.general_questions') || 'Patient concerns and experiences with medication',
         questions: [
           { name: 'p1_concerns_tooMany', text: this.transloco.translate('pdf.patient_concern_tooMany') || 'Ervaart de patient de geneesmiddelen als te veel?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_concerns_tooManyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_tooManyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_concerns_financialBurden', text: this.transloco.translate('pdf.patient_concern_financialBurden') || 'Ervaart de patient financiële last?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_concerns_financialBurdenAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_financialBurdenAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_concerns_anxiety', text: this.transloco.translate('anamnesis.questions.anxiety') || 'Ervaart de patient angst?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_concerns_anxietyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_anxietyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_concerns_untreatedComplaints', text: this.transloco.translate('pdf.patient_concern_untreatedComplaints') || 'Ervaart de patient onvoldoende of niet behandelde klachten?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_concerns_untreatedComplaintsAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_concerns_untreatedComplaintsAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_concerns_other', text: this.transloco.translate('pdf.patient_concern_other') || 'Zijn er andere bezorgdheden?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_concerns_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+          { name: 'p1_concerns_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
       {
@@ -188,8 +191,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         description: 'Assistance with medication intake',
         questions: [
           { name: 'p1_help_hasAssistance', text: this.transloco.translate('anamnesis_dynamic.what_problems') || 'Heeft de patient hulp bij inname, bijvoorbeeld een pillendoos of partner/familielid?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_help_additionalNeededQuestion', text: this.transloco.translate('pdf.medication_help_additionalNeeded') || 'Is extra hulp wenselijk voor de patient?', type: 'radio', options: [true, false], value: null, hidden: true },
-          { name: 'p1_help_additionalNeededAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+          { name: 'p1_help_additionalNeededQuestion', text: this.transloco.translate('pdf.medication_help_additionalNeeded') || 'Is extra hulp wenselijk voor de patient?', type: 'radio', options: [true, false], value: null, hidden: true, originallyHidden: true },
+          { name: 'p1_help_additionalNeededAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
       {
@@ -198,19 +201,19 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         description: this.transloco.translate('pdf.practical_problems') || 'Practical issues affecting medication use',
         questions: [
           { name: 'p1_practical_swallowing', text: this.transloco.translate('pdf.practical_problem_swallowing') || 'Heeft de patient slikproblemen?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_practical_swallowingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_swallowingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_practical_movement', text: this.transloco.translate('pdf.practical_problem_movement') || 'Heeft de patient beweegstoornissen?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_practical_movementAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_movementAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_practical_vision', text: this.transloco.translate('pdf.practical_problem_vision') || 'Heeft de patient visusstoornissen?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_practical_visionAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_visionAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_practical_hearing', text: this.transloco.translate('pdf.practical_problem_hearing') || 'Heeft de patient gehoorstoornissen?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_practical_hearingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_hearingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_practical_cognitive', text: this.transloco.translate('pdf.practical_problem_cognitive') || 'Heeft de patient cognitieve problemen?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_practical_cognitiveAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_cognitiveAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_practical_dexterity', text: this.transloco.translate('pdf.practical_problem_dexterity') || 'Heeft de patient problemen met handvaardigheid?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_practical_dexterityAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true },
+          { name: 'p1_practical_dexterityAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
           { name: 'p1_practical_other', text: this.transloco.translate('pdf.practical_problem_other') || 'Zijn er andere praktische problemen?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_practical_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+          { name: 'p1_practical_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
       {
@@ -221,7 +224,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
           { name: 'p1_incidents_falls', text: this.transloco.translate('anamnesis.questions.falls') || 'Hoe vaak is de patient in de afgelopen 6 maanden gevallen?', type: 'number', value: 0 },
           { name: 'p1_incidents_hospitalizations', text: this.transloco.translate('anamnesis.questions.hospitalizations') || 'Hoe vaak is de patient gehospitaliseerd in het afgelopen jaar?', type: 'number', value: 0 },
           { name: 'p1_incidents_actionNeeded', text: this.transloco.translate('pdf.incidents_actionNeeded') || 'Is action needed?', type: 'radio', value: null, options: [true, false] },
-          { name: 'p1_incidents_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+          { name: 'p1_incidents_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
       {
@@ -232,7 +235,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
           { name: 'p1_followup_careProviders', text: this.transloco.translate('anamnesis.questions.care_providers') || 'Door welke hulpverleners wordt de patient opgevolgd?', type: 'textarea', value: '' },
           { name: 'p1_followup_parameterMonitoring', text: this.transloco.translate('anamnesis.questions.parameter_monitoring') || 'Door welke hulpverleners worden de parameters opgevolgd?', type: 'textarea', value: '' },
           { name: 'p1_followup_actionNeeded', text: this.transloco.translate('pdf.followup_actionNeeded') || 'Is action needed?', type: 'radio', value: null, options: [true, false] },
-          { name: 'p1_followup_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true }
+          { name: 'p1_followup_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       }
     ];
@@ -797,40 +800,119 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     this.selectedBox = null; // Clear selection when switching parts
   }
 
-  getVisibleQuestionCount(box: QuestionBox): number {
-    return box.questions.filter(q => !q.hidden).length;
+  private getNotesForBox(box: QuestionBox): ReviewNote[] {
+    // Part 2: Therapy Adherence notes
+    if (this.currentPart === 'part2') {
+      if (box.id === 'p2_general_notes') {
+        return this.notes.filter(note => 
+          !note.linkedCnk && (note.category === 'TherapyAdherence' || note.category === 'MedicationSchema')
+        );
+      } else if (box.id.startsWith('p2_med_')) {
+        const cnk = box.id.replace('p2_med_', '');
+        return this.notes.filter(note => 
+          String(note.linkedCnk) === cnk && (note.category === 'TherapyAdherence' || note.category === 'MedicationSchema')
+        );
+      }
+    }
+
+    // Part 3: Effectiveness & Side Effects notes
+    if (this.currentPart === 'part3') {
+      if (box.id === 'p3_general_notes') {
+        return this.notes.filter(note => 
+          !note.linkedCnk && note.category !== 'TherapyAdherence' && note.category !== 'MedicationSchema'
+        );
+      } else if (box.id.startsWith('p3_med_')) {
+        const cnk = box.id.replace('p3_med_', '');
+        return this.notes.filter(note => 
+          String(note.linkedCnk) === cnk && note.category !== 'TherapyAdherence' && note.category !== 'MedicationSchema'
+        );
+      }
+    }
+
+    return [];
   }
 
-  getQuestionProgress(box: QuestionBox): number {
-    const visibleQuestions = box.questions.filter(q => !q.hidden);
-    if (visibleQuestions.length === 0) return 0;
+  getVisibleQuestionCount(box: QuestionBox): number {
+    let count = box.questions.filter(q => !q.hidden).length;
     
-    const answeredQuestions = visibleQuestions.filter(q => {
+    // Add notes count for general notes boxes
+    const notes = this.getNotesForBox(box);
+    count += notes.length;
+    
+    return count;
+  }
+
+  getAnsweredQuestionCount(box: QuestionBox): number {
+    const visibleQuestions = box.questions.filter(q => !q.hidden);
+    let answeredCount = visibleQuestions.filter(q => {
       if (q.type === 'checkbox') {
-        // Checkbox is only answered if explicitly checked (true), not if false/undefined
         return q.value === true;
       }
       if (q.type === 'radio') {
-        // Radio is answered if a value is selected (boolean or string)
         if (q.options && q.options.length > 0 && typeof q.options[0] === 'boolean') {
-          // For boolean radio buttons, check if value is true or false (not null/undefined)
           return q.value === true || q.value === false;
         }
-        // For string radio buttons, check if non-empty option is selected
         return q.value !== null && q.value !== undefined && q.value !== '';
       }
       if (q.type === 'number') {
-        // Number is answered if it has a value (including 0)
         return q.value !== null && q.value !== undefined;
       }
-      // Text/textarea is answered if not empty
       return q.value !== null && q.value !== undefined && q.value !== '';
+    }).length;
+    
+    // Add answered notes count (notes with comments)
+    const notes = this.getNotesForBox(box);
+    notes.forEach(note => {
+      const questionName = `note_comment_${note.rowKey}`;
+      const savedAnswer = this.questionAnswers.get(questionName);
+      if (savedAnswer?.value && savedAnswer.value.trim() !== '') {
+        answeredCount++;
+      }
     });
     
-    const progressPercent = Math.round((answeredQuestions.length / visibleQuestions.length) * 100);
+    return answeredCount;
+  }
+
+  getShareWithPatientCount(box: QuestionBox): number {
+    let count = box.questions.filter(q => q.shareWithPatient === true).length;
     
-    console.log(`[Anamnesis] Progress for box "${box.id}": ${answeredQuestions.length}/${visibleQuestions.length} = ${progressPercent}%`);
-    console.log(`[Anamnesis]   Visible questions:`, visibleQuestions.map(q => ({ name: q.name, type: q.type, value: q.value, answered: answeredQuestions.includes(q) })));
+    // Add notes marked for patient sharing
+    const notes = this.getNotesForBox(box);
+    notes.forEach(note => {
+      const questionName = `note_share_patient_${note.rowKey}`;
+      const savedAnswer = this.questionAnswers.get(questionName);
+      if (savedAnswer?.value === 'true') {
+        count++;
+      }
+    });
+    
+    return count;
+  }
+
+  getShareWithDoctorCount(box: QuestionBox): number {
+    let count = box.questions.filter(q => q.shareWithDoctor === true).length;
+    
+    // Add notes marked for doctor sharing
+    const notes = this.getNotesForBox(box);
+    notes.forEach(note => {
+      const questionName = `note_share_doctor_${note.rowKey}`;
+      const savedAnswer = this.questionAnswers.get(questionName);
+      if (savedAnswer?.value === 'true') {
+        count++;
+      }
+    });
+    
+    return count;
+  }
+
+  getQuestionProgress(box: QuestionBox): number {
+    const totalVisible = this.getVisibleQuestionCount(box);
+    if (totalVisible === 0) return 0;
+    
+    const totalAnswered = this.getAnsweredQuestionCount(box);
+    const progressPercent = Math.round((totalAnswered / totalVisible) * 100);
+    
+    console.log(`[Anamnesis] Progress for box "${box.id}": ${totalAnswered}/${totalVisible} = ${progressPercent}%`);
     
     return progressPercent;
   }
@@ -920,15 +1002,167 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     const target = event.target as HTMLTextAreaElement;
     const value = target.value;
     const questionName = `note_comment_${noteRowKey}`;
-    
-    // Queue the save
-    this.saveQueue$.next({ questionName, value });
+    this.saveQuestionAnswer(questionName, value);
   }
 
-  // Navigate to PDF preview page
-  previewPdf() {
-    console.log('[AnamnesisPage] Navigating to PDF preview');
-    this.router.navigate(['/pdf-preview']);
+  getNoteShareWithPatient(noteRowKey: string): boolean {
+    const questionName = `note_share_patient_${noteRowKey}`;
+    const savedAnswer = this.questionAnswers.get(questionName);
+    return savedAnswer?.value === 'true';
+  }
+
+  getNoteShareWithDoctor(noteRowKey: string): boolean {
+    const questionName = `note_share_doctor_${noteRowKey}`;
+    const savedAnswer = this.questionAnswers.get(questionName);
+    return savedAnswer?.value === 'true';
+  }
+
+  onNoteShareChange(noteRowKey: string, shareType: 'patient' | 'doctor', event: Event) {
+    const target = event.target as HTMLInputElement;
+    const value = target.checked;
+    const questionName = `note_share_${shareType}_${noteRowKey}`;
+    this.saveQuestionAnswer(questionName, value);
+  }
+
+  // Download PDF directly
+  downloadPdf() {
+    console.log('[AnamnesisPage] Generating and downloading PDF');
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) {
+      console.error('[AnamnesisPage] No medication review ID');
+      return;
+    }
+
+    // Get current notes from service
+    const notes = this.reviewNotesService.getNotes();
+    const generalSections = this.prepareGeneralSections(notes);
+    const { adherenceNotes, effectivenessNotes } = this.prepareGroupedNotes(notes);
+
+    // Get translated part titles
+    const partTitles = {
+      part1: this.transloco.translate('pdf.part_1_title'),
+      part2: this.transloco.translate('pdf.part_2_title'),
+      part3: this.transloco.translate('pdf.part_3_title'),
+      part4: this.transloco.translate('pdf.part_4_title')
+    };
+
+    // Generate PDF and trigger download
+    this.anamnesisePdfService.generatePDF(
+      generalSections,
+      this.medications,
+      adherenceNotes as Record<string, ReviewNote[]>,
+      effectivenessNotes as Record<string, ReviewNote[]>,
+      false, // download mode
+      partTitles
+    ).catch(error => {
+      console.error('Error generating PDF:', error);
+    });
+  }
+
+  private prepareGeneralSections(notes: ReviewNote[]): any[] {
+    // Build Part 1 sections from the question boxes and answers
+    const sections: any[] = [];
+    
+    // Get Part 1 question boxes
+    const part1Boxes = this.allQuestionBoxes.part1 || [];
+    
+    part1Boxes.forEach(box => {
+      const section: any = {
+        title: box.title,
+        questions: []
+      };
+      
+      box.questions.forEach(question => {
+        // Skip all hidden questions - they should NEVER appear in the PDF
+        // Use originallyHidden to check the initial state, not the current dynamic state
+        if (question.originallyHidden) {
+          console.log('[PDF] Skipping originally hidden question:', question.name);
+          return; // Skip this question entirely
+        }
+        
+        // Map question type to PDF type
+        let pdfType = 'text';
+        if (question.type === 'radio' && question.options && question.options.includes(true)) {
+          pdfType = 'checkbox';
+        } else if (question.type === 'number') {
+          pdfType = 'number';
+        } else if (question.type === 'textarea') {
+          pdfType = 'text';
+        }
+        
+        console.log('[PDF] Including question:', question.name, 'originallyHidden:', question.originallyHidden);
+        section.questions.push({
+          text: question.text,
+          type: pdfType,
+          value: this.questionAnswers.get(question.name)?.value
+        });
+      });
+      
+      if (section.questions.length > 0) {
+        sections.push(section);
+      }
+    });
+    
+    console.log('[PDF] Final sections prepared:', sections);
+    return sections;
+  }
+
+  private prepareGroupedNotes(notes: ReviewNote[]): { adherenceNotes: Record<string, ReviewNote[]>, effectivenessNotes: Record<string, ReviewNote[]> } {
+    const adherenceNotes: Record<string, ReviewNote[]> = {};
+    const effectivenessNotes: Record<string, ReviewNote[]> = {};
+
+    // Filter for patient conversation notes only
+    const patientNotes = notes.filter(note => note.discussWithPatient === true);
+
+    // Separate general notes (no linkedCnk) and medication-specific notes
+    const generalNotes = patientNotes.filter(note => !note.linkedCnk);
+    const medicationNotes = patientNotes.filter(note => note.linkedCnk);
+
+    // Build a quick lookup of medications by CNK
+    const medsByCnk: Record<string, any> = {};
+    this.medications.forEach(m => {
+      if (m.cnk) {
+        medsByCnk[m.cnk] = m;
+      }
+    });
+
+    // Group medication-specific notes by their medication
+    medicationNotes.forEach(note => {
+      const cnk = String(note.linkedCnk);
+      const med = medsByCnk[cnk];
+      
+      if (med) {
+        const key = med.name || 'Unknown Medication';
+        
+        // Categorize based on note category
+        if (note.category === 'TherapyAdherence' || note.category === 'MedicationSchema') {
+          if (!adherenceNotes[key]) {
+            adherenceNotes[key] = [];
+          }
+          adherenceNotes[key].push(note);
+        } else {
+          if (!effectivenessNotes[key]) {
+            effectivenessNotes[key] = [];
+          }
+          effectivenessNotes[key].push(note);
+        }
+      }
+    });
+
+    // Add general notes under "General" heading
+    if (generalNotes.length > 0) {
+      const therapyGeneralNotes = generalNotes.filter(n => n.category === 'TherapyAdherence' || n.category === 'MedicationSchema');
+      const effectivenessGeneralNotes = generalNotes.filter(n => n.category !== 'TherapyAdherence' && n.category !== 'MedicationSchema');
+      
+      if (therapyGeneralNotes.length > 0) {
+        adherenceNotes['General'] = therapyGeneralNotes;
+      }
+      if (effectivenessGeneralNotes.length > 0) {
+        effectivenessNotes['General'] = effectivenessGeneralNotes;
+      }
+    }
+
+    return { adherenceNotes, effectivenessNotes };
   }
 }
 

@@ -516,9 +516,9 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   onCreatePatientConversation() {
-    console.log('[AnalysisPage] Creating patient conversation - navigating to PDF preview');
+    console.log('[AnalysisPage] Creating patient conversation - navigating to anamnesis');
     this.showNoteOverviewModal = false;
-    this.router.navigate(['/pdf-preview']);
+    this.router.navigate(['/anamnesis']);
   }
 
   private getCategoryForTool(tool: ToolType | null): string {
