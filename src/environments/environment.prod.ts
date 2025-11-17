@@ -4,5 +4,5 @@
 // or a full URL like 'https://your-backend-domain.com/api'
 export const environment = {
   production: true,
-  apiBaseUrl: '/api'  // TODO: Update this URL when deploying to production
+  apiBaseUrl: '/api'  // TODO: Update this URL when deploying to production. 
 };
