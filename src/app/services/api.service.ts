@@ -28,6 +28,8 @@ import {
   UpdateLabValueRequest,
   LabValueResponse,
   DispensingHistoryResponse,
+  AddManualDispensingMomentRequest,
+  AddManualDispensingMomentResponse,
   QuestionAnswer,
   AddQuestionAnswerRequest,
   UpdateQuestionAnswerRequest,
@@ -393,6 +395,20 @@ export class ApiService {
     return this.http.get<DispensingHistoryResponse>(
       `${this.API_BASE_URL}/query_dispensing_history?apbNumber=${apbNumber}&medicationReviewId=${reviewId}`
     ).pipe(tap(response => console.log('[ApiService] Query dispensing history response:', response)));
+  }
+
+  addManualDispensingMoment(
+    apbNumber: string, 
+    reviewId: string, 
+    moment: AddManualDispensingMomentRequest
+  ): Observable<AddManualDispensingMomentResponse> {
+    const headers = this.getHeaders();
+
+    return this.http.post<AddManualDispensingMomentResponse>(
+      `${this.API_BASE_URL}/add_manual_dispensing_moment?apbNumber=${apbNumber}&medicationReviewId=${reviewId}`,
+      moment,
+      { headers }
+    ).pipe(tap(response => console.log('[ApiService] Add manual dispensing moment response:', response)));
   }
 
   checkInteractions(request: any): Observable<any> {

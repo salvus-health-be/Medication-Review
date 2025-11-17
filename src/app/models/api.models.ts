@@ -269,6 +269,7 @@ export interface LabValueResponse {
 export interface DispensingMoment {
   date: string;          // DD/MM/YYYY format
   amount: number;        // Quantity dispensed
+  source?: 'csv' | 'manual'; // Source of the dispensing moment
 }
 
 export interface CnkDispensingData {
@@ -282,7 +283,28 @@ export interface DispensingHistoryResponse {
   blobUri: string;
   totalCnkCodes: number;
   totalDispensingMoments: number;
+  csvMoments?: number;
+  manualMoments?: number;
   dispensingData: CnkDispensingData[];
+}
+
+// Manual Dispensing Moment
+export interface AddManualDispensingMomentRequest {
+  cnk: string;           // CNK medication code (7-digit)
+  description: string;   // Human-readable medication name
+  date: string;          // ISO 8601 date (YYYY-MM-DD)
+  amount: number;        // Quantity dispensed (> 0)
+}
+
+export interface AddManualDispensingMomentResponse {
+  id: string;
+  apbNumber: string;
+  medicationReviewId: string;
+  cnk: string;
+  description: string;
+  date: string;
+  amount: number;
+  message: string;
 }
 
 // Question Answer Management

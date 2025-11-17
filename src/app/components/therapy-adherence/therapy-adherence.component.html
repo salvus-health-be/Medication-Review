@@ -163,11 +163,27 @@
             (click)="triggerFileInput()"
             [disabled]="uploading"
           >
-            Upload New File
+            {{ 'therapy_adherence.upload_new_file' | transloco }}
+          </button>
+          
+          <button 
+            class="manual-dispensing-button" 
+            (click)="openManualDispensingModal()"
+            [disabled]="uploading"
+          >
+            {{ 'therapy_adherence.add_manual_moments' | transloco }}
           </button>
         </div>
       </div>
     </div>
+  }
+
+  <!-- Manual Dispensing Modal -->
+  @if (showManualDispensingModal) {
+    <app-manual-dispensing-modal
+      (close)="closeManualDispensingModal()"
+      (momentsAdded)="onManualMomentsAdded()"
+    />
   }
 </div>
 

@@ -1,0 +1,144 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'manual_dispensing.title' | transloco }}</h2>
+      <button class="close-button" (click)="closeModal()" [disabled]="submitting">×</button>
+    </div>
+
+    <div class="modal-body">
+      @if (loading) {
+        <div class="loading-state">
+          <p>{{ 'manual_dispensing.loading_medications' | transloco }}</p>
+        </div>
+      } @else {
+        <!-- Add dispensing moment form -->
+        <div class="add-moment-form">
+          <h3>{{ 'manual_dispensing.add_moment' | transloco }}</h3>
+
+          <div class="form-group">
+            <label for="medication-select">{{ 'manual_dispensing.select_medication' | transloco }} *</label>
+            <select 
+              id="medication-select" 
+              (change)="onMedicationSelected($event)"
+              [disabled]="submitting"
+              [class.error]="currentMoment.errors?.medication"
+            >
+              <option value="">{{ 'manual_dispensing.select_medication_placeholder' | transloco }}</option>
+              @for (med of medications; track med.medicationId) {
+                <option [value]="med.cnk">{{ med.name }} (CNK: {{ med.cnk }})</option>
+              }
+            </select>
+            @if (currentMoment.errors?.medication) {
+              <small class="error-text">{{ currentMoment.errors?.medication }}</small>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="date">{{ 'manual_dispensing.date' | transloco }} *</label>
+              <input 
+                id="date" 
+                type="date" 
+                [(ngModel)]="currentMoment.date"
+                [disabled]="submitting"
+                [class.error]="currentMoment.errors?.date"
+              />
+              @if (currentMoment.errors?.date) {
+                <small class="error-text">{{ currentMoment.errors?.date }}</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="amount">{{ 'manual_dispensing.amount' | transloco }} *</label>
+              <input 
+                id="amount" 
+                type="number" 
+                [(ngModel)]="currentMoment.amount" 
+                min="1"
+                [disabled]="submitting"
+                [class.error]="currentMoment.errors?.amount"
+              />
+              @if (currentMoment.errors?.amount) {
+                <small class="error-text">{{ currentMoment.errors?.amount }}</small>
+              }
+            </div>
+          </div>
+
+          <button 
+            class="add-to-list-button" 
+            (click)="addToList()"
+            [disabled]="submitting"
+          >
+            {{ 'manual_dispensing.add_to_list' | transloco }}
+          </button>
+        </div>
+
+        <!-- List of moments to be added -->
+        @if (moments.length > 0) {
+          <div class="moments-list">
+            <h3>{{ 'manual_dispensing.moments_to_add' | transloco }} ({{ moments.length }})</h3>
+            
+            <div class="moments-table">
+              <div class="table-header">
+                <div class="col-medication">{{ 'manual_dispensing.medication' | transloco }}</div>
+                <div class="col-date">{{ 'manual_dispensing.date' | transloco }}</div>
+                <div class="col-amount">{{ 'manual_dispensing.amount' | transloco }}</div>
+                <div class="col-actions"></div>
+              </div>
+
+              @for (moment of moments; track $index) {
+                <div class="table-row">
+                  <div class="col-medication">{{ moment.description }}</div>
+                  <div class="col-date">{{ formatDate(moment.date) }}</div>
+                  <div class="col-amount">{{ moment.amount }}</div>
+                  <div class="col-actions">
+                    <button 
+                      class="remove-button" 
+                      (click)="removeFromList($index)"
+                      [disabled]="submitting"
+                      title="{{ 'manual_dispensing.remove' | transloco }}"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (error) {
+          <div class="error-message">{{ error }}</div>
+        }
+
+        @if (successCount > 0 && !submitting) {
+          <div class="success-message">
+            {{ 'manual_dispensing.success_message' | transloco: { count: successCount } }}
+          </div>
+        }
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        class="cancel-button" 
+        (click)="closeModal()"
+        [disabled]="submitting"
+      >
+        {{ 'common.cancel' | transloco }}
+      </button>
+      
+      <button 
+        class="submit-button" 
+        (click)="submitAll()"
+        [disabled]="moments.length === 0 || submitting || loading"
+      >
+        @if (submitting) {
+          <span>{{ 'manual_dispensing.submitting' | transloco }}</span>
+        } @else {
+          <span>{{ 'manual_dispensing.submit_all' | transloco }} ({{ moments.length }})</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>

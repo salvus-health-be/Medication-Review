@@ -160,9 +160,9 @@
   },
   "tools": {
     "therapy_adherence": "Adhésion au traitement",
-    "interactions": "Interactions",
-    "contraindications": "Contre-indications",
-    "posology": "Posologie",
+    "interactions": "APB Interactions",
+    "contraindications": "APB Contre-indications",
+    "posology": "APB Posologie",
     "renadaptor": "Renadaptor",
     "gheops": "GheOPS",
     "start_stop": "START-STOP",
@@ -415,7 +415,27 @@
     "uploading": "Téléchargement en cours...",
     "retry": "Réessayer",
     "choose_csv": "Choisir un fichier CSV",
-    "upload_dispensing_history": "Veuillez télécharger l'historique de distribution"
+    "upload_dispensing_history": "Veuillez télécharger l'historique de distribution",
+    "upload_new_file": "Télécharger un Nouveau Fichier",
+    "add_manual_moments": "Ajouter des Moments Manuels"
+  },
+  "manual_dispensing": {
+    "title": "Ajouter des Moments de Délivrance Manuels",
+    "loading_medications": "Chargement des médicaments...",
+    "add_moment": "Ajouter un Moment de Délivrance",
+    "select_medication": "Sélectionner un Médicament",
+    "select_medication_placeholder": "Choisissez un médicament...",
+    "cnk": "Code CNK",
+    "description": "Description",
+    "description_placeholder": "ex. Paracétamol 500mg comprimés",
+    "date": "Date",
+    "amount": "Quantité (emballages)",
+    "add_to_list": "Ajouter à la Liste",
+    "moments_to_add": "Moments à Ajouter",
+    "remove": "Supprimer",
+    "submit_all": "Soumettre Tout",
+    "submitting": "Soumission...",
+    "success_message": "{{count}} moment(s) de délivrance ajouté(s) avec succès"
   },
   "posology": {
     "loading_info": "Chargement des informations posologiques...",

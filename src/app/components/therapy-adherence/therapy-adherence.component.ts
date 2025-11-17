@@ -7,6 +7,7 @@ import 'chartjs-adapter-date-fns';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
 import { DispensingHistoryResponse, CnkDispensingData, Medication as ApiMedication } from '../../models/api.models';
+import { ManualDispensingModalComponent } from '../manual-dispensing-modal/manual-dispensing-modal.component';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -29,12 +30,13 @@ interface DispensingMomentWithUnits {
   unitsPerPackage: number; // Units in one package
   totalUnits: number;      // amount × unitsPerPackage
   dateString: string;
+  source?: 'csv' | 'manual'; // Source of dispensing moment
 }
 
 @Component({
   selector: 'app-therapy-adherence',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoModule],
+  imports: [CommonModule, FormsModule, TranslocoModule, ManualDispensingModalComponent],
   templateUrl: './therapy-adherence.component.html',
   styleUrls: ['./therapy-adherence.component.scss']
 })
@@ -45,6 +47,7 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   uploading = false;
   uploadSuccess = false;
   uploadError: string | null = null;
+  showManualDispensingModal = false;
   
   dispensingHistory: DispensingHistoryResponse | null = null;
   medications: ApiMedication[] = [];
@@ -507,7 +510,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       amount: moment.amount,
       unitsPerPackage: unitsPerPackage,
       totalUnits: moment.amount * unitsPerPackage,
-      dateString: moment.date
+      dateString: moment.date,
+      source: moment.source || 'csv' // Default to csv if not specified
     })).sort((a, b) => a.date.getTime() - b.date.getTime());
 
     console.log('Dispensing moments with units:', moments);
@@ -549,7 +553,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         dateString: moment.dateString,
         amount: moment.amount,
         unitsPerPackage: moment.unitsPerPackage,
-        totalUnits: moment.totalUnits
+        totalUnits: moment.totalUnits,
+        source: moment.source || 'csv'
       });
     });
 
@@ -601,8 +606,14 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
           {
             label: 'Dispensing',
             data: dispensingPoints,
-            borderColor: 'rgb(0, 0, 0)',
-            backgroundColor: 'rgb(0, 0, 0)',
+            borderColor: (context: any) => {
+              if (!context.raw) return 'rgb(0, 0, 0)';
+              return context.raw.source === 'manual' ? 'rgb(255, 152, 0)' : 'rgb(0, 0, 0)'; // Orange for manual, black for CSV
+            },
+            backgroundColor: (context: any) => {
+              if (!context.raw) return 'rgb(0, 0, 0)';
+              return context.raw.source === 'manual' ? 'rgb(255, 152, 0)' : 'rgb(0, 0, 0)'; // Orange for manual, black for CSV
+            },
             pointRadius: 6,
             pointHoverRadius: 8,
             pointHitRadius: 50, // Much larger hit area for easier hovering
@@ -681,8 +692,9 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
                 const raw = context.raw as any;
                 
                 if (datasetLabel === 'Dispensing') {
+                  const sourceLabel = raw.source === 'manual' ? ' (Manual)' : ' (CSV)';
                   return [
-                    `Dispensed: ${raw.amount} package(s)`,
+                    `Dispensed: ${raw.amount} package(s)${sourceLabel}`,
                     `Package size: ${raw.unitsPerPackage} units`,
                     `Total: ${raw.totalUnits} units`
                   ];
@@ -880,7 +892,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       date: this.parseDate(moment.date),
       amount: moment.amount,
       dateString: moment.date,
-      packageSize: packageSize
+      packageSize: packageSize,
+      source: moment.source || 'csv'
     })).sort((a, b) => a.date.getTime() - b.date.getTime());
 
     // Create simple data points at fixed y-value (0.5 = middle of chart)
@@ -889,7 +902,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       y: 0.5, // Fixed y-value - all nodes at same height
       dateString: moment.dateString,
       amount: moment.amount,
-      packageSize: moment.packageSize
+      packageSize: moment.packageSize,
+      source: moment.source
     }));
 
     const config: ChartConfiguration<'line'> = {
@@ -898,8 +912,14 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         datasets: [{
           label: 'Dispensed',
           data: dataPoints as any,
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgb(75, 192, 192)',
+          borderColor: (context: any) => {
+            if (!context.raw) return 'rgb(75, 192, 192)';
+            return context.raw.source === 'manual' ? 'rgb(255, 152, 0)' : 'rgb(75, 192, 192)'; // Orange for manual, teal for CSV
+          },
+          backgroundColor: (context: any) => {
+            if (!context.raw) return 'rgb(75, 192, 192)';
+            return context.raw.source === 'manual' ? 'rgb(255, 152, 0)' : 'rgb(75, 192, 192)'; // Orange for manual, teal for CSV
+          },
           pointRadius: 4,
           pointHoverRadius: 6,
           pointHitRadius: 50, // Much larger hit area for easier hovering
@@ -973,13 +993,14 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
               },
               label: (context: any) => {
                 const point = context.raw as any;
+                const sourceLabel = point.source === 'manual' ? ' (Manual)' : ' (CSV)';
                 if (point.packageSize > 0) {
                   return [
-                    `Dispensed: ${point.amount} package(s)`,
+                    `Dispensed: ${point.amount} package(s)${sourceLabel}`,
                     `Package size: ${point.packageSize} units`
                   ];
                 }
-                return `Dispensed: ${point.amount} package(s)`;
+                return `Dispensed: ${point.amount} package(s)${sourceLabel}`;
               }
             }
           },
@@ -1002,15 +1023,30 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   parseDate(dateString: string): Date {
-    // Parse DD/MM/YYYY format
-    const parts = dateString.split('/');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
-      const year = parseInt(parts[2], 10);
-      return new Date(year, month, day);
+    // Handle DD/MM/YYYY format (from CSV and backend response)
+    if (dateString.includes('/')) {
+      const parts = dateString.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+        const year = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+      }
     }
-    return new Date();
+    
+    // Handle YYYY-MM-DD format (ISO format, just in case)
+    if (dateString.includes('-')) {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+        const day = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+      }
+    }
+    
+    // Fallback to Date constructor
+    return new Date(dateString);
   }
 
   onFileSelected(event: Event) {
@@ -1144,5 +1180,22 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       console.log('[TherapyAdherence] Opening notes for general note (no medication)');
       this.openNotes.emit(undefined as any); // Emit undefined for general notes
     }
+  }
+
+  openManualDispensingModal() {
+    console.log('[TherapyAdherence] Opening manual dispensing modal');
+    this.showManualDispensingModal = true;
+  }
+
+  closeManualDispensingModal() {
+    console.log('[TherapyAdherence] Closing manual dispensing modal');
+    this.showManualDispensingModal = false;
+  }
+
+  onManualMomentsAdded() {
+    console.log('[TherapyAdherence] Manual moments added, refreshing data');
+    this.showManualDispensingModal = false;
+    // Refresh the dispensing history to show the new manual entries
+    this.checkExistingFile();
   }
 }
