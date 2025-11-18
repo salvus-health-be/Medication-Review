@@ -167,6 +167,7 @@ export interface Medication {
   unitsBeforeDinner?: number | null;
   unitsDuringDinner?: number | null;
   unitsAtBedtime?: number | null;
+  timestamp?: string | null;
 }
 
 export interface AddMedicationRequest {

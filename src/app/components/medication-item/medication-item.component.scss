@@ -10,6 +10,36 @@
   overflow: hidden;
   transition: box-shadow 0.2s ease;
 
+  &.is-new {
+    animation: fadeIn 0.6s ease-out, highlightNew 1.5s ease-in-out;
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes highlightNew {
+      0% {
+        background-color: rgba(16, 185, 129, 0.1);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+      }
+      50% {
+        background-color: rgba(16, 185, 129, 0.15);
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+      }
+      100% {
+        background-color: $box-background;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+    }
+  }
+
   &:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   }

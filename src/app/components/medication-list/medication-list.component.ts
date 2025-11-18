@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
 import { MedicationItemComponent, Medication } from '../medication-item/medication-item.component';
@@ -28,6 +28,8 @@ export class MedicationListComponent implements OnInit {
   currentMedicationForCnkSelection: MedicationWithMatches | null = null;
   pendingMedicationsToSave: Array<Partial<Medication> & { searchResult?: MedicationSearchResult }> = [];
   currentMedicationIndex = 0;
+
+  @ViewChild('medicationsScroll') medicationsScrollContainer: any;
 
   constructor(
     private apiService: ApiService,
@@ -660,6 +662,11 @@ export class MedicationListComponent implements OnInit {
           console.log('[MedicationList] Medication added:', response);
           this.showSearchModal = false;
           this.loadMedications();
+          
+          // Mark as new and scroll to it after a brief delay to allow rendering
+          setTimeout(() => {
+            this.scrollToNewMedication();
+          }, 100);
         },
         error: (error) => {
           console.error('[MedicationList] Failed to add medication:', error);
@@ -735,5 +742,34 @@ export class MedicationListComponent implements OnInit {
     };
 
     deleteNext(0);
+  }
+
+  private scrollToNewMedication() {
+    if (this.medications.length === 0) return;
+    
+    // Mark the last medication as new
+    const lastMedication = this.medications[this.medications.length - 1];
+    if (lastMedication) {
+      (lastMedication as any).isNew = true;
+      
+      // Scroll to the last medication after rendering
+      setTimeout(() => {
+        const scrollContainer = this.medicationsScrollContainer?.nativeElement;
+        if (scrollContainer) {
+          // Get the last medication item element
+          const lastItem = scrollContainer.lastElementChild;
+          if (lastItem) {
+            // Scroll the item into view smoothly
+            lastItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            console.log('[MedicationList] Scrolled to new medication');
+          }
+        }
+      }, 50);
+
+      // Remove the new flag after animation completes
+      setTimeout(() => {
+        (lastMedication as any).isNew = false;
+      }, 2500);
+    }
   }
 }

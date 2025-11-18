@@ -1,4 +1,4 @@
-<div class="medication-item" [attr.data-cnk]="medication.cnk ?? ''" [attr.data-vmp]="medication.vmp ?? ''" [attr.data-package-size]="medication.packageSize ?? ''">
+<div class="medication-item" [ngClass]="{ 'is-new': isNew }" [attr.data-cnk]="medication.cnk ?? ''" [attr.data-vmp]="medication.vmp ?? ''" [attr.data-package-size]="medication.packageSize ?? ''">
   <div class="medication-header" (click)="toggleExpand()">
     <div class="header-content">
       <div class="medication-name">{{ medication.name }}</div>

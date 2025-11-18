@@ -114,6 +114,37 @@
       font-weight: $font-weight-medium;
     }
 
+    .btn-secondary {
+      padding: 0.55rem 1rem;
+      background-color: rgba($box-background, 0.85);
+      color: $text-primary;
+      border: 1.5px solid rgba($box-background, 0.5);
+      border-radius: $box-border-radius-small;
+      font-family: $primary-font;
+      font-size: 0.9rem;
+      font-weight: $font-weight-semibold;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      svg {
+        flex-shrink: 0;
+      }
+
+      &:hover {
+        background-color: $box-background;
+        border-color: rgba($box-background, 0.8);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
     .btn-primary {
       padding: 0.55rem 1rem;
       background-color: rgba($box-background, 0.95);
@@ -474,6 +505,110 @@
       .btn-cancel {
         background-color: rgba(255, 255, 255, 0.6);
         border-color: #d4c5a9;
+        color: $text-secondary;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.9);
+          border-color: $text-secondary;
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+}
+
+// General note form
+.general-note-form {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  z-index: 10;
+
+  h3 {
+    margin: 0 0 1.5rem 0;
+    font-family: $primary-font;
+    font-size: 1.5rem;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-family: $primary-font;
+      font-size: 0.9rem;
+      font-weight: $font-weight-medium;
+      color: $text-secondary;
+    }
+
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d4c5a9;
+      border-radius: 8px;
+      font-family: $primary-font;
+      font-size: 0.9rem;
+      color: $text-primary;
+      background-color: white;
+      transition: border-color 0.15s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $button-primary-background;
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+
+    button {
+      padding: 0.6rem 1.25rem;
+      border: none;
+      border-radius: 10px;
+      font-family: $primary-font;
+      font-size: 0.9rem;
+      font-weight: $font-weight-medium;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &.btn-primary {
+        background-color: $button-primary-background;
+        color: white;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba($button-primary-background, 0.25);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+
+      &.btn-secondary {
+        background-color: rgba(255, 255, 255, 0.6);
+        border: 1px solid #d4c5a9;
         color: $text-secondary;
 
         &:hover {

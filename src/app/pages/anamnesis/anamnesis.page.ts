@@ -280,8 +280,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         description: `${this.transloco.translate('medication.cnk') || 'CNK'}: ${med.cnk || '—'} | ${medicationNotes.length} ${this.transloco.translate('notes.existing_notes') || 'note(s)'}`,
         questions: [
           { name: `p2_med_${cnk}_adherence`, text: this.transloco.translate('anamnesis_dynamic.takes_as_prescribed') || 'Takes as prescribed?', type: 'radio', value: null, options: [true, false] },
-          { name: `p2_med_${cnk}_frequency`, text: this.transloco.translate('anamnesis_dynamic.how_often_forgotten') || 'How often is it forgotten?', type: 'textarea', value: '', hidden: true },
-          { name: `p2_med_${cnk}_barriers`, text: this.transloco.translate('anamnesis_dynamic.what_problems') || 'What are the barriers to adherence?', type: 'textarea', value: '', hidden: true },
           { name: `p2_med_${cnk}_notes`, text: this.transloco.translate('anamnesis_dynamic.pharmacist_notes') || 'Pharmacist notes', type: 'textarea', value: '', hidden: true }
         ]
       });
@@ -611,7 +609,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     console.log('[Anamnesis] updatePart2QuestionVisibility for', cnk, 'adherenceValue=', adherenceValue, '-> showFollowUp=', showFollowUpQuestions);
 
     box.questions.forEach(q => {
-      if (q.name.includes('_frequency') || q.name.includes('_barriers') || q.name.includes('_notes')) {
+      if (q.name.includes('_notes')) {
         q.hidden = !showFollowUpQuestions;
       }
     });

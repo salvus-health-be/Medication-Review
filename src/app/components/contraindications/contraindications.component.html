@@ -80,7 +80,7 @@
                         @for (detail of contraindication.contraindications; track detail.code) {
                           <div class="detail-item">
                             <span class="detail-code">[{{ detail.code }}]</span>
-                            <span class="detail-description">{{ detail.description }}</span>
+                            <span class="detail-description" [innerHTML]="formatText(detail.description)"></span>
                           </div>
                         }
                       </div>
@@ -158,7 +158,7 @@
                         @for (detail of contraindication.contraindications; track detail.code) {
                           <div class="detail-item">
                             <span class="detail-code">[{{ detail.code }}]</span>
-                            <span class="detail-description">{{ detail.description }}</span>
+                            <span class="detail-description" [innerHTML]="formatText(detail.description)"></span>
                           </div>
                         }
                       </div>

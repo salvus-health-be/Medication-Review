@@ -358,4 +358,27 @@ export class ContraindicationsComponent implements OnInit {
       return `product-${ci.cnk}-${ci.conditionCode}-${index}`;
     }
   }
+
+  formatText(text: string): string {
+    if (!text) return '';
+    
+    let formatted = text;
+    
+    // First, handle ~n as newline markers (before processing other ~ patterns)
+    formatted = formatted.replace(/~n-?/g, '\n');
+    
+    // Replace ~text~ with <sub>text</sub> for subscript (but not single ~)
+    formatted = formatted.replace(/~([^~\n]+)~/g, '<sub>$1</sub>');
+    
+    // Replace **text** with <strong>text</strong> for bold
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Replace remaining line breaks with <br> tags
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Format inline literature references (e.g., [1], [2-5])
+    formatted = formatted.replace(/\[(\d+(?:-\d+)?(?:,\s*\d+(?:-\d+)?)*)\]/g, '<sup class="reference">[$1]</sup>');
+    
+    return formatted;
+  }
 }

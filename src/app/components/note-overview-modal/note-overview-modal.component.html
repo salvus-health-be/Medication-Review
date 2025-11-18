@@ -4,6 +4,13 @@
       <h1>Note Overview</h1>
       <div class="header-actions">
         <div class="notes-count">{{ notes.length }} note{{ notes.length !== 1 ? 's' : '' }}</div>
+        <button class="btn-secondary" (click)="showAddGeneralNote()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add General Note
+        </button>
         <button class="btn-primary" (click)="generatePatientConversation()">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -143,6 +150,33 @@
         </div>
       }
     </div>
+
+    <!-- Add general note form -->
+    @if (showGeneralNoteForm) {
+      <div class="general-note-form">
+        <h3>Add General Note</h3>
+        <div class="form-group">
+          <label for="noteText">Note Text:</label>
+          <textarea 
+            id="noteText" 
+            [(ngModel)]="newNoteText" 
+            placeholder="Enter your note here..."
+            rows="4"
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label for="noteCategory">Category:</label>
+          <select id="noteCategory" [(ngModel)]="newNoteCategory">
+            <option value="TherapyAdherence">Therapy Adherence (Part 2)</option>
+            <option value="Effectiveness">Effectiveness (Part 3)</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button class="btn-secondary" (click)="cancelAddGeneralNote()">Cancel</button>
+          <button class="btn-primary" (click)="saveGeneralNote()" [disabled]="!newNoteText.trim()">Save Note</button>
+        </div>
+      </div>
+    }
 
     <!-- Delete confirmation modal -->
     @if (showDeleteConfirmation) {

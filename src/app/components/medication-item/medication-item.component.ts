@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -27,6 +27,7 @@ export interface Medication {
   unitsBeforeDinner?: number | null;
   unitsDuringDinner?: number | null;
   unitsAtBedtime?: number | null;
+  isNew?: boolean;
 }
 
 @Component({
@@ -36,9 +37,10 @@ export interface Medication {
   templateUrl: './medication-item.component.html',
   styleUrls: ['./medication-item.component.scss']
 })
-export class MedicationItemComponent implements OnInit {
+export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges {
   @Input() medication!: Medication;
   @Input() expandable: boolean = true; // New input to control if item can be expanded
+  @Input() isNew: boolean = false; // Flag to indicate this is a newly added medication
   @Output() medicationDeleted = new EventEmitter<string>();
   @Output() editRequested = new EventEmitter<Medication>();
   isExpanded = false;
@@ -53,6 +55,14 @@ export class MedicationItemComponent implements OnInit {
     private stateService: StateService
     , private transloco: TranslocoService
   ) {}
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Detect when isNew changes to true and expand the box
+    if (changes['isNew'] && changes['isNew'].currentValue === true) {
+      this.isExpanded = true;
+      console.log('[MedicationItem] Auto-expanding new medication:', this.medication.name);
+    }
+  }
 
   ngOnInit() {
     console.log('[MedicationItem] ngOnInit for medication:', this.medication.name);

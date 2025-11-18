@@ -86,9 +86,11 @@ export class ManualDispensingModalComponent implements OnInit {
       const medication = this.medications.find(m => m.cnk?.toString() === cnk);
       if (medication) {
         this.currentMoment.description = medication.name || '';
+        this.currentMoment.cnk = cnk; // Ensure CNK is set as string
       }
     } else {
       this.currentMoment.description = '';
+      this.currentMoment.cnk = '';
     }
   }
 
@@ -177,7 +179,7 @@ export class ManualDispensingModalComponent implements OnInit {
 
     for (const moment of this.moments) {
       const request: AddManualDispensingMomentRequest = {
-        cnk: moment.cnk,
+        cnk: moment.cnk.toString(), // Ensure CNK is string
         description: moment.description,
         date: moment.date, // Send as ISO format (YYYY-MM-DD)
         amount: moment.amount

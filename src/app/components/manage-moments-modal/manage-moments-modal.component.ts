@@ -48,6 +48,10 @@ export class ManageMomentsModalComponent implements OnInit {
 
     this.apiService.queryDispensingHistory(apbNumber, reviewId).subscribe({
       next: (response) => {
+        console.log('[ManageMoments] Dispensing history loaded:', response);
+        console.log('[ManageMoments] First CNK group:', response.dispensingData?.[0]);
+        console.log('[ManageMoments] First moment in first CNK:', response.dispensingData?.[0]?.dispensingMoments?.[0]);
+        
         this.dispensingHistory = response;
         this.loading = false;
         
@@ -74,7 +78,7 @@ export class ManageMomentsModalComponent implements OnInit {
     }
 
     const cnkGroup = this.dispensingHistory.dispensingData.find(
-      group => group.cnk === this.selectedCnk
+      group => group.cnk === this.selectedCnk || group.cnk === this.selectedCnk.toString()
     );
 
     if (cnkGroup) {
@@ -82,6 +86,8 @@ export class ManageMomentsModalComponent implements OnInit {
       this.filteredMoments = cnkGroup.dispensingMoments.filter(
         moment => moment.source === 'manual'
       );
+      console.log('[ManageMoments] Filtered moments for CNK', this.selectedCnk, ':', this.filteredMoments);
+      console.log('[ManageMoments] First moment ID:', this.filteredMoments[0]?.id);
     } else {
       this.filteredMoments = [];
     }
@@ -91,7 +97,7 @@ export class ManageMomentsModalComponent implements OnInit {
     if (!this.dispensingHistory) return cnk;
     
     const cnkGroup = this.dispensingHistory.dispensingData.find(
-      group => group.cnk === cnk
+      group => group.cnk === cnk || group.cnk === cnk.toString()
     );
     
     return cnkGroup ? cnkGroup.description : cnk;
@@ -111,18 +117,14 @@ export class ManageMomentsModalComponent implements OnInit {
   }
 
   deleteMoment(moment: DispensingMoment) {
-    if (!moment.id) {
-      this.error = 'Cannot delete: moment ID is missing';
-      return;
-    }
-
-    const confirmed = confirm(
-      `Delete this dispensing moment?\n\n` +
-      `Date: ${this.formatDate(moment.date)}\n` +
-      `Amount: ${moment.amount}`
-    );
-
-    if (!confirmed) {
+    console.log('[ManageMoments] Delete moment called:', moment);
+    console.log('[ManageMoments] Moment ID value:', moment.id);
+    console.log('[ManageMoments] Moment ID type:', typeof moment.id);
+    console.log('[ManageMoments] Full moment object:', moment);
+    
+    if (!moment.id || moment.id.trim?.() === '' || moment.id === null) {
+      this.error = 'Cannot delete: moment ID is missing or empty. ID value: "' + moment.id + '". Properties: ' + Object.keys(moment).join(', ') + '. Values: ' + JSON.stringify(moment);
+      console.error('[ManageMoments] Moment missing or empty ID. Full moment object:', moment);
       return;
     }
 

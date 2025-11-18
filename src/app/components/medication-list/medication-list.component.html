@@ -12,10 +12,12 @@
     </div>
   </div>
 
-  <div class="medications-scroll">
+  <div class="medications-scroll" #medicationsScroll>
     <app-medication-item 
-      *ngFor="let medication of medications" 
+      #medicationItems
+      *ngFor="let medication of medications; let last = last" 
       [medication]="medication"
+      [isNew]="medication.isNew === true"
       (medicationDeleted)="onMedicationDeleted($event)"
       (editRequested)="onEditRequested($event)">
     </app-medication-item>

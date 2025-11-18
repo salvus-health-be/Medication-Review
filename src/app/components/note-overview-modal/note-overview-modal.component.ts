@@ -27,6 +27,11 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   selectedNoteToDelete: ReviewNote | null = null;
   editingNoteId: string | null = null;
   editingNoteText: string = '';
+  
+  // General note form state
+  showGeneralNoteForm = false;
+  newNoteText = '';
+  newNoteCategory: 'TherapyAdherence' | 'Effectiveness' = 'TherapyAdherence';
 
   constructor(
     private reviewNotesService: ReviewNotesService,
@@ -192,5 +197,44 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
 
   close() {
     this.closeModal.emit();
+  }
+
+  showAddGeneralNote() {
+    this.showGeneralNoteForm = true;
+    this.newNoteText = '';
+    this.newNoteCategory = 'TherapyAdherence';
+  }
+
+  cancelAddGeneralNote() {
+    this.showGeneralNoteForm = false;
+    this.newNoteText = '';
+  }
+
+  saveGeneralNote() {
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId || !this.newNoteText.trim()) {
+      console.error('[NoteOverviewModal] Cannot save general note - missing review ID or text');
+      return;
+    }
+
+    console.log('[NoteOverviewModal] Saving general note with category:', this.newNoteCategory);
+
+    this.reviewNotesService.addNote(reviewId, {
+      text: this.newNoteText.trim(),
+      discussWithPatient: true,
+      communicateToDoctor: false,
+      category: this.newNoteCategory,
+      linkedCnk: undefined // No linked CNK for general notes
+    }).subscribe({
+      next: (note) => {
+        console.log('[NoteOverviewModal] General note saved successfully:', note);
+        this.showGeneralNoteForm = false;
+        this.newNoteText = '';
+      },
+      error: (error) => {
+        console.error('[NoteOverviewModal] Error saving general note:', error);
+        alert('Failed to save note. Please try again.');
+      }
+    });
   }
 }

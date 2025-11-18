@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
 import { FormsModule } from '@angular/forms';
@@ -14,10 +14,11 @@ import { MedicationSearchResult } from '../../models/api.models';
   templateUrl: './medication-search-modal.component.html',
   styleUrls: ['./medication-search-modal.component.scss']
 })
-export class MedicationSearchModalComponent {
+export class MedicationSearchModalComponent implements AfterViewInit {
   @Input() isEditMode = false;
   @Output() close = new EventEmitter<void>();
   @Output() medicationSelected = new EventEmitter<MedicationSearchResult>();
+  @ViewChild('searchInput') searchInput!: ElementRef;
 
   searchTerm = '';
   searchResults: MedicationSearchResult[] = [];
@@ -38,6 +39,16 @@ export class MedicationSearchModalComponent {
         this.searchResults = [];
       }
     });
+  }
+
+  ngAfterViewInit() {
+    // Focus the search input after the view is initialized
+    if (this.searchInput) {
+      setTimeout(() => {
+        this.searchInput.nativeElement.focus();
+        console.log('[MedicationSearchModal] Search input focused');
+      }, 100);
+    }
   }
 
   onSearchInput(event: Event) {

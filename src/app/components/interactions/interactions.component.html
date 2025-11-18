@@ -86,7 +86,7 @@
                               @for (text of group.texts; track text.title.code) {
                                 <div class="detail-text">
                                   <strong>{{ text.title.description }}:</strong>
-                                  <p>{{ text.text }}</p>
+                                  <p [innerHTML]="formatText(text.text)"></p>
                                 </div>
                               }
                             </div>
@@ -97,7 +97,7 @@
                             @if (interactionDetails.details.direction && interactionDetails.details.direction.description !== 'fallbacks.no_direction') {
                               <div class="detail-row">
                                 <span class="detail-label">{{ 'interactions.detail_direction' | transloco }}</span>
-                                <span class="detail-value">{{ interactionDetails.details.direction.description }}</span>
+                                <span class="detail-value" [innerHTML]="formatText(interactionDetails.details.direction.description)"></span>
                               </div>
                             }
                             @if (interactionDetails.details.plausibility) {
@@ -200,7 +200,7 @@
                               @for (text of group.texts; track text.title.code) {
                                 <div class="detail-text">
                                   <strong>{{ text.title.description }}:</strong>
-                                  <p>{{ text.text }}</p>
+                                  <p [innerHTML]="formatText(text.text)"></p>
                                 </div>
                               }
                             </div>
@@ -211,13 +211,13 @@
                             @if (interactionDetails.details.direction && interactionDetails.details.direction.description !== 'fallbacks.no_direction') {
                               <div class="detail-row">
                                 <span class="detail-label">{{ 'interactions.detail_direction' | transloco }}</span>
-                                <span class="detail-value">{{ interactionDetails.details.direction.description }}</span>
+                                <span class="detail-value" [innerHTML]="formatText(interactionDetails.details.direction.description)"></span>
                               </div>
                             }
                             @if (interactionDetails.details.plausibility) {
                               <div class="detail-row">
                                 <span class="detail-label">Plausibility:</span>
-                                <span class="detail-value">{{ interactionDetails.details.plausibility.description }}</span>
+                                <span class="detail-value" [innerHTML]="formatText(interactionDetails.details.plausibility.description)"></span>
                               </div>
                             }
                             @if (interactionDetails.details.frequency) {

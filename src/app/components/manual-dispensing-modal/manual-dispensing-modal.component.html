@@ -26,7 +26,7 @@
             >
               <option value="">{{ 'manual_dispensing.select_medication_placeholder' | transloco }}</option>
               @for (med of medications; track med.medicationId) {
-                <option [value]="med.cnk">{{ med.name }} (CNK: {{ med.cnk }})</option>
+                <option [value]="med.cnk?.toString() || ''">{{ med.name }} (CNK: {{ med.cnk }})</option>
               }
             </select>
             @if (currentMoment.errors?.medication) {

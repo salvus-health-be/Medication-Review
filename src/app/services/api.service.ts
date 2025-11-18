@@ -217,12 +217,12 @@ export class ApiService {
         tap(rawResponse => {
           console.log('[ApiService] RAW backend response:', JSON.stringify(rawResponse, null, 2));
         }),
-        map(items => items.map(item => {
-          const mapped = {
+        map(items => {
+          const mapped = items.map(item => ({
             medicationId: item.rowKey ?? item.MedicationId ?? item.medicationId,
             name: item.name ?? item.Name ?? null,
             cnk: item.cnk ?? item.CNK ?? item.Cnk ?? null,
-              asNeeded: (item.asNeeded === true || item.asNeeded === 'true' || item.AsNeeded === true || item.AsNeeded === 'true') ? true : false,
+            asNeeded: (item.asNeeded === true || item.asNeeded === 'true' || item.AsNeeded === true || item.AsNeeded === 'true') ? true : false,
             vmp: item.vmp ?? item.VMP ?? item.Vmp ?? null,
             packageSize: item.packageSize ?? item.PackageSize ?? null,
             dosageMg: item.dosageMg ?? item.DosageMg ?? null,
@@ -236,11 +236,21 @@ export class ApiService {
             unitsDuringLunch: item.unitsDuringLunch ?? item.UnitsDuringLunch ?? null,
             unitsBeforeDinner: item.unitsBeforeDinner ?? item.UnitsBeforeDinner ?? null,
             unitsDuringDinner: item.unitsDuringDinner ?? item.UnitsDuringDinner ?? null,
-            unitsAtBedtime: item.unitsAtBedtime ?? item.UnitsAtBedtime ?? null
-          };
-          console.log('[ApiService] Mapped item:', JSON.stringify(mapped, null, 2));
+            unitsAtBedtime: item.unitsAtBedtime ?? item.UnitsAtBedtime ?? null,
+            timestamp: item.timestamp ?? item.Timestamp ?? null
+          }));
+          
+          // Sort by timestamp (oldest first)
+          mapped.sort((a, b) => {
+            if (!a.timestamp && !b.timestamp) return 0;
+            if (!a.timestamp) return 1;
+            if (!b.timestamp) return -1;
+            return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+          });
+          
+          console.log('[ApiService] Medications sorted by timestamp:', mapped.length);
           return mapped;
-        }))
+        })
       );
   }
 
@@ -392,9 +402,44 @@ export class ApiService {
   }
 
   queryDispensingHistory(apbNumber: string, reviewId: string): Observable<DispensingHistoryResponse> {
-    return this.http.get<DispensingHistoryResponse>(
+    return this.http.get<any>(
       `${this.API_BASE_URL}/query_dispensing_history?apbNumber=${apbNumber}&medicationReviewId=${reviewId}`
-    ).pipe(tap(response => console.log('[ApiService] Query dispensing history response:', response)));
+    ).pipe(
+      tap(response => {
+        console.log('[ApiService] Query dispensing history raw response:', JSON.stringify(response, null, 2));
+        if (response.dispensingData?.[0]?.dispensingMoments?.[0]) {
+          console.log('[ApiService] First raw moment:', response.dispensingData[0].dispensingMoments[0]);
+        }
+      }),
+      map(response => ({
+        medicationReviewId: response.medicationReviewId ?? response.MedicationReviewId,
+        blobUri: response.blobUri ?? response.BlobUri,
+        totalCnkCodes: response.totalCnkCodes ?? response.TotalCnkCodes,
+        totalDispensingMoments: response.totalDispensingMoments ?? response.TotalDispensingMoments,
+        csvMoments: response.csvMoments ?? response.CsvMoments,
+        manualMoments: response.manualMoments ?? response.ManualMoments,
+        dispensingData: (response.dispensingData ?? response.DispensingData ?? []).map((cnkGroup: any) => ({
+          cnk: cnkGroup.cnk ?? cnkGroup.Cnk ?? cnkGroup.CNK,
+          description: cnkGroup.description ?? cnkGroup.Description,
+          dispensingMoments: (cnkGroup.dispensingMoments ?? cnkGroup.DispensingMoments ?? []).map((moment: any) => {
+            const extractedId = moment.id ?? moment.Id ?? moment.rowKey ?? moment.RowKey;
+            console.log('[ApiService] Extracting ID from moment:', { rawId: moment.id, rawId_PascalCase: moment.Id, rawRowKey: moment.rowKey, rawRowKey_PascalCase: moment.RowKey, extractedId });
+            return {
+              date: moment.date ?? moment.Date,
+              amount: moment.amount ?? moment.Amount,
+              source: moment.source ?? moment.Source,
+              id: extractedId
+            };
+          })
+        }))
+      })),
+      tap(response => {
+        console.log('[ApiService] Query dispensing history mapped response:', JSON.stringify(response, null, 2));
+        if (response.dispensingData?.[0]?.dispensingMoments?.[0]) {
+          console.log('[ApiService] First mapped moment:', response.dispensingData[0].dispensingMoments[0]);
+        }
+      })
+    );
   }
 
   addManualDispensingMoment(

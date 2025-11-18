@@ -375,8 +375,11 @@ export class InteractionsComponent implements OnInit {
     
     let formatted = text;
     
-    // Replace ~text~ with <sub>text</sub> for subscript
-    formatted = formatted.replace(/~([^~]+)~/g, '<sub>$1</sub>');
+    // First, handle ~n as newline markers (before processing other ~ patterns)
+    formatted = formatted.replace(/~n-?/g, '\n');
+    
+    // Replace ~text~ with <sub>text</sub> for subscript (but not single ~)
+    formatted = formatted.replace(/~([^~\n]+)~/g, '<sub>$1</sub>');
     
     // Replace **text** with <strong>text</strong> for bold
     formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
