@@ -270,6 +270,7 @@ export interface DispensingMoment {
   date: string;          // DD/MM/YYYY format
   amount: number;        // Quantity dispensed
   source?: 'csv' | 'manual'; // Source of the dispensing moment
+  id?: string;           // Unique ID for manual moments (GUID)
 }
 
 export interface CnkDispensingData {

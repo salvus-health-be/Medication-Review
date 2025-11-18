@@ -15,17 +15,27 @@
         style="display: none;"
       />
       
-      <button 
-        class="upload-button" 
-        (click)="triggerFileInput()"
-        [disabled]="uploading"
-      >
-        @if (uploading) {
-          <span>{{ 'therapy_adherence.uploading' | transloco }}</span>
-        } @else {
-          <span>{{ 'therapy_adherence.choose_csv' | transloco }}</span>
-        }
-      </button>
+      <div class="button-group">
+        <button 
+          class="upload-button-prompt" 
+          (click)="triggerFileInput()"
+          [disabled]="uploading"
+        >
+          @if (uploading) {
+            <span>{{ 'therapy_adherence.uploading' | transloco }}</span>
+          } @else {
+            <span>{{ 'therapy_adherence.choose_csv' | transloco }}</span>
+          }
+        </button>
+        
+        <button 
+          class="manual-dispensing-button-prompt" 
+          (click)="openManualDispensingModal()"
+          [disabled]="uploading"
+        >
+          <span>{{ 'therapy_adherence.add_manual_moments' | transloco }}</span>
+        </button>
+      </div>
       
       @if (uploadError) {
         <p class="error-message">{{ uploadError }}</p>
@@ -156,7 +166,7 @@
           }
         </div>
         
-        <!-- Upload new file button at bottom -->
+        <!-- Action buttons -->
         <div class="upload-footer">
           <button 
             class="upload-button secondary" 
@@ -173,6 +183,14 @@
           >
             {{ 'therapy_adherence.add_manual_moments' | transloco }}
           </button>
+          
+          <button 
+            class="manage-moments-button" 
+            (click)="openManageMomentsModal()"
+            [disabled]="uploading"
+          >
+            {{ 'therapy_adherence.view_all_moments' | transloco }}
+          </button>
         </div>
       </div>
     </div>
@@ -183,6 +201,14 @@
     <app-manual-dispensing-modal
       (close)="closeManualDispensingModal()"
       (momentsAdded)="onManualMomentsAdded()"
+    />
+  }
+  
+  <!-- Manage Moments Modal -->
+  @if (showManageMomentsModal) {
+    <app-manage-moments-modal
+      (close)="closeManageMomentsModal()"
+      (momentsDeleted)="onMomentsDeleted()"
     />
   }
 </div>

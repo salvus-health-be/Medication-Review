@@ -431,7 +431,21 @@
     "choose_csv": "Choose CSV File",
     "upload_dispensing_history": "Please upload dispensing history",
     "upload_new_file": "Upload New File",
-    "add_manual_moments": "Add Manual Moments"
+    "add_manual_moments": "Add Manual Moments",
+    "view_all_moments": "View All Moments"
+  },
+  "manage_moments": {
+    "title": "Manage Dispensing Moments",
+    "loading": "Loading dispensing moments...",
+    "no_data": "No dispensing history available. Please upload a CSV file or add manual moments first.",
+    "select_medication": "Select Medication",
+    "no_manual_moments": "No manual dispensing moments found for this medication. Only manually added moments can be deleted.",
+    "date": "Date",
+    "amount": "Amount",
+    "actions": "Actions",
+    "delete": "Delete",
+    "total": "Total",
+    "medication": "Medication"
   },
   "manual_dispensing": {
     "title": "Add Manual Dispensing Moments",

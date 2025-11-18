@@ -34,17 +34,19 @@
   margin: auto;
 }
 
-.prompt-text {
-  font-family: $primary-font;
-  font-size: 1.25rem;
-  color: $text-primary;
-  font-weight: $font-weight-semibold;
-  text-align: center;
-  margin: 0;
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  align-items: center;
 }
 
-.upload-button {
+.upload-button-prompt,
+.manual-dispensing-button-prompt {
   padding: 0.75rem 2rem;
+  width: 100%;
+  max-width: 300px;
   background-color: $button-primary-background;
   color: white;
   border: none;
@@ -55,6 +57,13 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
 
   &:hover:not(:disabled) {
     background-color: darken($button-primary-background, 5%);
@@ -69,16 +78,6 @@
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-  }
-
-  &.secondary {
-    background-color: #6c757d;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-
-    &:hover:not(:disabled) {
-      background-color: darken(#6c757d, 5%);
-    }
   }
 }
 
@@ -122,9 +121,11 @@
   margin: 0 2rem;
 }
 
-.manual-dispensing-button {
+.upload-button.secondary,
+.manual-dispensing-button,
+.manage-moments-button {
   padding: 0.5rem 1rem;
-  background-color: #2196F3;
+  background-color: $button-primary-background;
   color: white;
   border: none;
   border-radius: $box-border-radius;
@@ -136,7 +137,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &:hover:not(:disabled) {
-    background-color: darken(#2196F3, 5%);
+    background-color: darken($button-primary-background, 5%);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 

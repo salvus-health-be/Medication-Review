@@ -85,11 +85,9 @@ export class ManualDispensingModalComponent implements OnInit {
     if (cnk) {
       const medication = this.medications.find(m => m.cnk?.toString() === cnk);
       if (medication) {
-        this.currentMoment.cnk = cnk;
         this.currentMoment.description = medication.name || '';
       }
     } else {
-      this.currentMoment.cnk = '';
       this.currentMoment.description = '';
     }
   }
@@ -130,7 +128,18 @@ export class ManualDispensingModalComponent implements OnInit {
       };
       
       this.moments.push(momentCopy);
-      this.currentMoment = this.createEmptyMoment();
+      
+      // Reset only date and amount, keep the selected medication
+      const selectedCnk = this.currentMoment.cnk;
+      const selectedDescription = this.currentMoment.description;
+      this.currentMoment.date = new Date().toISOString().split('T')[0];
+      this.currentMoment.amount = 1;
+      this.currentMoment.errors = {};
+      
+      // Preserve the medication selection
+      this.currentMoment.cnk = selectedCnk;
+      this.currentMoment.description = selectedDescription;
+      
       this.error = null;
     }
   }

@@ -19,6 +19,7 @@
             <label for="medication-select">{{ 'manual_dispensing.select_medication' | transloco }} *</label>
             <select 
               id="medication-select" 
+              [(ngModel)]="currentMoment.cnk"
               (change)="onMedicationSelected($event)"
               [disabled]="submitting"
               [class.error]="currentMoment.errors?.medication"

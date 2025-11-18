@@ -431,7 +431,21 @@
     "choose_csv": "CSV-bestand kiezen",
     "upload_dispensing_history": "Upload afleveringhistoriek",
     "upload_new_file": "Nieuw Bestand Uploaden",
-    "add_manual_moments": "Handmatige Momenten Toevoegen"
+    "add_manual_moments": "Handmatige Momenten Toevoegen",
+    "view_all_moments": "Alle Momenten Bekijken"
+  },
+  "manage_moments": {
+    "title": "Aflevermomenten Beheren",
+    "loading": "Aflevermomenten laden...",
+    "no_data": "Geen afleverhistoriek beschikbaar. Upload een CSV-bestand of voeg handmatige momenten toe.",
+    "select_medication": "Selecteer Medicijn",
+    "no_manual_moments": "Geen handmatige aflevermomenten gevonden voor dit medicijn. Alleen handmatig toegevoegde momenten kunnen worden verwijderd.",
+    "date": "Datum",
+    "amount": "Hoeveelheid",
+    "actions": "Acties",
+    "delete": "Verwijderen",
+    "total": "Totaal",
+    "medication": "Medicijn"
   },
   "manual_dispensing": {
     "title": "Handmatige Aflevermomenten Toevoegen",

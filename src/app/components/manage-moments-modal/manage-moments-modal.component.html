@@ -1,0 +1,81 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'manage_moments.title' | transloco }}</h2>
+      <button class="close-button" (click)="closeModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      @if (loading) {
+        <div class="loading-state">
+          <p>{{ 'manage_moments.loading' | transloco }}</p>
+        </div>
+      } @else if (!dispensingHistory || dispensingHistory.dispensingData.length === 0) {
+        <div class="no-data">
+          <p>{{ 'manage_moments.no_data' | transloco }}</p>
+        </div>
+      } @else {
+        <div class="medication-selector">
+          <label for="medication-select">{{ 'manage_moments.select_medication' | transloco }}</label>
+          <select 
+            id="medication-select" 
+            [(ngModel)]="selectedCnk"
+            (change)="onMedicationSelected()"
+          >
+            @for (cnkGroup of dispensingHistory.dispensingData; track cnkGroup.cnk) {
+              <option [value]="cnkGroup.cnk">{{ cnkGroup.description }} (CNK: {{ cnkGroup.cnk }})</option>
+            }
+          </select>
+        </div>
+
+        @if (filteredMoments.length === 0) {
+          <div class="no-moments">
+            <p>{{ 'manage_moments.no_manual_moments' | transloco }}</p>
+          </div>
+        } @else {
+          <div class="moments-table">
+            <div class="table-header">
+              <div class="col-date">{{ 'manage_moments.date' | transloco }}</div>
+              <div class="col-amount">{{ 'manage_moments.amount' | transloco }}</div>
+              <div class="col-actions">{{ 'manage_moments.actions' | transloco }}</div>
+            </div>
+
+            @for (moment of filteredMoments; track moment.id) {
+              <div class="table-row" [class.deleting]="isDeleting(moment.id)">
+                <div class="col-date">{{ formatDate(moment.date) }}</div>
+                <div class="col-amount">{{ moment.amount }}</div>
+                <div class="col-actions">
+                  <button 
+                    class="delete-button" 
+                    (click)="deleteMoment(moment)"
+                    [disabled]="isDeleting(moment.id)"
+                  >
+                    @if (isDeleting(moment.id)) {
+                      <span>{{ 'common.loading' | transloco }}</span>
+                    } @else {
+                      <span>{{ 'manage_moments.delete' | transloco }}</span>
+                    }
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="summary">
+            <p>{{ 'manage_moments.total' | transloco }}: {{ filteredMoments.length }}</p>
+          </div>
+        }
+
+        @if (error) {
+          <div class="error-message">{{ error }}</div>
+        }
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button class="close-footer-button" (click)="closeModal()">
+        {{ 'common.close' | transloco }}
+      </button>
+    </div>
+  </div>
+</div>

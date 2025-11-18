@@ -411,6 +411,16 @@ export class ApiService {
     ).pipe(tap(response => console.log('[ApiService] Add manual dispensing moment response:', response)));
   }
 
+  deleteManualDispensingMoment(
+    apbNumber: string,
+    reviewId: string,
+    id: string
+  ): Observable<any> {
+    return this.http.delete<any>(
+      `${this.API_BASE_URL}/delete_manual_dispensing_moment?apbNumber=${apbNumber}&medicationReviewId=${reviewId}&id=${id}`
+    ).pipe(tap(response => console.log('[ApiService] Delete manual dispensing moment response:', response)));
+  }
+
   checkInteractions(request: any): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'

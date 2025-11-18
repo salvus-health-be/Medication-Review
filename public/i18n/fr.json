@@ -417,7 +417,21 @@
     "choose_csv": "Choisir un fichier CSV",
     "upload_dispensing_history": "Veuillez télécharger l'historique de distribution",
     "upload_new_file": "Télécharger un Nouveau Fichier",
-    "add_manual_moments": "Ajouter des Moments Manuels"
+    "add_manual_moments": "Ajouter des Moments Manuels",
+    "view_all_moments": "Voir Tous les Moments"
+  },
+  "manage_moments": {
+    "title": "Gérer les Moments de Délivrance",
+    "loading": "Chargement des moments de délivrance...",
+    "no_data": "Aucun historique de distribution disponible. Veuillez télécharger un fichier CSV ou ajouter des moments manuels d'abord.",
+    "select_medication": "Sélectionner un Médicament",
+    "no_manual_moments": "Aucun moment de délivrance manuel trouvé pour ce médicament. Seuls les moments ajoutés manuellement peuvent être supprimés.",
+    "date": "Date",
+    "amount": "Quantité",
+    "actions": "Actions",
+    "delete": "Supprimer",
+    "total": "Total",
+    "medication": "Médicament"
   },
   "manual_dispensing": {
     "title": "Ajouter des Moments de Délivrance Manuels",

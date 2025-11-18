@@ -8,6 +8,7 @@ import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
 import { DispensingHistoryResponse, CnkDispensingData, Medication as ApiMedication } from '../../models/api.models';
 import { ManualDispensingModalComponent } from '../manual-dispensing-modal/manual-dispensing-modal.component';
+import { ManageMomentsModalComponent } from '../manage-moments-modal/manage-moments-modal.component';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -36,7 +37,7 @@ interface DispensingMomentWithUnits {
 @Component({
   selector: 'app-therapy-adherence',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslocoModule, ManualDispensingModalComponent],
+  imports: [CommonModule, FormsModule, TranslocoModule, ManualDispensingModalComponent, ManageMomentsModalComponent],
   templateUrl: './therapy-adherence.component.html',
   styleUrls: ['./therapy-adherence.component.scss']
 })
@@ -48,6 +49,7 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   uploadSuccess = false;
   uploadError: string | null = null;
   showManualDispensingModal = false;
+  showManageMomentsModal = false;
   
   dispensingHistory: DispensingHistoryResponse | null = null;
   medications: ApiMedication[] = [];
@@ -1196,6 +1198,22 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     console.log('[TherapyAdherence] Manual moments added, refreshing data');
     this.showManualDispensingModal = false;
     // Refresh the dispensing history to show the new manual entries
+    this.checkExistingFile();
+  }
+
+  openManageMomentsModal() {
+    console.log('[TherapyAdherence] Opening manage moments modal');
+    this.showManageMomentsModal = true;
+  }
+
+  closeManageMomentsModal() {
+    console.log('[TherapyAdherence] Closing manage moments modal');
+    this.showManageMomentsModal = false;
+  }
+
+  onMomentsDeleted() {
+    console.log('[TherapyAdherence] Moments deleted, refreshing data');
+    // Refresh the dispensing history to reflect deletions
     this.checkExistingFile();
   }
 }
