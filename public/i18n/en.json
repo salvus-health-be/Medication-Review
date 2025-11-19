@@ -31,6 +31,8 @@
     "help": "Help",
     "logout": "Logout",
     "profile": "Profile"
+    ,
+    "retry": "Retry"
   },
   "header": {
     "step_1": "Input",

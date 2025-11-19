@@ -49,15 +49,17 @@
     </div>
   }
 
-  <div class="iframe-container" [class.loading]="isLoading">
-    <iframe
-      #pdfFrame
-      [src]="documentUrl"
-      (load)="onIframeLoad()"
-      (error)="onIframeError($event)"
-      frameborder="0"
-  title="GheOPS Tool Document">
-    </iframe>
+   <div class="iframe-container" [class.loading]="isLoading">
+    @if (documentUrl) {
+      <iframe
+        #pdfFrame
+        [src]="documentUrl"
+        (load)="onIframeLoad()"
+        (error)="onIframeError($event)"
+        frameborder="0"
+        title="GheOPS Tool Document">
+      </iframe>
+    }
   </div>
   
   @if (isLoading) {

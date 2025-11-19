@@ -370,6 +370,8 @@ export class AnalysisPage implements OnInit, OnDestroy {
     // Handle clicks based on active tool
     if (this.activeTool === 'interactions' && this.interactionsComponent) {
       this.interactionsComponent.onMedicationClick(medication.medicationId);
+    } else if (this.activeTool === 'contra-indications' && this.contraindicationsComponent) {
+      this.contraindicationsComponent.onMedicationClick(medication.medicationId);
     } else if (this.activeTool === 'posology' && this.posologyComponent) {
       this.posologyComponent.onMedicationClick(medication.medicationId);
     } else if (this.activeTool === 'renadapter' && this.renadaptorComponent) {
@@ -379,6 +381,10 @@ export class AnalysisPage implements OnInit, OnDestroy {
 
   isSelectedForInteractions(medicationId: string): boolean {
     return this.interactionsComponent?.isMedicationSelected(medicationId) ?? false;
+  }
+
+  isSelectedForContraindications(medicationId: string): boolean {
+    return this.contraindicationsComponent?.isMedicationSelected(medicationId) ?? false;
   }
 
   isSelectedForPosology(medicationId: string): boolean {

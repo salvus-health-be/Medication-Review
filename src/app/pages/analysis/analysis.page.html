@@ -10,8 +10,8 @@
       <app-analysis-medication-item
         *ngFor="let medication of medications" 
         [medication]="medication"
-        [class.clickable]="activeTool === 'interactions' || activeTool === 'posology' || activeTool === 'renadapter'"
-        [class.selected]="(activeTool === 'interactions' && isSelectedForInteractions(medication.medicationId)) || (activeTool === 'posology' && isSelectedForPosology(medication.medicationId)) || (activeTool === 'renadapter' && isSelectedForRenadaptor(medication.medicationId))"
+        [class.clickable]="activeTool === 'interactions' || activeTool === 'contra-indications' || activeTool === 'posology' || activeTool === 'renadapter'"
+        [class.selected]="(activeTool === 'interactions' && isSelectedForInteractions(medication.medicationId)) || (activeTool === 'contra-indications' && isSelectedForContraindications(medication.medicationId)) || (activeTool === 'posology' && isSelectedForPosology(medication.medicationId)) || (activeTool === 'renadapter' && isSelectedForRenadaptor(medication.medicationId))"
         (click)="onMedicationBoxClick(medication)"
         (medicationDeleted)="onMedicationDeleted($event)"
         (editRequested)="onEditRequested($event)">

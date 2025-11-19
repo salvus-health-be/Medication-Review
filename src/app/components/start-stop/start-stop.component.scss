@@ -168,10 +168,6 @@
     background-color: white;
     min-height: 0; // Important for flex child to shrink
 
-    &.loading {
-      opacity: 0;
-    }
-
     iframe {
       position: absolute;
       top: 0;

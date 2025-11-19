@@ -50,12 +50,14 @@
   }
 
   <div class="iframe-container" [class.loading]="isLoading">
-    <iframe
-      [src]="documentUrl"
-      (load)="onIframeLoad()"
-      (error)="onIframeError()"
-      frameborder="0"
-      title="START-STOP Criteria Document">
-    </iframe>
+    @if (documentUrl) {
+      <iframe
+        [src]="documentUrl"
+        (load)="onIframeLoad()"
+        (error)="onIframeError()"
+        frameborder="0"
+        title="START-STOP Criteria Document">
+      </iframe>
+    }
   </div>
 </div>

@@ -19,7 +19,7 @@
   }
   
   ::ng-deep .medication-item {
-    height: 4.5rem; // 60% of original 7.5rem
+    height: 4.5rem; // Fixed height to align with schema rows
     margin-bottom: 1rem;
     
     .medication-header {
@@ -27,6 +27,8 @@
       overflow: hidden;
       pointer-events: none !important;
       cursor: default !important;
+      // Drastically reduce padding to fit content
+      padding: 0.6rem 0.75rem !important;
     }
     
     // Re-enable pointer events for action buttons
@@ -34,41 +36,66 @@
       pointer-events: auto !important;
     }
     
+    // Allow header content to flow naturally
+    .header-content {
+      display: block !important;
+      width: 100%;
+    }
+    
     .medication-name {
-      font-size: 0.95625rem !important; // 85% of 1.125rem (15% smaller)
+      font-size: 0.9rem !important;
+      font-weight: 700 !important;
+      margin-bottom: 0.25rem !important;
+      line-height: 1.2 !important;
+      
+      /* Force single line for name to save vertical space */
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      display: block !important;
+      width: 100%;
     }
     
     .medication-codes {
       display: none !important; // Hide CNK and VMP codes
     }
     
-    .medication-indication {
-      font-size: 0.6375rem !important; // 85% of 0.75rem (15% smaller)
+    /* Make Frequency and Indication display inline to save space if needed, or just compact blocks */
+    
+    .header-frequency {
       display: inline-block !important;
+      margin-top: 0 !important;
+      margin-right: 0.5rem !important;
+      vertical-align: middle !important;
+      font-size: 0.7rem !important;
+    }
+
+    .as-needed-badge {
+      display: inline-block !important;
+      margin-top: 0 !important;
+      margin-right: 0.5rem !important;
+      vertical-align: middle !important;
+      font-size: 0.7rem !important;
+    }
+
+    .medication-indication {
+      display: inline-block !important;
+      font-size: 0.75rem !important;
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
-      max-width: 12rem !important;
+      max-width: 140px !important; /* Prevent it from pushing layout too wide */
+      opacity: 0.95 !important;
+      visibility: visible !important;
+      margin-top: 0 !important;
+      vertical-align: middle !important;
+      color: #15803d !important; /* Distinct green color */
+      font-style: italic !important;
+      line-height: 1.2 !important;
     }
     
     .medication-details {
-      font-size: 0.74375rem !important; // 85% of 0.875rem (15% smaller)
-    }
-    
-    /* Stack header content vertically so boxes appear below the name */
-    .header-content {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 0.25rem !important;
-    }
-
-    /* Ensure badges and frequency are block-level and appear under the name */
-    .header-frequency,
-    .as-needed-badge,
-    .medication-indication {
-      display: block !important;
-      margin-top: 0 !important;
+      display: none !important;
     }
   }
 }

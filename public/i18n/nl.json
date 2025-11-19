@@ -31,6 +31,8 @@
     "help": "Help",
     "logout": "Uitloggen",
     "profile": "Profiel"
+    ,
+    "retry": "Opnieuw proberen"
   },
   "header": {
     "step_1": "Input",

@@ -30,6 +30,8 @@
     "help": "Aide",
     "logout": "Déconnexion",
     "profile": "Profil"
+    ,
+    "retry": "Réessayer"
   },
   "header": {
     "step_1": "Saisie",

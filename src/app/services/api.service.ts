@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -544,6 +544,14 @@ export class ApiService {
   // Reference Documents
   getReferenceDocumentUrl(type: 'gheops' | 'start-stop'): string {
     return `${this.API_BASE_URL}/get_reference_document?type=${type}`;
+  }
+
+  getReferenceDocument(type: 'gheops' | 'start-stop'): Observable<Blob> {
+    return this.http.get(`${this.API_BASE_URL}/get_reference_document?type=${type}`, {
+      responseType: 'blob'
+    }).pipe(
+      tap(() => console.log(`[ApiService] Retrieved reference document: ${type}`))
+    );
   }
 
   // Review Notes CRUD

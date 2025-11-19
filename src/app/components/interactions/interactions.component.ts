@@ -6,7 +6,18 @@ import { StateService } from '../../services/state.service';
 import { Medication } from '../../models/api.models';
 import { Output, EventEmitter } from '@angular/core';
 
-// APB API Interfaces
+// Backend Request/Response Interfaces
+interface CNKParticipant {
+  cnk: string;
+  routeOfAdministrationCode?: string;
+}
+
+interface InteractionsRequest {
+  language: string;
+  cnks: CNKParticipant[];
+}
+
+// APB Response Interfaces (returned by backend)
 interface Participant {
   id: string;
   type: 'produ';
@@ -72,11 +83,6 @@ interface InteractionsResponse {
   language: string;
   participants: Participant[];
   result: InteractionsResult;
-}
-
-interface InteractionsRequest {
-  language: string;
-  participants: Participant[];
 }
 
 // Display Interfaces
