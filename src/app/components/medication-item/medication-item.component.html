@@ -2,21 +2,41 @@
   <div class="medication-header" (click)="toggleExpand()">
     <div class="header-content">
       <div class="medication-name">{{ medication.name }}</div>
-      @if (!medication.asNeeded && !notDaily) {
-        <div class="header-frequency">{{ dosesPerDay }}x{{ 'medication.per_day' | transloco }}</div>
-      }
-      @if (!medication.asNeeded && notDaily && medication.specialFrequency && medication.specialDescription) {
-        <div class="header-frequency">{{ medication.specialFrequency }}x {{ getLocalizedPeriod() }}</div>
-      }
+
+      <div class="header-addons">
+        <!-- As needed badge: shown first for as-needed medications -->
+        @if (medication.asNeeded) {
+          <div class="as-needed-wrapper">
+            <div class="as-needed-badge">{{ 'ui.as_needed_with_translation' | transloco }}</div>
+          </div>
+        }
+
+        <!-- Frequency: shown for normal or special frequency -->
+        <div class="frequency-wrapper">
+          @if (!medication.asNeeded && !notDaily) {
+            <div class="header-frequency">{{ dosesPerDay }}x{{ 'medication.per_day' | transloco }}</div>
+          }
+          @if (!medication.asNeeded && notDaily && medication.specialFrequency && medication.specialDescription) {
+            <div class="header-frequency">{{ medication.specialFrequency }}x {{ getLocalizedPeriod() }}</div>
+          }
+        </div>
+
+        <!-- Active ingredient: only non-excipient substance -->
+        <div class="active-ingredient-wrapper">
+          @if (activeIngredient) {
+            <div class="active-ingredient">{{ activeIngredient }}</div>
+          }
+        </div>
+
+        <!-- Indication: keep after active ingredient, can wrap to line 2 -->
+        <div class="indication-wrapper">
+          @if (medication.indication) {
+            <div class="medication-indication" title="{{ medication.indication }}">{{ medication.indication }}</div>
+          }
+        </div>
+      </div>
+
       <div class="medication-codes"><!-- metadata --></div>
-
-      @if (medication.asNeeded) {
-        <div class="as-needed-badge">{{ 'ui.as_needed_with_translation' | transloco }}</div>
-      }
-
-      @if (medication.indication) {
-        <div class="medication-indication" title="{{ medication.indication }}">{{ medication.indication }}</div>
-      }
     </div>
 
     <div class="action-buttons">

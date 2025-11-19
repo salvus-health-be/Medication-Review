@@ -987,6 +987,10 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     return [];
   }
 
+  getNoteCount(box: QuestionBox): number {
+    return this.getNotesForBox(box).length;
+  }
+
   getNoteComment(noteRowKey: string): string {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return '';

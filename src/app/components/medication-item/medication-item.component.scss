@@ -68,13 +68,51 @@
 
       .header-frequency {
         display: inline-block;
-        margin-left: 0.5rem;
         padding: 0.15rem 0.4rem;
         background-color: rgba($button-primary-background, 0.06);
         color: $button-primary-background;
         font-size: 0.75rem;
         border-radius: 0.25rem;
         font-weight: $font-weight-medium;
+      }
+
+      .active-ingredient {
+        display: inline-block;
+        padding: 0.15rem 0.4rem;
+        background-color: rgba(52, 152, 219, 0.08);
+        color: #2980b9;
+        font-size: 0.75rem;
+        border-radius: 0.25rem;
+        font-weight: $font-weight-medium;
+        font-style: italic;
+      }
+
+      .header-addons {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        row-gap: 0.15rem;
+        margin-top: 0.25rem;
+
+        /* Ensure the visual order: as-needed > frequency > active ingredient > indication */
+        .as-needed-wrapper { order: 1; }
+        .frequency-wrapper { order: 2; }
+        .active-ingredient-wrapper { order: 3; }
+        .indication-wrapper { order: 4; }
+
+        /* Keep badges compact and don't shrink */
+        .header-frequency, .active-ingredient, .as-needed-badge {
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
+        /* Allow indication to wrap to new line if needed */
+        .indication-wrapper {
+          flex-shrink: 1;
+          min-width: 0; /* Allow it to shrink */
+          /* If there's not enough space, it will wrap to the next line */
+        }
       }
 
       .medication-codes {
@@ -91,7 +129,6 @@
       }
       .as-needed-badge {
         display: inline-block;
-        margin-top: 0.25rem;
         padding: 0.2rem 0.5rem;
         background-color: rgba($button-primary-background, 0.08);
         color: $button-primary-background;
@@ -100,7 +137,7 @@
         border-radius: 0.375rem;
       }
       .medication-indication {
-        display: block;
+        display: inline-block;
         max-width: 36rem;
         white-space: nowrap;
         overflow: hidden;

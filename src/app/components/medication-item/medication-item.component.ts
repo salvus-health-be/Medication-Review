@@ -28,6 +28,7 @@ export interface Medication {
   unitsDuringDinner?: number | null;
   unitsAtBedtime?: number | null;
   isNew?: boolean;
+  activeIngredient?: string | null;
 }
 
 @Component({
@@ -48,6 +49,8 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
   isExpanded = false;
   showDeleteConfirmation = false;
   notDaily = false;
+  activeIngredient: string | null = null;
+  loadingActiveIngredient = false;
 
   private destroy$ = new Subject<void>();
   private valueChanged$ = new Subject<void>();
@@ -79,6 +82,11 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
     // Ensure asNeeded is a boolean, not null/undefined
     if (this.medication.asNeeded === null || this.medication.asNeeded === undefined) {
       this.medication.asNeeded = false;
+    }
+    
+    // Load active ingredient if we have a CNK
+    if (this.medication.cnk) {
+      this.loadActiveIngredient();
     }
     
     // Set up auto-save with debounce
@@ -269,5 +277,38 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
 
   onDeleteCancel() {
     this.showDeleteConfirmation = false;
+  }
+
+  loadActiveIngredient() {
+    if (!this.medication.cnk) {
+      return;
+    }
+
+    // Check if already loaded
+    if (this.medication.activeIngredient) {
+      this.activeIngredient = this.medication.activeIngredient;
+      return;
+    }
+
+    this.loadingActiveIngredient = true;
+    this.apiService.getProductComposition(this.medication.cnk.toString()).subscribe({
+      next: (response) => {
+        if (response.result && response.result.length > 0) {
+          const activeIngredientData = response.result[0].detailCompositions.find(
+            (composition: any) => !composition.isExcipient
+          );
+          if (activeIngredientData) {
+            this.activeIngredient = activeIngredientData.substanceName;
+            this.medication.activeIngredient = activeIngredientData.substanceName;
+            console.log('[MedicationItem] Active ingredient loaded:', this.activeIngredient);
+          }
+        }
+        this.loadingActiveIngredient = false;
+      },
+      error: (error) => {
+        console.error('[MedicationItem] Failed to load active ingredient:', error);
+        this.loadingActiveIngredient = false;
+      }
+    });
   }
 }

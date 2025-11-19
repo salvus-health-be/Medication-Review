@@ -1,126 +1,140 @@
 <div class="posology-container">
   <!-- General note button (top right) -->
-  <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal()" title="Add general note">
+  <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal()"
+    title="Add general note">
     +
   </button>
 
   @if (medications.length === 0) {
-    <div class="no-medications">
-      <p>No medications with CNK codes found</p>
-      <p class="hint">Click on a medication in the left panel to view dosage information</p>
-    </div>
+  <div class="no-medications">
+    <p>No medications with CNK codes found</p>
+    <p class="hint">Click on a medication in the left panel to view dosage information</p>
+  </div>
   } @else if (!selectedMedicationId) {
-    <div class="no-selection">
-      <p>Select a medication from the left panel</p>
-      <p class="hint">Click on any medication box to view posology information</p>
-    </div>
+  <div class="no-selection">
+    <p>Select a medication from the left panel</p>
+    <p class="hint">Click on any medication box to view posology information</p>
+  </div>
   } @else {
-    @if (getSelectedMedicationDosage(); as medDosage) {
-      <div class="posology-content">
-        <!-- Header with medication name and add note button -->
-        <div class="posology-header">
-          <div class="header-info">
-            <h2>{{ medDosage.medicationName }}</h2>
-            <span class="cnk-badge">CNK: {{ medDosage.cnk }}</span>
-          </div>
-          <button class="add-note-button" (click)="openNotesModal()" title="Add note">
-            +
-          </button>
+  @if (getSelectedMedicationDosage(); as medDosage) {
+  <div class="posology-content">
+    <!-- Header with medication name and add note button -->
+    <div class="posology-header">
+      <div class="header-info">
+        <h2>{{ medDosage.medicationName }}</h2>
+      </div>
+      <button class="add-note-button" (click)="openNotesModal()" title="Add note">
+        +
+      </button>
+    </div>
+
+    <!-- Loading state -->
+    @if (medDosage.loading) {
+    <div class="loading-state">
+      <p>{{ 'posology.loading_info' | transloco }}</p>
+    </div>
+    }
+
+    <!-- Error state -->
+    @if (medDosage.error) {
+    <div class="error-state">
+      <p class="error-message">{{ medDosage.error }}</p>
+      <button class="retry-button" (click)="loadDosageInfo(medDosage)">{{ 'posology.retry' | transloco }}</button>
+    </div>
+    }
+
+    <!-- Dosage information -->
+    @if (medDosage.dosageInfo && medDosage.dosageInfo.result) {
+    <div class="dosage-content">
+      <!-- Dosing Instructions -->
+      @if (medDosage.dosageInfo.result.dosage && medDosage.dosageInfo.result.dosage.textBlocks &&
+      medDosage.dosageInfo.result.dosage.textBlocks.length > 0) {
+      <div class="dosage-section">
+        <div class="section-header">
+          <h3>{{ 'medication.dosing_instructions' | transloco }}</h3>
         </div>
-        
-        <!-- Loading state -->
-        @if (medDosage.loading) {
-          <div class="loading-state">
-            <p>{{ 'posology.loading_info' | transloco }}</p>
-          </div>
-        }
-
-        <!-- Error state -->
-        @if (medDosage.error) {
-          <div class="error-state">
-            <p class="error-message">{{ medDosage.error }}</p>
-            <button class="retry-button" (click)="loadDosageInfo(medDosage)">{{ 'posology.retry' | transloco }}</button>
-          </div>
-        }
-
-        <!-- Dosage information -->
-        @if (medDosage.dosageInfo && medDosage.dosageInfo.result) {
-          <div class="dosage-content">
-            <!-- Dosing Instructions -->
-            @if (medDosage.dosageInfo.result.dosage && medDosage.dosageInfo.result.dosage.textBlocks && medDosage.dosageInfo.result.dosage.textBlocks.length > 0) {
-              <div class="dosage-section">
-                <div class="section-header">
-                  <h3>{{ 'medication.dosing_instructions' | transloco }}</h3>
-                </div>
-                @for (block of medDosage.dosageInfo.result.dosage.textBlocks; track $index) {
-                  <div class="dosage-block">
-                    <h4 class="block-title">{{ block.title }}</h4>
-                    <div class="block-lines">
-                      @for (line of block.lines; track $index) {
-                        <div class="dosage-line">
-                          <span class="line-content">{{ line.content }}</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- Maximum Dosages -->
-            @if (medDosage.dosageInfo.result.maximumDosage) {
-              <div class="dosage-section">
-                <div class="section-header">
-                  <h3>{{ 'tools.maximum_dosages' | transloco }}</h3>
-                </div>
-                
-                <!-- Adults -->
-                @if (medDosage.dosageInfo.result.maximumDosage.adults && medDosage.dosageInfo.result.maximumDosage.adults.lines && medDosage.dosageInfo.result.maximumDosage.adults.lines.length > 0) {
-                  <div class="max-dosage-block">
-                    <h4 class="block-title high">{{ medDosage.dosageInfo.result.maximumDosage.adults.title }}</h4>
-                    <div class="block-lines">
-                      @for (line of medDosage.dosageInfo.result.maximumDosage.adults.lines; track $index) {
-                        <div class="dosage-line">
-                          <span class="line-content">{{ line }}</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-                
-                <!-- Children -->
-                @if (medDosage.dosageInfo.result.maximumDosage.children && medDosage.dosageInfo.result.maximumDosage.children.lines && medDosage.dosageInfo.result.maximumDosage.children.lines.length > 0) {
-                  <div class="max-dosage-block">
-                    <h4 class="block-title medium">{{ medDosage.dosageInfo.result.maximumDosage.children.title }}</h4>
-                    <div class="block-lines">
-                      @for (line of medDosage.dosageInfo.result.maximumDosage.children.lines; track $index) {
-                        <div class="dosage-line">
-                          <span class="line-content">{{ line }}</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-                
-                <!-- Remarks -->
-                @if (medDosage.dosageInfo.result.maximumDosage.remarks && medDosage.dosageInfo.result.maximumDosage.remarks.lines && medDosage.dosageInfo.result.maximumDosage.remarks.lines.length > 0) {
-                  <div class="remarks-block">
-                    <h4 class="block-title warning">{{ medDosage.dosageInfo.result.maximumDosage.remarks.title }}</h4>
-                    <div class="block-lines">
-                      @for (line of medDosage.dosageInfo.result.maximumDosage.remarks.lines; track $index) {
-                        <div class="dosage-line warning-line">
-                          <span class="warning-icon">⚠️</span>
-                          <span class="line-content">{{ line }}</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
+        @for (block of medDosage.dosageInfo.result.dosage.textBlocks; track $index) {
+        <div class="dosage-block">
+          @if (block.title) {
+          <h4 class="block-title">{{ block.title }}</h4>
+          }
+          <div class="block-lines">
+            @for (line of block.lines; track $index) {
+            <div class="dosage-line">
+              <span class="line-content">{{ line.content }}</span>
+            </div>
             }
           </div>
+        </div>
         }
       </div>
+      }
+
+      <!-- Maximum Dosages -->
+      @if (medDosage.dosageInfo.result.maximumDosage) {
+      <div class="dosage-section">
+        <div class="section-header">
+          <h3>{{ 'tools.maximum_dosages' | transloco }}</h3>
+        </div>
+
+        <!-- Adults -->
+        @if (medDosage.dosageInfo.result.maximumDosage.adults && medDosage.dosageInfo.result.maximumDosage.adults.lines
+        && medDosage.dosageInfo.result.maximumDosage.adults.lines.length > 0) {
+        <div class="max-dosage-block">
+          @if (medDosage.dosageInfo.result.maximumDosage.adults.title) {
+          <h4 class="block-title high">{{ medDosage.dosageInfo.result.maximumDosage.adults.title }}</h4>
+          }
+          <div class="block-lines">
+            @for (line of medDosage.dosageInfo.result.maximumDosage.adults.lines; track $index) {
+            <div class="dosage-line">
+              <span class="line-content">{{ line }}</span>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Children -->
+        @if (medDosage.dosageInfo.result.maximumDosage.children &&
+        medDosage.dosageInfo.result.maximumDosage.children.lines &&
+        medDosage.dosageInfo.result.maximumDosage.children.lines.length > 0) {
+        <div class="max-dosage-block">
+          @if (medDosage.dosageInfo.result.maximumDosage.children.title) {
+          <h4 class="block-title medium">{{ medDosage.dosageInfo.result.maximumDosage.children.title }}</h4>
+          }
+          <div class="block-lines">
+            @for (line of medDosage.dosageInfo.result.maximumDosage.children.lines; track $index) {
+            <div class="dosage-line">
+              <span class="line-content">{{ line }}</span>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Remarks -->
+        @if (medDosage.dosageInfo.result.maximumDosage.remarks &&
+        medDosage.dosageInfo.result.maximumDosage.remarks.lines &&
+        medDosage.dosageInfo.result.maximumDosage.remarks.lines.length > 0) {
+        <div class="remarks-block">
+          @if (medDosage.dosageInfo.result.maximumDosage.remarks.title) {
+          <h4 class="block-title warning">{{ medDosage.dosageInfo.result.maximumDosage.remarks.title }}</h4>
+          }
+          <div class="block-lines">
+            @for (line of medDosage.dosageInfo.result.maximumDosage.remarks.lines; track $index) {
+            <div class="dosage-line warning-line">
+              <span class="warning-icon">⚠️</span>
+              <span class="line-content">{{ line }}</span>
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
     }
+  </div>
+  }
   }
 </div>

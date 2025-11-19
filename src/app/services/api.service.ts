@@ -33,7 +33,9 @@ import {
   QuestionAnswer,
   AddQuestionAnswerRequest,
   UpdateQuestionAnswerRequest,
-  QuestionAnswerResponse
+  QuestionAnswerResponse,
+  ProductCompositionRequest,
+  ProductCompositionResponse
 } from '../models/api.models';
 import { environment } from '../../environments/environment';
 
@@ -630,6 +632,35 @@ export class ApiService {
       `${this.API_BASE_URL}/manage_question_answers?medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
       { headers: this.getHeaders() }
     ).pipe(tap(response => console.log('[ApiService] Delete question answer response:', response)));
+  }
+
+  // Product Composition
+  getProductComposition(cnk: string, language: string = 'NL'): Observable<ProductCompositionResponse> {
+    const headers = this.getHeaders();
+    const request: ProductCompositionRequest = {
+      language,
+      cnk
+    };
+
+    return this.http.post<ProductCompositionResponse>(
+      `${this.API_BASE_URL}/get_product_composition`,
+      request,
+      { headers }
+    ).pipe(
+      tap(response => console.log('[ApiService] Product composition response:', response)),
+      map(response => {
+        // Cache the active ingredient name for easy access
+        if (response.result && response.result.length > 0) {
+          const activeIngredient = response.result[0].detailCompositions.find(
+            (composition: any) => !composition.isExcipient
+          );
+          if (activeIngredient) {
+            console.log('[ApiService] Active ingredient found:', activeIngredient.substanceName);
+          }
+        }
+        return response;
+      })
+    );
   }
 }
 

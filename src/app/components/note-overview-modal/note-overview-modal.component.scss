@@ -16,16 +16,9 @@
   padding: 2rem;
 }
 
-// Modal container - styled like a notebook
+// Modal container
 .modal-container {
-  background: linear-gradient(to right,
-    darken($button-primary-background, 12%) 0%,
-    darken($button-primary-background, 12%) 40px,
-    darken($button-primary-background, 6%) 40px,
-    darken($button-primary-background, 6%) 42px,
-    $main-background 42px,
-    $main-background 100%
-  );
+  background: $main-background;
   width: 90vw;
   max-width: 1400px;
   height: 85vh;
@@ -38,54 +31,18 @@
     0 16px 32px rgba(0,0,0,0.15);
   overflow: hidden;
   position: relative;
-
-  // Notebook binding rings effect
-  &::before {
-    content: '';
-    position: absolute;
-    left: 20px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 30px,
-      rgba($box-background, 0.08) 30px,
-      rgba($box-background, 0.08) 35px
-    );
-    z-index: 1;
-  }
 }
 
-// Modal header - notebook cover style
+// Modal header
 .modal-header {
   background: linear-gradient(135deg, darken($button-primary-background, 6%) 0%, $button-primary-background 100%);
-  padding: 1.25rem 1.5rem 1.25rem 60px;
+  padding: 1.25rem 1.5rem;
   border-bottom: 3px solid darken($button-primary-background, 18%);
   display: flex;
   align-items: center;
   gap: 1.25rem;
   flex-shrink: 0;
   position: relative;
-
-  // Add subtle texture
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 42px;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 2px,
-      rgba(255,255,255,0.01) 2px,
-      rgba(255,255,255,0.01) 4px
-    );
-    pointer-events: none;
-  }
 
   h1 {
     flex: 1;
@@ -196,11 +153,11 @@
   }
 }
 
-// Modal body - notebook pages area
+// Modal body
 .modal-body {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem 1.5rem 1.5rem calc(1.5rem + 42px);
+  padding: 1.5rem;
   background-color: transparent;
   position: relative;
 }

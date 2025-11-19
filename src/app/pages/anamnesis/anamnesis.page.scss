@@ -135,7 +135,7 @@
 
         &:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(69,75,96,0.12);
+          box-shadow: 0 6px 18px rgba(69, 75, 96, 0.12);
         }
       }
 
@@ -155,6 +155,7 @@
 
   .part-tabs {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
     padding: 0 1.5rem;
     background-color: transparent; // keep tabs background transparent as requested
@@ -180,7 +181,7 @@
 
       &.active {
         border-bottom-color: $button-primary-background;
-        
+
         .tab-number {
           background-color: $button-primary-background;
           color: white;
@@ -230,6 +231,66 @@
       &.active .tab-percentage {
         background-color: rgba($button-primary-background, 0.15);
         color: $button-primary-background;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-left: auto;
+
+      .btn-download {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        background-color: $box-background;
+        color: $text-primary;
+        border: $box-border-width solid $box-border;
+        border-radius: $box-border-radius-small;
+        font-family: $primary-font;
+        font-size: 0.9rem;
+        font-weight: $font-weight-medium;
+        cursor: pointer;
+        transition: all 0.12s ease;
+
+        svg {
+          flex-shrink: 0;
+        }
+
+        &:hover {
+          background-color: $main-background;
+          border-color: $button-primary-background;
+          color: $button-primary-background;
+          transform: translateY(-1px);
+        }
+      }
+
+      .btn-primary {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        background-color: $button-primary-background;
+        color: $text-button-primary;
+        border: none;
+        border-radius: $box-border-radius-small;
+        font-family: $primary-font;
+        font-size: 0.9rem;
+        font-weight: $font-weight-medium;
+        cursor: pointer;
+        transition: all 0.12s ease;
+
+        &:hover {
+          background-color: darken($button-primary-background, 5%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(69, 75, 96, 0.12);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
       }
     }
   }
@@ -294,7 +355,11 @@
           &:hover {
             background-color: rgba($button-primary-background, 0.06);
             border-color: rgba($button-primary-background, 0.12);
-            svg { color: $button-primary-background; }
+
+            svg {
+              color: $button-primary-background;
+            }
+
             transform: translateY(-1px);
           }
 
@@ -306,8 +371,11 @@
         }
 
         .btn-print {
+
           // slightly stronger contrast for the print icon
-          svg { color: $text-secondary; }
+          svg {
+            color: $text-secondary;
+          }
         }
       }
 
@@ -393,6 +461,15 @@
 
                 svg {
                   color: #9b59b6;
+                }
+              }
+
+              &.note-counter {
+                background-color: rgba($warning, 0.1);
+                color: darken($warning, 10%);
+
+                svg {
+                  color: darken($warning, 10%);
                 }
               }
             }
@@ -868,7 +945,7 @@
             transition: all 0.12s ease;
 
             &:hover {
-              box-shadow: 0 4px 12px rgba(69,75,96,0.06);
+              box-shadow: 0 4px 12px rgba(69, 75, 96, 0.06);
               transform: translateY(-2px);
             }
 
@@ -1062,6 +1139,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1072,6 +1150,7 @@
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;

@@ -124,8 +124,8 @@
 // Table Header (similar to schema header)
 .interactions-header {
   display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1fr 0.5fr 0.5fr;
-  padding: 0.75rem 2rem;
+  grid-template-columns: 2fr 2fr 1fr 1fr 0.75fr 0.5fr;
+  padding: 0.75rem 0;
   background-color: #f8f9fa;
   border: 1px solid $box-border-primary;
   border-radius: $box-border-radius-small;
@@ -133,7 +133,6 @@
   font-weight: $font-weight-semibold;
   color: $text-primary;
   font-family: $primary-font;
-  text-align: center;
   flex-shrink: 0; // Prevent header from shrinking
 
   .header-cell {
@@ -141,12 +140,19 @@
     align-items: center;
     justify-content: center;
     font-size: 0.875rem;
+    padding: 0 1rem;
   }
 
   .left-header,
   .right-header {
-    text-align: left;
     justify-content: flex-start;
+  }
+  
+  .severity-header,
+  .number-header,
+  .details-header,
+  .notes-header {
+    justify-content: center;
   }
 }
 
@@ -187,8 +193,8 @@
 // Interaction Row (grid matching header)
 .interaction-row {
   display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1fr 0.5fr 0.5fr;
-  height: 4.5rem; // Match medication box height
+  grid-template-columns: 2fr 2fr 1fr 1fr 0.75fr 0.5fr;
+  min-height: 4.5rem; // Match medication box height
   align-items: center;
   cursor: pointer;
 
@@ -197,11 +203,14 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: flex-start;
     height: 100%;
+    min-width: 0; // Allow proper text overflow in grid
 
     &.left-medication,
     &.right-medication {
       gap: 0.25rem;
+      align-items: flex-start;
 
       .medication-name {
         font-family: $primary-font;
@@ -211,6 +220,8 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        width: 100%;
+        display: block;
       }
 
       .substance {
@@ -220,13 +231,13 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        width: 100%;
+        display: block;
       }
     }
 
-    &.severity-cell,
-    &.number-cell,
-    &.details-cell,
-    &.notes-cell {
+    &.severity-cell {
+      flex-direction: row;
       align-items: center;
       justify-content: center;
     }
@@ -236,13 +247,16 @@
       font-size: 0.875rem;
       color: $text-tertiary;
       font-weight: $font-weight-medium;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
     }
 
     &.details-cell {
-      display: flex;
+      flex-direction: row;
       align-items: center;
       justify-content: center;
-      
+
       svg {
         flex-shrink: 0;
         color: $text-tertiary;
@@ -251,7 +265,10 @@
 
     &.notes-cell {
       cursor: default;
-      
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+
       // Note buttons use global styling from _add-note-buttons.scss
     }
   }
@@ -367,6 +384,7 @@
     opacity: 0;
     max-height: 0;
   }
+
   to {
     opacity: 1;
     max-height: 500px;
@@ -390,7 +408,7 @@
 
   .interaction-row {
     grid-template-columns: 1.5fr 1.5fr 1fr 1fr 0.5fr;
-    
+
     .cell {
       padding: 0.5rem;
       font-size: 0.8rem;

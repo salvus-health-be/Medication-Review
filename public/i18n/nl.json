@@ -30,8 +30,7 @@
     "settings": "Instellingen",
     "help": "Help",
     "logout": "Uitloggen",
-    "profile": "Profiel"
-    ,
+    "profile": "Profiel",
     "retry": "Opnieuw proberen"
   },
   "header": {
@@ -50,8 +49,7 @@
     "password": "Wachtwoord",
     "login_button": "Inloggen",
     "forgot_password": "Wachtwoord vergeten?",
-    "remember_me": "Onthoud mij"
-    ,
+    "remember_me": "Onthoud mij",
     "apb_number": "APB-nummer",
     "enter_apb": "Voer APB-nummer in",
     "medication_review_id": "Medicatierapport ID",
@@ -130,8 +128,8 @@
     "period_biweekly": "om de 2 weken",
     "period_monthly": "maandelijks",
     "period_quarterly": "driemaandelijks",
-    "period_yearly": "jaarlijks"
-    ,"delete_all": "Verwijder alles",
+    "period_yearly": "jaarlijks",
+    "delete_all": "Verwijder alles",
     "select_cnk": "Selecteer Medicatie CNK",
     "select_cnk_instruction": "Meerdere medicijnen komen overeen met deze naam. Selecteer de juiste:",
     "skip_medication": "Deze Medicatie Overslaan",
@@ -288,7 +286,9 @@
     "preset_dose_too_high": "Dosis is te hoog",
     "preset_dose_too_low": "Dosis is te laag",
     "preset_dosing_adjustment": "Dosering vereist aanpassingen",
-    "preset_renal_followup": "Nierfunctie-opvolging"
+    "preset_renal_followup": "Nierfunctie-opvolging",
+    "note": "notitie",
+    "notes": "notities"
   },
   "frequency": {
     "daily": "dagelijks",
@@ -413,7 +413,7 @@
     "what_problems": "Welke problemen heeft de patiënt met dit medicijn?",
     "is_effective": "Is dit medicijn effectief voor de patiënt?",
     "which_side_effects": "Welke bijwerkingen ervaart de patiënt?",
-  "additional_notes": "Aanvullende opmerkingen",
+    "additional_notes": "Aanvullende opmerkingen",
     "pharmacist_notes": "Opmerkingen apotheker",
     "pharmacist_action": "Apothekers actie",
     "share_with_patient": "Delen met patiënt",

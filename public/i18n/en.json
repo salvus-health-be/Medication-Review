@@ -30,8 +30,7 @@
     "settings": "Settings",
     "help": "Help",
     "logout": "Logout",
-    "profile": "Profile"
-    ,
+    "profile": "Profile",
     "retry": "Retry"
   },
   "header": {
@@ -50,8 +49,7 @@
     "password": "Password",
     "login_button": "Login",
     "forgot_password": "Forgot Password?",
-    "remember_me": "Remember Me"
-    ,
+    "remember_me": "Remember Me",
     "apb_number": "APB Number",
     "enter_apb": "Enter APB number",
     "medication_review_id": "Medication Review ID",
@@ -130,8 +128,8 @@
     "period_biweekly": "every 2 weeks",
     "period_monthly": "monthly",
     "period_quarterly": "quarterly",
-    "period_yearly": "yearly"
-    ,"delete_all": "Delete all",
+    "period_yearly": "yearly",
+    "delete_all": "Delete all",
     "select_cnk": "Select Medication CNK",
     "select_cnk_instruction": "Multiple medications match this name. Please select the correct one:",
     "skip_medication": "Skip This Medication",
@@ -288,7 +286,9 @@
     "preset_dose_too_high": "Dose is too high",
     "preset_dose_too_low": "Dose is too low",
     "preset_dosing_adjustment": "Dosing needs adjustments",
-    "preset_renal_followup": "Renal function follow-up"
+    "preset_renal_followup": "Renal function follow-up",
+    "note": "note",
+    "notes": "notes"
   },
   "frequency": {
     "daily": "daily",
@@ -413,7 +413,7 @@
     "what_problems": "What problems does the patient have with this medication?",
     "is_effective": "Is this medication effective for the patient?",
     "which_side_effects": "What side effects does the patient experience?",
-  "additional_notes": "Additional remarks",
+    "additional_notes": "Additional remarks",
     "pharmacist_notes": "Pharmacist notes",
     "pharmacist_action": "Pharmacist action",
     "share_with_patient": "Share with patient",
@@ -486,19 +486,19 @@
     "loading_details": "Loading details...",
     "checking": "Checking for interactions...",
     "drug_drug_title": "Drug-Drug Interactions",
-	"drug_food_title": "Drug-Food Interactions",
+    "drug_food_title": "Drug-Food Interactions",
     "header_left": "Left",
     "header_right": "Right",
     "header_severity": "Severity",
     "header_number": "Number",
     "header_details": "Details",
     "header_notes": "Notes",
-	"header_medication": "Medication",
-	"header_condition": "Condition",
-	"header_type": "Type",
-	"header_food": "Food",
-	"no_drug_drug": "No drug-drug interactions found!",
-	"no_drug_food": "No drug-food interactions found!"
+    "header_medication": "Medication",
+    "header_condition": "Condition",
+    "header_type": "Type",
+    "header_food": "Food",
+    "no_drug_drug": "No drug-drug interactions found!",
+    "no_drug_food": "No drug-food interactions found!"
   },
   "note_modal": {
     "save_changes": "Save changes",
