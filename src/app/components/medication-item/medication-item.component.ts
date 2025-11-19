@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -37,12 +37,14 @@ export interface Medication {
   templateUrl: './medication-item.component.html',
   styleUrls: ['./medication-item.component.scss']
 })
-export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges {
+export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
   @Input() medication!: Medication;
   @Input() expandable: boolean = true; // New input to control if item can be expanded
   @Input() isNew: boolean = false; // Flag to indicate this is a newly added medication
   @Output() medicationDeleted = new EventEmitter<string>();
   @Output() editRequested = new EventEmitter<Medication>();
+  @ViewChild('indicationInput') indicationInput?: ElementRef<HTMLInputElement>;
+  
   isExpanded = false;
   showDeleteConfirmation = false;
   notDaily = false;
@@ -89,6 +91,16 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges {
         console.log('[MedicationItem] Value changed, triggering save...');
         this.saveToBackend();
       });
+  }
+
+  ngAfterViewInit() {
+    // Auto-focus indication field for newly created medications
+    if (this.isNew && this.indicationInput) {
+      setTimeout(() => {
+        this.indicationInput?.nativeElement.focus();
+        console.log('[MedicationItem] Auto-focused indication field for new medication');
+      }, 0);
+    }
   }
 
   ngOnDestroy() {

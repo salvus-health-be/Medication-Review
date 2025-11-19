@@ -47,6 +47,7 @@
       <div class="indication-section">
         <label for="indication-{{ medication.medicationId }}">{{ 'ui.indication_label' | transloco }}</label>
         <input
+          #indicationInput
           type="text"
           id="indication-{{ medication.medicationId }}"
           [(ngModel)]="medication.indication"

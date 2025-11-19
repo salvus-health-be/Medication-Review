@@ -141,7 +141,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     this.reviewNotesService.notes$
       .pipe(takeUntil(this.destroy$))
       .subscribe(notes => {
-        this.notes = notes.filter(note => note.discussWithPatient === true);
+        // Show ALL notes in the UI
+        this.notes = notes;
         this.updatePart2And3QuestionBoxes();
         // Re-apply loaded answers when notes change
         this.applyLoadedAnswersToParts(['part2', 'part3']);
