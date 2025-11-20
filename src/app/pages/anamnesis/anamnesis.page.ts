@@ -561,6 +561,12 @@ export class AnamnesisPage implements OnInit, OnDestroy {
   onQuestionChange(questionName: string, value: any) {
     this.saveQueue$.next({ questionName, value });
     
+    // Skip visibility updates for textarea/action fields to improve typing performance
+    // Only run visibility logic for radio/checkbox questions that control visibility
+    if (questionName.includes('Action') || questionName.includes('_notes')) {
+      return; // These are action/note fields that don't affect visibility
+    }
+    
     // For Part 1 concern questions, show/hide action fields
     if (this.currentPart === 'part1') {
       if (questionName.startsWith('p1_concerns_')) {
