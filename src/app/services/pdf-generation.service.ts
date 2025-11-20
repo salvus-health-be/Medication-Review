@@ -103,7 +103,8 @@ export class PdfGenerationService {
           data.patient,
           data.review,
           data.medications,
-          data.reviewNotes
+          data.reviewNotes,
+          data.questionAnswers
         );
         return this.createPdfBlob(docDefinition);
       })
@@ -117,7 +118,8 @@ export class PdfGenerationService {
           data.patient,
           data.review,
           data.medications,
-          data.reviewNotes
+          data.reviewNotes,
+          data.questionAnswers
         );
         return this.createPdfBlob(docDefinition);
       })

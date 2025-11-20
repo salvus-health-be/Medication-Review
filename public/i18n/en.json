@@ -130,6 +130,8 @@
     "period_quarterly": "quarterly",
     "period_yearly": "yearly",
     "delete_all": "Delete all",
+    "delete_all_confirm_title": "Delete All Medications",
+    "delete_all_confirm_message": "Are you sure you want to delete ALL medications for this review? This action cannot be undone.",
     "select_cnk": "Select Medication CNK",
     "select_cnk_instruction": "Multiple medications match this name. Please select the correct one:",
     "skip_medication": "Skip This Medication",

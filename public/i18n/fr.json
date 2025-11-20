@@ -98,6 +98,8 @@
     "cnk": "CNK",
     "vmp": "VMP",
     "delete_all": "Supprimer tout",
+    "delete_all_confirm_title": "Supprimer Tous les Médicaments",
+    "delete_all_confirm_message": "Êtes-vous sûr de vouloir supprimer TOUS les médicaments de cette revue ? Cette action ne peut pas être annulée.",
     "breakfast": "Petit-déjeuner",
     "lunch": "Déjeuner",
     "dinner": "Dîner",

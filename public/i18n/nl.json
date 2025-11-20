@@ -130,6 +130,8 @@
     "period_quarterly": "driemaandelijks",
     "period_yearly": "jaarlijks",
     "delete_all": "Verwijder alles",
+    "delete_all_confirm_title": "Alle Medicaties Verwijderen",
+    "delete_all_confirm_message": "Weet u zeker dat u ALLE medicaties voor deze review wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
     "select_cnk": "Selecteer Medicatie CNK",
     "select_cnk_instruction": "Meerdere medicijnen komen overeen met deze naam. Selecteer de juiste:",
     "skip_medication": "Deze Medicatie Overslaan",

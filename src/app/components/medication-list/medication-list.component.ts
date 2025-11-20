@@ -4,6 +4,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { MedicationItemComponent, Medication } from '../medication-item/medication-item.component';
 import { MedicationSearchModalComponent } from '../medication-search-modal/medication-search-modal.component';
 import { CnkSelectionModalComponent, MedicationWithMatches } from '../cnk-selection-modal/cnk-selection-modal.component';
+import { ConfirmationModalComponent } from '../confirmation-modal/confirmation-modal.component';
 import { MedicationSearchResult } from '../../models/api.models';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
@@ -13,7 +14,7 @@ import { catchError, map } from 'rxjs/operators';
 @Component({
   selector: 'app-medication-list',
   standalone: true,
-  imports: [CommonModule, TranslocoModule, MedicationItemComponent, MedicationSearchModalComponent, CnkSelectionModalComponent],
+  imports: [CommonModule, TranslocoModule, MedicationItemComponent, MedicationSearchModalComponent, CnkSelectionModalComponent, ConfirmationModalComponent],
   templateUrl: './medication-list.component.html',
   styleUrls: ['./medication-list.component.scss']
 })
@@ -21,6 +22,7 @@ export class MedicationListComponent implements OnInit {
   medications: Medication[] = [];
   showSearchModal = false;
   showCnkSelectionModal = false;
+  showDeleteAllModal = false;
   isLoading = false;
   editingMedication: Medication | null = null;
   
@@ -694,11 +696,12 @@ export class MedicationListComponent implements OnInit {
       return;
     }
 
-    const confirmMsg = 'Are you sure you want to delete ALL medications for this review? This action cannot be undone.';
-    if (!confirm(confirmMsg)) {
-      console.log('[MedicationList] deleteAllMedications cancelled by user');
-      return;
-    }
+    // Show confirmation modal instead of browser confirm
+    this.showDeleteAllModal = true;
+  }
+
+  onDeleteAllConfirmed() {
+    this.showDeleteAllModal = false;
 
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
@@ -742,6 +745,11 @@ export class MedicationListComponent implements OnInit {
     };
 
     deleteNext(0);
+  }
+
+  onDeleteAllCancelled() {
+    console.log('[MedicationList] deleteAllMedications cancelled by user');
+    this.showDeleteAllModal = false;
   }
 
   private scrollToNewMedication() {

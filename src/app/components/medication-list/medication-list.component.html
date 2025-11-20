@@ -40,3 +40,14 @@
   (medicationSelected)="onCnkSelected($event)"
   (skip)="onCnkSkipped()"
 ></app-cnk-selection-modal>
+
+<!-- Delete All Confirmation Modal -->
+<app-confirmation-modal
+  *ngIf="showDeleteAllModal"
+  [title]="'medication.delete_all_confirm_title' | transloco"
+  [message]="'medication.delete_all_confirm_message' | transloco"
+  [confirmText]="'common.delete' | transloco"
+  [cancelText]="'common.cancel' | transloco"
+  (confirm)="onDeleteAllConfirmed()"
+  (cancel)="onDeleteAllCancelled()"
+></app-confirmation-modal>
