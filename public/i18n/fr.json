@@ -107,6 +107,7 @@
     "before": "Avant",
     "during": "Pendant",
     "at_bedtime": "Au coucher",
+    "time": "Heure",
     "units": "Unités",
     "times_per_day": "{{count}}x/jour",
     "per_day": "/jour",

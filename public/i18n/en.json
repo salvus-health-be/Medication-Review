@@ -107,6 +107,7 @@
     "before": "Before",
     "during": "During",
     "at_bedtime": "At Bedtime",
+    "time": "Time",
     "units": "Units",
     "times_per_day": "{{count}}x/day",
     "per_day": "/day",

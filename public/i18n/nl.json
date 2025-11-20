@@ -107,6 +107,7 @@
     "before": "Voor",
     "during": "Tijdens",
     "at_bedtime": "Bij het slapengaan",
+    "time": "Tijd",
     "units": "Eenheden",
     "times_per_day": "{{count}}x/dag",
     "per_day": "/dag",
