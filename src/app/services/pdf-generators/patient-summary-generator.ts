@@ -237,15 +237,44 @@ export class PatientSummaryGenerator extends BasePdfGenerator {
   }
 
   private createRecommendationsList(recommendations: Array<{ text: string, context?: string }>): Content {
-    const items = recommendations.map(rec => {
-      let text = rec.text;
+    // Group recommendations by context
+    const grouped = new Map<string, string[]>();
+    const noContext: string[] = [];
+
+    recommendations.forEach(rec => {
       if (rec.context) {
-        text = `${rec.context}: ${text}`;
+        if (!grouped.has(rec.context)) {
+          grouped.set(rec.context, []);
+        }
+        grouped.get(rec.context)!.push(rec.text);
+      } else {
+        noContext.push(rec.text);
       }
-      return {
-        text,
-        style: 'listItem'
-      };
+    });
+
+    const items: any[] = [];
+
+    // Add items without context
+    noContext.forEach(text => {
+      items.push({ text, style: 'listItem' });
+    });
+
+    // Add grouped items with nested ul
+    grouped.forEach((texts, context) => {
+      if (texts.length === 1) {
+        // Single item: inline format
+        items.push({
+          text: `${context}: ${texts[0]}`,
+          style: 'listItem'
+        });
+      } else {
+        // Multiple items: nested list
+        items.push({
+          text: context,
+          style: 'listItem',
+          ul: texts.map(t => ({ text: t, style: 'listItem' }))
+        });
+      }
     });
 
     return {

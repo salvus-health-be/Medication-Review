@@ -602,15 +602,52 @@ export class ReportGenerationPage implements OnInit {
       });
       content.push({ text: '', margin: [0, 8, 0, 0] });
 
-      const listItems = this.patientContent.recommendations.map(rec => {
-        let text = rec.text;
+      // Group recommendations by context (medication)
+      const groupedRecs = new Map<string, string[]>();
+      const recsWithoutContext: string[] = [];
+
+      this.patientContent.recommendations.forEach(rec => {
         if (rec.context) {
-          text = `${rec.context}: ${text}`;
+          if (!groupedRecs.has(rec.context)) {
+            groupedRecs.set(rec.context, []);
+          }
+          groupedRecs.get(rec.context)!.push(rec.text);
+        } else {
+          recsWithoutContext.push(rec.text);
         }
-        return {
+      });
+
+      const listItems: any[] = [];
+
+      // Add recommendations without context
+      recsWithoutContext.forEach(text => {
+        listItems.push({
           text,
           style: 'listItem'
-        };
+        });
+      });
+
+      // Add grouped recommendations with nested ul
+      groupedRecs.forEach((texts, context) => {
+        if (texts.length === 1) {
+          // Single item: inline format
+          listItems.push({
+            text: `${context}: ${texts[0]}`,
+            style: 'listItem'
+          });
+        } else {
+          // Multiple items: nested list with proper parent
+          listItems.push([
+            context + ':',
+            {
+              ul: texts.map(t => ({
+                text: t,
+                style: 'listItem'
+              })),
+              margin: [0, 2, 0, 4]
+            }
+          ]);
+        }
       });
 
       content.push({
@@ -750,15 +787,52 @@ export class ReportGenerationPage implements OnInit {
       });
       content.push({ text: '', margin: [0, 8, 0, 0] });
 
-      const listItems = this.doctorContent.observations.map(obs => {
-        let text = obs.text;
+      // Group observations by context (medication)
+      const groupedObs = new Map<string, string[]>();
+      const obsWithoutContext: string[] = [];
+
+      this.doctorContent.observations.forEach(obs => {
         if (obs.context) {
-          text = `${obs.context}: ${text}`;
+          if (!groupedObs.has(obs.context)) {
+            groupedObs.set(obs.context, []);
+          }
+          groupedObs.get(obs.context)!.push(obs.text);
+        } else {
+          obsWithoutContext.push(obs.text);
         }
-        return {
+      });
+
+      const listItems: any[] = [];
+
+      // Add observations without context
+      obsWithoutContext.forEach(text => {
+        listItems.push({
           text,
           style: 'listItem'
-        };
+        });
+      });
+
+      // Add grouped observations with nested ul
+      groupedObs.forEach((texts, context) => {
+        if (texts.length === 1) {
+          // Single item: inline format
+          listItems.push({
+            text: `${context}: ${texts[0]}`,
+            style: 'listItem'
+          });
+        } else {
+          // Multiple items: nested list with proper parent
+          listItems.push([
+            context + ':',
+            {
+              ul: texts.map(t => ({
+                text: t,
+                style: 'listItem'
+              })),
+              margin: [0, 2, 0, 4]
+            }
+          ]);
+        }
       });
 
       content.push({
@@ -942,6 +1016,7 @@ export class ReportGenerationPage implements OnInit {
         console.log(`  ${med}: ${notes.length} notes`);
       });
 
+      // Build list items with proper nesting
       const listItems: any[] = [];
 
       // Add notes without context first
@@ -952,7 +1027,7 @@ export class ReportGenerationPage implements OnInit {
         });
       });
 
-      // Add grouped notes with medication context
+      // Add grouped notes with medication context using nested ul
       groupedNotes.forEach((notes, medicationName) => {
         if (notes.length === 1) {
           // Single note: display inline
@@ -961,20 +1036,19 @@ export class ReportGenerationPage implements OnInit {
             style: 'listItem'
           });
         } else {
-          // Multiple notes: display as summary with indentation
+          // Multiple notes: create nested structure with proper parent
           console.log(`Formatting ${notes.length} notes for ${medicationName}`);
-          listItems.push({
-            text: `${medicationName}:`,
-            style: 'listItem'
-          });
-          // Add each note as a separate indented item
-          notes.forEach(note => {
-            listItems.push({
-              text: `• ${note}`,
-              style: 'indentedNote',
-              margin: [40, 0, 0, 2]
-            });
-          });
+          
+          listItems.push([
+            medicationName + ':',
+            {
+              ul: notes.map(note => ({
+                text: note,
+                style: 'indentedNote'
+              })),
+              margin: [0, 2, 0, 4]
+            }
+          ]);
         }
       });
 

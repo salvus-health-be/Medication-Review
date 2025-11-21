@@ -202,15 +202,44 @@ export class DoctorSummaryGenerator extends BasePdfGenerator {
   }
 
   private createObservationsList(observations: Array<{ text: string, context?: string }>): Content {
-    const items = observations.map(obs => {
-      let text = obs.text;
+    // Group observations by context
+    const grouped = new Map<string, string[]>();
+    const noContext: string[] = [];
+
+    observations.forEach(obs => {
       if (obs.context) {
-        text = `${obs.context}: ${text}`;
+        if (!grouped.has(obs.context)) {
+          grouped.set(obs.context, []);
+        }
+        grouped.get(obs.context)!.push(obs.text);
+      } else {
+        noContext.push(obs.text);
       }
-      return {
-        text,
-        style: 'listItem'
-      };
+    });
+
+    const items: any[] = [];
+
+    // Add items without context
+    noContext.forEach(text => {
+      items.push({ text, style: 'listItem' });
+    });
+
+    // Add grouped items with nested ul
+    grouped.forEach((texts, context) => {
+      if (texts.length === 1) {
+        // Single item: inline format
+        items.push({
+          text: `${context}: ${texts[0]}`,
+          style: 'listItem'
+        });
+      } else {
+        // Multiple items: nested list
+        items.push({
+          text: context,
+          style: 'listItem',
+          ul: texts.map(t => ({ text: t, style: 'listItem' }))
+        });
+      }
     });
 
     return {

@@ -224,15 +224,44 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
   }
 
   private createSimpleList(items: Array<{ text: string, context?: string }>): Content {
-    const listItems = items.map(item => {
-      let text = item.text;
+    // Group items by context
+    const grouped = new Map<string, string[]>();
+    const noContext: string[] = [];
+
+    items.forEach(item => {
       if (item.context) {
-        text = `${item.context}: ${text}`;
+        if (!grouped.has(item.context)) {
+          grouped.set(item.context, []);
+        }
+        grouped.get(item.context)!.push(item.text);
+      } else {
+        noContext.push(item.text);
       }
-      return {
-        text,
-        style: 'listItem'
-      };
+    });
+
+    const listItems: any[] = [];
+
+    // Add items without context
+    noContext.forEach(text => {
+      listItems.push({ text, style: 'listItem' });
+    });
+
+    // Add grouped items with nested ul
+    grouped.forEach((texts, context) => {
+      if (texts.length === 1) {
+        // Single item: inline format
+        listItems.push({
+          text: `${context}: ${texts[0]}`,
+          style: 'listItem'
+        });
+      } else {
+        // Multiple items: nested list
+        listItems.push({
+          text: context,
+          style: 'listItem',
+          ul: texts.map(t => ({ text: t, style: 'listItem' }))
+        });
+      }
     });
 
     return {
