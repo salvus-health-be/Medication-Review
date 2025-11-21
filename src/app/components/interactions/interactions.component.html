@@ -6,7 +6,7 @@
   } @else if (error) {
     <div class="error-state">
       <p class="error-message">{{ error }}</p>
-      <button class="retry-button" (click)="loadMedications()">{{ 'common.retry' | transloco }}</button>
+      <button class="retry-button" (click)="refreshInteractions()">{{ 'common.retry' | transloco }}</button>
     </div>
   } @else {
     <div class="interactions-content">

@@ -80,7 +80,7 @@ export class LoginPage {
         
         console.log('[LoginPage] Final session data to store:', newSession);
         this.stateService.setSessionData(newSession);
-        this.router.navigate(['/input']);
+        this.router.navigate(['/disclaimer']);
       },
       error: (error) => {
         console.error('Login failed:', error);

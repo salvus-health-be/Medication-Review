@@ -1,0 +1,39 @@
+<div class="disclaimer-page">
+  <div class="disclaimer-container">
+    <div class="disclaimer-box">
+      <div class="disclaimer-header">
+        <h1>{{ 'disclaimer.title' | transloco }}</h1>
+      </div>
+
+      <div class="disclaimer-content">
+        <div class="warning-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 20h20L12 2z" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M12 9v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="disclaimer-text">
+          <p class="main-message">{{ 'disclaimer.main_message' | transloco }}</p>
+          
+          <ul class="disclaimer-points">
+            <li>{{ 'disclaimer.point_1' | transloco }}</li>
+            <li>{{ 'disclaimer.point_2' | transloco }}</li>
+            <li>{{ 'disclaimer.point_3' | transloco }}</li>
+          </ul>
+
+          <p class="footer-message">{{ 'disclaimer.footer_message' | transloco }}</p>
+        </div>
+      </div>
+
+      <div class="disclaimer-actions">
+        <button class="btn-decline" (click)="onDecline()">
+          {{ 'disclaimer.decline' | transloco }}
+        </button>
+        <button class="btn-accept" (click)="onAccept()">
+          {{ 'disclaimer.accept' | transloco }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

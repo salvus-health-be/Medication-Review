@@ -1,53 +1,68 @@
 <div class="report-generation-page">
-  <div class="page-header">
-    <button class="back-button" (click)="goBack()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
-      {{ 'documentation.back_to_actions' | transloco }}
-    </button>
-    <h1>{{ 'pdf.preview' | transloco }}</h1>
-  </div>
-
   <div class="content-container">
     <!-- Left Sidebar: Tools -->
     <div class="tools-sidebar">
+      <div class="sidebar-header">
+        <h3>{{ 'reports.document_types' | transloco }}</h3>
+        <p class="subtitle">{{ 'reports.select_document' | transloco }}</p>
+      </div>
+
       <div class="tool-button" 
            [class.active]="activeTool === 'patient-summary'"
            (click)="selectTool('patient-summary')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <span>{{ 'reports.patient_summary' | transloco }}</span>
+        <div class="tool-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="tool-content">
+          <span class="tool-name">{{ 'reports.patient_summary' | transloco }}</span>
+          <span class="tool-desc">{{ 'reports.patient_summary_desc' | transloco }}</span>
+        </div>
       </div>
 
       <div class="tool-button" 
            [class.active]="activeTool === 'doctor-summary'"
            (click)="selectTool('doctor-summary')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="12" y1="18" x2="12" y2="12"></line>
-          <line x1="9" y1="15" x2="15" y2="15"></line>
-        </svg>
-        <span>{{ 'reports.doctor_summary' | transloco }}</span>
+        <div class="tool-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <div class="tool-content">
+          <span class="tool-name">{{ 'reports.doctor_summary' | transloco }}</span>
+          <span class="tool-desc">{{ 'reports.doctor_summary_desc' | transloco }}</span>
+        </div>
       </div>
 
       <div class="tool-button" 
            [class.active]="activeTool === 'pharmacy-summary'"
            (click)="selectTool('pharmacy-summary')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-        </svg>
-        <span>{{ 'reports.pharmacy_summary' | transloco }}</span>
+        <div class="tool-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+        </div>
+        <div class="tool-content">
+          <span class="tool-name">{{ 'reports.pharmacy_summary' | transloco }}</span>
+          <span class="tool-desc">{{ 'reports.pharmacy_summary_desc' | transloco }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- Main Content Area: PDF Preview -->
-    <div class="pdf-preview-area">
-      @if (activeTool === null) {
+    <!-- Main Content Area: PDF Editor -->
+    <div class="pdf-editor-area">
+      @if (isLoadingData) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>{{ 'reports.loading_data' | transloco }}</p>
+        </div>
+      } @else if (activeTool === null) {
         <div class="empty-state">
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -55,44 +70,530 @@
             <line x1="12" y1="18" x2="12" y2="12"></line>
             <line x1="9" y1="15" x2="15" y2="15"></line>
           </svg>
-          <p>{{ 'reports.select_tool' | transloco }}</p>
+          <h2>{{ 'reports.welcome_title' | transloco }}</h2>
+          <p>{{ 'reports.welcome_subtitle' | transloco }}</p>
         </div>
       } @else {
-        <div class="pdf-container">
-          <div class="pdf-toolbar">
-            <h3>
-              @if (activeTool === 'patient-summary') {
-                {{ 'reports.patient_summary' | transloco }}
-              } @else if (activeTool === 'doctor-summary') {
-                {{ 'reports.doctor_summary' | transloco }}
-              } @else if (activeTool === 'pharmacy-summary') {
-                {{ 'reports.pharmacy_summary' | transloco }}
-              } @else {
-                {{ 'reports.select_tool' | transloco }}
-              }
-            </h3>
-            <button class="btn-primary" (click)="downloadPDF()">
+        <!-- PDF Editor Content -->
+        <div class="editor-container">
+          <!-- Toolbar -->
+          <div class="editor-toolbar">
+            <div class="toolbar-left">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <h3>{{ 'reports.edit_document' | transloco }}</h3>
+            </div>
+            <div class="toolbar-right">
+              <button class="btn-primary" (click)="generateAndDownloadPDF()" [disabled]="isGenerating">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              {{ 'pdf.download' | transloco }}
-            </button>
+              @if (isGenerating) {
+                {{ 'pdf.generating' | transloco }}
+              } @else {
+                {{ 'pdf.download' | transloco }}
+              }
+              </button>
+            </div>
           </div>
-          <div class="pdf-viewer">
-            @if (isGenerating) {
-              <div class="loading-state">
-                <div class="spinner"></div>
-                <p>{{ 'pdf.generating' | transloco }}</p>
-              </div>
-            } @else if (pdfUrl) {
-              <iframe [src]="pdfUrl" frameborder="0"></iframe>
-            } @else {
-              <div class="error-state">
-                <p>{{ 'pdf_errors.failed_to_generate' | transloco }}</p>
-              </div>
-            }
+
+          <!-- Editor Form -->
+          <div class="editor-content">
+            <div class="editor-form">
+              
+              <!-- Patient Summary Editor -->
+              @if (activeTool === 'patient-summary' && patientContent) {
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.header_section' | transloco }}</h4>
+                      <p>{{ 'reports.header_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="patient-title">{{ 'reports.document_title' | transloco }}</label>
+                    <input 
+                      id="patient-title"
+                      type="text" 
+                      [(ngModel)]="patientContent.documentTitle"
+                      class="form-input"
+                      [placeholder]="'reports.document_title_placeholder' | transloco">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="patient-salutation">{{ 'reports.salutation' | transloco }}</label>
+                    <input 
+                      id="patient-salutation"
+                      type="text" 
+                      [(ngModel)]="patientContent.salutation"
+                      class="form-input"
+                      [placeholder]="'reports.salutation_placeholder' | transloco">
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="17" y1="10" x2="3" y2="10"></line>
+                        <line x1="21" y1="6" x2="3" y2="6"></line>
+                        <line x1="21" y1="14" x2="3" y2="14"></line>
+                        <line x1="17" y1="18" x2="3" y2="18"></line>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.introduction_section' | transloco }}</h4>
+                      <p>{{ 'reports.introduction_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="patient-intro">{{ 'reports.intro_text' | transloco }}</label>
+                    <textarea 
+                      id="patient-intro"
+                      [(ngModel)]="patientContent.introText"
+                      class="form-textarea"
+                      rows="4"
+                      [placeholder]="'reports.intro_text_placeholder' | transloco"></textarea>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.recommendations_section' | transloco }}</h4>
+                      <p>{{ 'reports.recommendations_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="patient-rec-heading">{{ 'reports.section_heading' | transloco }}</label>
+                    <input 
+                      id="patient-rec-heading"
+                      type="text" 
+                      [(ngModel)]="patientContent.recommendationsHeading"
+                      class="form-input"
+                      [placeholder]="'reports.section_heading_placeholder' | transloco">
+                  </div>
+
+                  <div class="recommendations-list">
+                    <div class="list-header">
+                      <label>{{ 'reports.recommendation_items' | transloco }}</label>
+                      <button type="button" class="btn-secondary btn-small" (click)="addRecommendation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        {{ 'reports.add_item' | transloco }}
+                      </button>
+                    </div>
+
+                    @for (rec of patientContent.recommendations; track rec.originalIndex; let i = $index) {
+                      <div class="recommendation-item">
+                        <div class="item-header">
+                          <span class="item-number">{{ i + 1 }}</span>
+                          @if (rec.context) {
+                            <span class="item-context">{{ rec.context }}</span>
+                          }
+                          <button type="button" class="btn-icon btn-delete" (click)="removeRecommendation(i)" [title]="'common.delete' | transloco">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </div>
+                        <textarea 
+                          [(ngModel)]="rec.text"
+                          class="form-textarea"
+                          rows="2"
+                          [placeholder]="'reports.recommendation_text_placeholder' | transloco"></textarea>
+                      </div>
+                    }
+
+                    @if (patientContent.recommendations.length === 0) {
+                      <div class="empty-list">
+                        <p>{{ 'reports.no_items_yet' | transloco }}</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.closing_section' | transloco }}</h4>
+                      <p>{{ 'reports.closing_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="patient-closing">{{ 'reports.closing_text' | transloco }}</label>
+                    <textarea 
+                      id="patient-closing"
+                      [(ngModel)]="patientContent.closingText"
+                      class="form-textarea"
+                      rows="3"
+                      [placeholder]="'reports.closing_text_placeholder' | transloco"></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="patient-signoff">{{ 'reports.sign_off' | transloco }}</label>
+                    <input 
+                      id="patient-signoff"
+                      type="text" 
+                      [(ngModel)]="patientContent.signOff"
+                      class="form-input"
+                      [placeholder]="'reports.sign_off_placeholder' | transloco">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="patient-pharmacist">{{ 'reports.pharmacist_name' | transloco }}</label>
+                    <input 
+                      id="patient-pharmacist"
+                      type="text" 
+                      [(ngModel)]="patientContent.pharmacistName"
+                      class="form-input"
+                      [placeholder]="'reports.pharmacist_name_placeholder' | transloco">
+                  </div>
+                </div>
+              }
+
+              <!-- Doctor Summary Editor -->
+              @if (activeTool === 'doctor-summary' && doctorContent) {
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.header_section' | transloco }}</h4>
+                      <p>{{ 'reports.header_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="doctor-title">{{ 'reports.document_title' | transloco }}</label>
+                    <input 
+                      id="doctor-title"
+                      type="text" 
+                      [(ngModel)]="doctorContent.documentTitle"
+                      class="form-input"
+                      [placeholder]="'reports.document_title_placeholder' | transloco">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="doctor-salutation">{{ 'reports.salutation' | transloco }}</label>
+                    <input 
+                      id="doctor-salutation"
+                      type="text" 
+                      [(ngModel)]="doctorContent.salutation"
+                      class="form-input"
+                      [placeholder]="'reports.salutation_placeholder' | transloco">
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="17" y1="10" x2="3" y2="10"></line>
+                        <line x1="21" y1="6" x2="3" y2="6"></line>
+                        <line x1="21" y1="14" x2="3" y2="14"></line>
+                        <line x1="17" y1="18" x2="3" y2="18"></line>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.introduction_section' | transloco }}</h4>
+                      <p>{{ 'reports.introduction_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="doctor-intro">{{ 'reports.intro_text' | transloco }}</label>
+                    <textarea 
+                      id="doctor-intro"
+                      [(ngModel)]="doctorContent.introText"
+                      class="form-textarea"
+                      rows="4"
+                      [placeholder]="'reports.intro_text_placeholder' | transloco"></textarea>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.observations_section' | transloco }}</h4>
+                      <p>{{ 'reports.observations_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="doctor-obs-heading">{{ 'reports.section_heading' | transloco }}</label>
+                    <input 
+                      id="doctor-obs-heading"
+                      type="text" 
+                      [(ngModel)]="doctorContent.observationsHeading"
+                      class="form-input"
+                      [placeholder]="'reports.section_heading_placeholder' | transloco">
+                  </div>
+
+                  <div class="recommendations-list">
+                    <div class="list-header">
+                      <label>{{ 'reports.observation_items' | transloco }}</label>
+                      <button type="button" class="btn-secondary btn-small" (click)="addRecommendation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        {{ 'reports.add_item' | transloco }}
+                      </button>
+                    </div>
+
+                    @for (obs of doctorContent.observations; track obs.originalIndex; let i = $index) {
+                      <div class="recommendation-item">
+                        <div class="item-header">
+                          <span class="item-number">{{ i + 1 }}</span>
+                          @if (obs.context) {
+                            <span class="item-context">{{ obs.context }}</span>
+                          }
+                          <button type="button" class="btn-icon btn-delete" (click)="removeRecommendation(i)" [title]="'common.delete' | transloco">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </div>
+                        <textarea 
+                          [(ngModel)]="obs.text"
+                          class="form-textarea"
+                          rows="2"
+                          [placeholder]="'reports.observation_text_placeholder' | transloco"></textarea>
+                      </div>
+                    }
+
+                    @if (doctorContent.observations.length === 0) {
+                      <div class="empty-list">
+                        <p>{{ 'reports.no_items_yet' | transloco }}</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.closing_section' | transloco }}</h4>
+                      <p>{{ 'reports.closing_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="doctor-closing">{{ 'reports.closing_text' | transloco }}</label>
+                    <textarea 
+                      id="doctor-closing"
+                      [(ngModel)]="doctorContent.closingText"
+                      class="form-textarea"
+                      rows="3"
+                      [placeholder]="'reports.closing_text_placeholder' | transloco"></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="doctor-signoff">{{ 'reports.sign_off' | transloco }}</label>
+                    <input 
+                      id="doctor-signoff"
+                      type="text" 
+                      [(ngModel)]="doctorContent.signOff"
+                      class="form-input"
+                      [placeholder]="'reports.sign_off_placeholder' | transloco">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="doctor-pharmacist">{{ 'reports.pharmacist_name' | transloco }}</label>
+                    <input 
+                      id="doctor-pharmacist"
+                      type="text" 
+                      [(ngModel)]="doctorContent.pharmacistName"
+                      class="form-input"
+                      [placeholder]="'reports.pharmacist_name_placeholder' | transloco">
+                  </div>
+                </div>
+              }
+
+              <!-- Pharmacy Summary Editor -->
+              @if (activeTool === 'pharmacy-summary' && pharmacyContent) {
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.header_section' | transloco }}</h4>
+                      <p>{{ 'reports.header_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pharmacy-title">{{ 'reports.document_title' | transloco }}</label>
+                    <input 
+                      id="pharmacy-title"
+                      type="text" 
+                      [(ngModel)]="pharmacyContent.documentTitle"
+                      class="form-input"
+                      [placeholder]="'reports.document_title_placeholder' | transloco">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pharmacy-notice">{{ 'reports.internal_notice' | transloco }}</label>
+                    <textarea 
+                      id="pharmacy-notice"
+                      [(ngModel)]="pharmacyContent.internalNotice"
+                      class="form-textarea"
+                      rows="2"
+                      [placeholder]="'reports.internal_notice_placeholder' | transloco"></textarea>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.notes_section' | transloco }}</h4>
+                      <p>{{ 'reports.notes_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pharmacy-notes-heading">{{ 'reports.section_heading' | transloco }}</label>
+                    <input 
+                      id="pharmacy-notes-heading"
+                      type="text" 
+                      [(ngModel)]="pharmacyContent.reviewNotesHeading"
+                      class="form-input"
+                      [placeholder]="'reports.section_heading_placeholder' | transloco">
+                  </div>
+
+                  <div class="recommendations-list">
+                    <div class="list-header">
+                      <label>{{ 'reports.note_items' | transloco }}</label>
+                      <button type="button" class="btn-secondary btn-small" (click)="addRecommendation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        {{ 'reports.add_item' | transloco }}
+                      </button>
+                    </div>
+
+                    @for (note of pharmacyContent.notes; track note.originalIndex; let i = $index) {
+                      <div class="recommendation-item">
+                        <div class="item-header">
+                          <span class="item-number">{{ i + 1 }}</span>
+                          @if (note.context) {
+                            <span class="item-context">{{ note.context }}</span>
+                          }
+                          <button type="button" class="btn-icon btn-delete" (click)="removeRecommendation(i)" [title]="'common.delete' | transloco">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </div>
+                        <textarea 
+                          [(ngModel)]="note.text"
+                          class="form-textarea"
+                          rows="2"
+                          [placeholder]="'reports.note_text_placeholder' | transloco"></textarea>
+                      </div>
+                    }
+
+                    @if (pharmacyContent.notes.length === 0) {
+                      <div class="empty-list">
+                        <p>{{ 'reports.no_items_yet' | transloco }}</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <div class="section-header">
+                    <div class="section-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                      </svg>
+                    </div>
+                    <div class="section-title-group">
+                      <h4>{{ 'reports.closing_section' | transloco }}</h4>
+                      <p>{{ 'reports.closing_section_desc' | transloco }}</p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pharmacy-closing">{{ 'reports.closing_text' | transloco }}</label>
+                    <textarea 
+                      id="pharmacy-closing"
+                      [(ngModel)]="pharmacyContent.closingText"
+                      class="form-textarea"
+                      rows="3"
+                      [placeholder]="'reports.closing_text_placeholder' | transloco"></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="pharmacy-pharmacist">{{ 'reports.pharmacist_name' | transloco }}</label>
+                    <input 
+                      id="pharmacy-pharmacist"
+                      type="text" 
+                      [(ngModel)]="pharmacyContent.pharmacistName"
+                      class="form-input"
+                      [placeholder]="'reports.pharmacist_name_placeholder' | transloco">
+                  </div>
+                </div>
+              }
+              
+            </div>
           </div>
         </div>
       }

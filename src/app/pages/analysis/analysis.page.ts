@@ -21,6 +21,8 @@ import { QuestionnaireComponent } from '../../components/questionnaire/questionn
 import { MedicationSearchResult, Medication as ApiMedication } from '../../models/api.models';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
+import { InteractionsCacheService } from '../../services/interactions-cache.service';
+import { ContraindicationsCacheService } from '../../services/contraindications-cache.service';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
@@ -43,6 +45,8 @@ export class AnalysisPage implements OnInit, OnDestroy {
   selectedInteraction: any = null;
   selectedInteractionType: 'drug-drug' | 'drug-food' = 'drug-drug';
   showNoteOverviewModal = false;
+  interactionCount = 0;
+  contraindicationCount = 0;
 
   @ViewChild(TherapyAdherenceComponent) therapyAdherenceComponent?: TherapyAdherenceComponent;
   @ViewChild(InteractionsComponent) interactionsComponent?: InteractionsComponent;
@@ -69,7 +73,9 @@ export class AnalysisPage implements OnInit, OnDestroy {
     private apiService: ApiService,
     private stateService: StateService,
     private router: Router,
-    private transloco: TranslocoService
+    private transloco: TranslocoService,
+    private interactionsCache: InteractionsCacheService,
+    private contraindicationsCache: ContraindicationsCacheService
   ) {}
 
   ngOnInit() {
@@ -91,6 +97,68 @@ export class AnalysisPage implements OnInit, OnDestroy {
       .subscribe(() => {
         this.openNoteOverview();
       });
+
+    // Subscribe to interactions cache to update count badge
+    this.interactionsCache.cache$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(cache => {
+        if (cache.response && cache.response.result && cache.response.result.interactionMatches) {
+          // Count total interactions across all matches
+          this.interactionCount = cache.response.result.interactionMatches.reduce((total, match) => {
+            return total + (match.interactions?.length || 0);
+          }, 0);
+        } else {
+          this.interactionCount = 0;
+        }
+      });
+
+    // Trigger initial cache load if not already loaded
+    const currentCache = this.interactionsCache.getCacheData();
+    if (!currentCache.lastUpdated && !currentCache.loading) {
+      console.log('[AnalysisPage] Triggering initial interactions cache load');
+      this.interactionsCache.refreshCache();
+    }
+
+    // Subscribe to contraindications cache to update count badge
+    this.contraindicationsCache.cache$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(cache => {
+        console.log('[AnalysisPage] Contraindications cache update:', {
+          hasMatchesResponse: !!cache.matchesResponse,
+          hasResult: !!(cache.matchesResponse?.result),
+          resultLength: cache.matchesResponse?.result?.length,
+          patientContraindications: cache.patientContraindications.length,
+          loading: cache.loading,
+          error: cache.error
+        });
+        
+        // Only count contraindication matches (patient contraindications), not product contraindications
+        if (cache.matchesResponse && cache.matchesResponse.result) {
+          this.contraindicationCount = cache.matchesResponse.result.length;
+          console.log('[AnalysisPage] Contraindication count from matches:', this.contraindicationCount);
+        } else if (cache.patientContraindications && cache.patientContraindications.length > 0 && !cache.loading) {
+          // If we have patient contraindications but no matches response, it means either:
+          // 1. No medications match the conditions (count = 0, correct)
+          // 2. The API failed (we should still show 0, but log the issue)
+          this.contraindicationCount = 0;
+          if (cache.error) {
+            console.warn('[AnalysisPage] Contraindication matches API failed, showing 0 count');
+          } else {
+            console.log('[AnalysisPage] No contraindication matches found (patient has', cache.patientContraindications.length, 'conditions)');
+          }
+        } else {
+          this.contraindicationCount = 0;
+        }
+        
+        console.log('[AnalysisPage] Final contraindication count:', this.contraindicationCount);
+      });
+
+    // Trigger initial contraindications cache load if not already loaded
+    const currentContraCache = this.contraindicationsCache.getCacheData();
+    if (!currentContraCache.lastUpdated && !currentContraCache.loading) {
+      console.log('[AnalysisPage] Triggering initial contraindications cache load');
+      this.contraindicationsCache.refreshCache();
+    }
   }
 
   ngOnDestroy() {
@@ -500,15 +568,8 @@ export class AnalysisPage implements OnInit, OnDestroy {
       this.therapyAdherenceComponent.refreshData();
     }
     
-    // Refresh interactions component
-    if (this.interactionsComponent) {
-      this.interactionsComponent.refreshInteractions();
-    }
-    
-    // Refresh contraindications component
-    if (this.contraindicationsComponent) {
-      this.contraindicationsComponent.refreshContraindications();
-    }
+    // Note: Interactions and contraindications refresh automatically via cache services
+    // when medications change, so no manual refresh needed here
   }
 
   openNoteOverview() {

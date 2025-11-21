@@ -5,6 +5,12 @@
     (click)="onToolClick(tool.id)" 
     [class.active]="activeTool === tool.id">
     <div class="tool-icon">
+      @if (tool.id === 'interactions') {
+        <span class="badge" [class.badge-zero]="interactionCount === 0">{{ interactionCount }}</span>
+      }
+      @if (tool.id === 'contra-indications') {
+        <span class="badge" [class.badge-zero]="contraindicationCount === 0">{{ contraindicationCount }}</span>
+      }
       @switch (tool.icon) {
         @case ('grid') {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

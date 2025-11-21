@@ -60,70 +60,108 @@
     overflow: hidden;
 
     .tools-sidebar {
-      flex: 0 0 280px;
+      flex: 0 0 300px;
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      padding: 1rem;
+      padding: 1.25rem;
       background-color: $box-background;
       border: 1px solid $box-border;
       border-radius: 8px;
       overflow-y: auto;
 
+      .sidebar-header {
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid $box-border;
+
+        h3 {
+          margin: 0 0 0.375rem 0;
+          font-family: $primary-font;
+          font-weight: $font-weight-semibold;
+          font-size: 1.125rem;
+          color: $text-primary;
+        }
+
+        .subtitle {
+          font-family: $primary-font;
+          font-size: 0.8125rem;
+          color: $text-secondary;
+          margin: 0;
+          line-height: 1.4;
+        }
+      }
+
       .tool-button {
         display: flex;
-        align-items: center;
-        gap: 0.875rem;
-        padding: 1rem 1.25rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1.125rem 1.25rem;
         background-color: $main-background;
         border: 2px solid $box-border;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
-        font-family: $primary-font;
-        font-size: 0.9375rem;
-        color: $text-primary;
-        font-weight: $font-weight-medium;
-
-        svg {
-          flex-shrink: 0;
-          color: $text-secondary;
-          transition: color 0.2s ease;
-        }
-
-        span {
-          flex: 1;
-        }
+        text-align: left;
 
         &:hover {
           border-color: $button-primary-background;
           background-color: rgba($button-primary-background, 0.05);
-          transform: translateY(-2px);
+          transform: translateX(4px);
           box-shadow: 0 4px 12px rgba(69, 75, 96, 0.08);
-
-          svg {
-            color: $button-primary-background;
-          }
         }
 
         &.active {
           border-color: $button-primary-background;
-          background-color: rgba($button-primary-background, 0.1);
+          background-color: rgba($button-primary-background, 0.08);
           box-shadow: 0 4px 12px rgba(69, 75, 96, 0.12);
 
-          svg {
+          .tool-icon svg {
             color: $button-primary-background;
           }
 
-          span {
+          .tool-content .tool-name {
             color: $button-primary-background;
             font-weight: $font-weight-semibold;
+          }
+        }
+
+        .tool-icon {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          svg {
+            flex-shrink: 0;
+            color: $text-secondary;
+            transition: color 0.2s ease;
+          }
+        }
+
+        .tool-content {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+
+          .tool-name {
+            font-family: $primary-font;
+            font-size: 0.9375rem;
+            color: $text-primary;
+            font-weight: $font-weight-medium;
+            transition: all 0.2s ease;
+          }
+
+          .tool-desc {
+            font-family: $primary-font;
+            font-size: 0.8125rem;
+            color: $text-secondary;
+            line-height: 1.4;
           }
         }
       }
     }
 
-    .pdf-preview-area {
+    .pdf-editor-area {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -139,120 +177,434 @@
         align-items: center;
         justify-content: center;
         padding: 3rem 2rem;
-        gap: 1rem;
+        gap: 1.25rem;
 
         svg {
           color: $text-muted;
-          opacity: 0.5;
+          opacity: 0.4;
+        }
+
+        h2 {
+          font-family: $primary-font;
+          font-weight: $font-weight-semibold;
+          font-size: 1.375rem;
+          color: $text-primary;
+          margin: 0;
         }
 
         p {
           font-family: $primary-font;
           font-size: 0.9375rem;
-          color: $text-muted;
+          color: $text-secondary;
           text-align: center;
+          margin: 0;
+          line-height: 1.5;
+        }
+      }
+
+      .loading-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid $box-border;
+          border-top-color: $button-primary-background;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        p {
+          font-family: $primary-font;
+          font-size: 0.9375rem;
+          color: $text-secondary;
           margin: 0;
         }
       }
 
-      .pdf-container {
+      .editor-container {
         flex: 1;
         display: flex;
         flex-direction: column;
         overflow: hidden;
 
-        .pdf-toolbar {
+        .editor-toolbar {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 1rem 1.5rem;
+          padding: 1.125rem 1.75rem;
           background-color: $box-background;
           border-bottom: 1px solid $box-border;
           flex-shrink: 0;
 
-          h3 {
-            margin: 0;
-            font-family: $primary-font;
-            font-weight: $font-weight-semibold;
-            font-size: 1.125rem;
-            color: $text-primary;
-          }
-
-          .btn-primary {
+          .toolbar-left {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
-            background-color: $button-primary-background;
-            color: $text-button-primary;
-            border: none;
-            border-radius: $box-border-radius-small;
-            font-family: $primary-font;
-            font-size: 0.9rem;
-            font-weight: $font-weight-medium;
-            cursor: pointer;
-            transition: all 0.12s ease;
+            gap: 0.875rem;
 
             svg {
+              color: $button-primary-background;
               flex-shrink: 0;
             }
 
-            &:hover {
-              background-color: darken($button-primary-background, 5%);
-              transform: translateY(-2px);
-              box-shadow: 0 6px 18px rgba(69, 75, 96, 0.12);
+            h3 {
+              margin: 0;
+              font-family: $primary-font;
+              font-weight: $font-weight-semibold;
+              font-size: 1.1875rem;
+              color: $text-primary;
             }
+          }
 
-            &:active {
-              transform: translateY(0);
+          .toolbar-right {
+            .btn-primary {
+              display: flex;
+              align-items: center;
+              gap: 0.625rem;
+              padding: 0.75rem 1.5rem;
+              background-color: $button-primary-background;
+              color: $text-button-primary;
+              border: none;
+              border-radius: $box-border-radius-small;
+              font-family: $primary-font;
+              font-size: 0.9375rem;
+              font-weight: $font-weight-semibold;
+              cursor: pointer;
+              transition: all 0.15s ease;
+
+              svg {
+                flex-shrink: 0;
+              }
+
+              &:hover {
+                background-color: darken($button-primary-background, 6%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(69, 75, 96, 0.15);
+              }
+
+              &:active {
+                transform: translateY(0);
+              }
+
+              &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none;
+
+                &:hover {
+                  transform: none;
+                  box-shadow: none;
+                }
+              }
             }
           }
         }
 
-        .pdf-viewer {
+        .editor-content {
           flex: 1;
-          display: flex;
-          padding: 1.5rem;
-          overflow: hidden;
-          background-color: #525659;
+          overflow-y: auto;
+          padding: 2rem;
+          background-color: $main-background;
 
-          iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: $box-border-radius-small;
-            background-color: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-          }
-
-          .loading-state,
-          .error-state {
-            flex: 1;
+          .editor-form {
+            max-width: 900px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
+            gap: 2rem;
 
-            .spinner {
-              width: 40px;
-              height: 40px;
-              border: 4px solid rgba(255, 255, 255, 0.3);
-              border-top-color: white;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
+            .form-section {
+              background-color: $box-background;
+              border: 1px solid $box-border;
+              border-radius: 10px;
+              padding: 1.75rem;
+              transition: all 0.2s ease;
+
+              &:hover {
+                box-shadow: 0 4px 16px rgba(69, 75, 96, 0.06);
+                border-color: darken($box-border, 5%);
+              }
+
+              .section-header {
+                display: flex;
+                align-items: flex-start;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1.25rem;
+                border-bottom: 1px solid $box-border;
+
+                .section-icon {
+                  flex-shrink: 0;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 36px;
+                  height: 36px;
+                  background-color: rgba($button-primary-background, 0.1);
+                  border-radius: 8px;
+
+                  svg {
+                    color: $button-primary-background;
+                  }
+                }
+
+                .section-title-group {
+                  flex: 1;
+
+                  h4 {
+                    margin: 0 0 0.375rem 0;
+                    font-family: $primary-font;
+                    font-weight: $font-weight-semibold;
+                    font-size: 1.0625rem;
+                    color: $text-primary;
+                  }
+
+                  p {
+                    margin: 0;
+                    font-family: $primary-font;
+                    font-size: 0.8125rem;
+                    color: $text-secondary;
+                    line-height: 1.4;
+                  }
+                }
+              }
+
+              .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 1.25rem;
+
+                &:last-child {
+                  margin-bottom: 0;
+                }
+
+                label {
+                  font-family: $primary-font;
+                  font-size: 0.875rem;
+                  font-weight: $font-weight-medium;
+                  color: $text-primary;
+                  margin-bottom: 0.125rem;
+                }
+
+                .form-input,
+                .form-textarea {
+                  width: 100%;
+                  padding: 0.75rem 1rem;
+                  font-family: $primary-font;
+                  font-size: 0.9375rem;
+                  color: $text-primary;
+                  background-color: $main-background;
+                  border: 1px solid $box-border;
+                  border-radius: $box-border-radius-small;
+                  transition: all 0.2s ease;
+                  box-sizing: border-box;
+
+                  &::placeholder {
+                    color: $text-muted;
+                  }
+
+                  &:focus {
+                    outline: none;
+                    border-color: $button-primary-background;
+                    box-shadow: 0 0 0 3px rgba($button-primary-background, 0.1);
+                  }
+
+                  &:hover:not(:focus) {
+                    border-color: darken($box-border, 10%);
+                  }
+                }
+
+                .form-textarea {
+                  resize: vertical;
+                  min-height: 80px;
+                  line-height: 1.5;
+                }
+              }
+
+              .recommendations-list {
+                .list-header {
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 1rem;
+
+                  label {
+                    font-family: $primary-font;
+                    font-size: 0.875rem;
+                    font-weight: $font-weight-medium;
+                    color: $text-primary;
+                  }
+
+                  .btn-secondary {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.5rem 1rem;
+                    background-color: transparent;
+                    color: $button-primary-background;
+                    border: 1px solid $button-primary-background;
+                    border-radius: $box-border-radius-small;
+                    font-family: $primary-font;
+                    font-size: 0.8125rem;
+                    font-weight: $font-weight-medium;
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+
+                    svg {
+                      flex-shrink: 0;
+                    }
+
+                    &:hover {
+                      background-color: $button-primary-background;
+                      color: white;
+                      transform: translateY(-1px);
+                      box-shadow: 0 4px 12px rgba(69, 75, 96, 0.12);
+                    }
+
+                    &:active {
+                      transform: translateY(0);
+                    }
+
+                    &.btn-small {
+                      padding: 0.4375rem 0.875rem;
+                      font-size: 0.8125rem;
+                    }
+                  }
+                }
+
+                .recommendation-item {
+                  background-color: $main-background;
+                  border: 1px solid $box-border;
+                  border-radius: 8px;
+                  padding: 1rem;
+                  margin-bottom: 0.875rem;
+                  transition: all 0.2s ease;
+
+                  &:last-child {
+                    margin-bottom: 0;
+                  }
+
+                  &:hover {
+                    border-color: darken($box-border, 8%);
+                    box-shadow: 0 2px 8px rgba(69, 75, 96, 0.04);
+                  }
+
+                  .item-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.625rem;
+                    margin-bottom: 0.75rem;
+
+                    .item-number {
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      width: 24px;
+                      height: 24px;
+                      background-color: rgba($button-primary-background, 0.12);
+                      color: $button-primary-background;
+                      font-family: $primary-font;
+                      font-size: 0.75rem;
+                      font-weight: $font-weight-semibold;
+                      border-radius: 50%;
+                      flex-shrink: 0;
+                    }
+
+                    .item-context {
+                      flex: 1;
+                      font-family: $primary-font;
+                      font-size: 0.8125rem;
+                      font-weight: $font-weight-medium;
+                      color: $text-secondary;
+                      padding: 0.25rem 0.625rem;
+                      background-color: rgba($button-primary-background, 0.08);
+                      border-radius: 4px;
+                    }
+
+                    .btn-icon {
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      width: 28px;
+                      height: 28px;
+                      background-color: transparent;
+                      border: none;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      transition: all 0.15s ease;
+                      flex-shrink: 0;
+
+                      svg {
+                        color: $text-secondary;
+                      }
+
+                      &:hover {
+                        background-color: rgba(#ff6b6b, 0.1);
+
+                        svg {
+                          color: #ff6b6b;
+                        }
+                      }
+
+                      &.btn-delete:hover {
+                        background-color: rgba(#ff6b6b, 0.12);
+                      }
+                    }
+                  }
+
+                  .form-textarea {
+                    width: 100%;
+                    padding: 0.75rem 1rem;
+                    font-family: $primary-font;
+                    font-size: 0.9375rem;
+                    color: $text-primary;
+                    background-color: $box-background;
+                    border: 1px solid $box-border;
+                    border-radius: $box-border-radius-small;
+                    transition: all 0.2s ease;
+                    resize: vertical;
+                    min-height: 70px;
+                    line-height: 1.5;
+                    box-sizing: border-box;
+
+                    &::placeholder {
+                      color: $text-muted;
+                    }
+
+                    &:focus {
+                      outline: none;
+                      border-color: $button-primary-background;
+                      box-shadow: 0 0 0 3px rgba($button-primary-background, 0.08);
+                    }
+
+                    &:hover:not(:focus) {
+                      border-color: darken($box-border, 10%);
+                    }
+                  }
+                }
+
+                .empty-list {
+                  padding: 2rem 1.5rem;
+                  text-align: center;
+                  background-color: $main-background;
+                  border: 1px dashed $box-border;
+                  border-radius: 8px;
+
+                  p {
+                    margin: 0;
+                    font-family: $primary-font;
+                    font-size: 0.875rem;
+                    color: $text-muted;
+                  }
+                }
+              }
             }
-
-            p {
-              font-family: $primary-font;
-              font-size: 0.9375rem;
-              color: white;
-              margin: 0;
-            }
-          }
-
-          .error-state p {
-            color: #ff6b6b;
           }
         }
       }

@@ -547,6 +547,7 @@ export class MedicationListComponent implements OnInit {
         this.isLoading = false;
         alert(`Successfully imported ${savedCount} medication(s).`);
         this.loadMedications();
+        this.stateService.notifyMedicationsChanged();
         this.pendingMedicationsToSave = [];
         return;
       }
@@ -640,6 +641,7 @@ export class MedicationListComponent implements OnInit {
           this.showSearchModal = false;
           this.editingMedication = null;
           this.loadMedications();
+          this.stateService.notifyMedicationsChanged();
         },
         error: (error) => {
           console.error('[MedicationList] Failed to update medication:', error);
@@ -664,6 +666,7 @@ export class MedicationListComponent implements OnInit {
           console.log('[MedicationList] Medication added:', response);
           this.showSearchModal = false;
           this.loadMedications();
+          this.stateService.notifyMedicationsChanged();
           
           // Mark as new and scroll to it after a brief delay to allow rendering
           setTimeout(() => {
@@ -682,6 +685,7 @@ export class MedicationListComponent implements OnInit {
     console.log('[MedicationList] Medication deleted:', medicationId);
     // Remove from local array
     this.medications = this.medications.filter(med => med.medicationId !== medicationId);
+    this.stateService.notifyMedicationsChanged();
   }
 
   onEditRequested(medication: Medication) {
@@ -720,6 +724,7 @@ export class MedicationListComponent implements OnInit {
         console.log('[MedicationList] Completed deleting medications. Deleted count:', deletedCount);
         alert(`Deleted ${deletedCount} medication(s).`);
         this.loadMedications();
+        this.stateService.notifyMedicationsChanged();
         return;
       }
 

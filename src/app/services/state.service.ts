@@ -12,6 +12,9 @@ export class StateService {
   private contraindicationsChangedSubject = new Subject<void>();
   public contraindicationsChanged$: Observable<void> = this.contraindicationsChangedSubject.asObservable();
 
+  private medicationsChangedSubject = new Subject<void>();
+  public medicationsChanged$: Observable<void> = this.medicationsChangedSubject.asObservable();
+
   private noteOverviewModalSubject = new Subject<void>();
   public noteOverviewModal$: Observable<void> = this.noteOverviewModalSubject.asObservable();
 
@@ -33,6 +36,10 @@ export class StateService {
 
   notifyContraindicationsChanged(): void {
     this.contraindicationsChangedSubject.next();
+  }
+
+  notifyMedicationsChanged(): void {
+    this.medicationsChangedSubject.next();
   }
 
   get apbNumber(): string {

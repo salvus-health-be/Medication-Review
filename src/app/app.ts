@@ -28,7 +28,7 @@ export class App {
   }
 
   private checkRoute(url: string) {
-    this.isLoginPage = url === '/login' || url === '/';
+    this.isLoginPage = url === '/login' || url === '/' || url === '/disclaimer';
   }
 
   onOpenNoteOverview() {

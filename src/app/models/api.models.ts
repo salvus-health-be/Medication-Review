@@ -154,6 +154,7 @@ export interface Medication {
   cnk?: number | null;
   vmp?: number | null;
   packageSize?: number | null;
+  activeIngredient?: string | null;
   dosageMg?: number | null;
   routeOfAdministration?: string | null;
   indication?: string | null;
@@ -177,6 +178,7 @@ export interface AddMedicationRequest {
   cnk?: number;
   vmp?: number;
   packageSize?: number;
+  activeIngredient?: string;
   dosageMg?: number;
   routeOfAdministration?: string;
   indication?: string;
@@ -199,6 +201,7 @@ export interface UpdateMedicationRequest {
   cnk?: number | null;
   vmp?: number | null;
   packageSize?: number | null;
+  activeIngredient?: string | null;
   dosageMg?: number | null;
   routeOfAdministration?: string | null;
   indication?: string | null;
@@ -220,6 +223,7 @@ export interface MedicationResponse {
   cnk?: number | null;
   vmp?: number | null;
   packageSize?: number | null;
+  activeIngredient?: string | null;
   dosageMg?: number | null;
   routeOfAdministration?: string | null;
   indication?: string | null;

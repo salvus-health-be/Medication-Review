@@ -1,21 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
+import { InteractionsCacheService, InteractionsResponse } from '../../services/interactions-cache.service';
 import { Medication } from '../../models/api.models';
 import { Output, EventEmitter } from '@angular/core';
-
-// Backend Request/Response Interfaces
-interface CNKParticipant {
-  cnk: string;
-  routeOfAdministrationCode?: string;
-}
-
-interface InteractionsRequest {
-  language: string;
-  cnks: CNKParticipant[];
-}
+import { Subscription } from 'rxjs';
 
 // APB Response Interfaces (returned by backend)
 interface Participant {
@@ -44,45 +35,6 @@ interface DrugDrugInteraction {
   sourceAssessment: CodeDescription | null;
   leftParticipant: Participant;
   rightParticipant: Participant;
-}
-
-interface InteractionMatch {
-  clinicalRelevance: CodeDescription;
-  interactions: DrugDrugInteraction[];
-}
-
-interface DrugFoodInteractionInfo {
-  interactionNumber: string;
-  leftSubstance: Substance;
-  rightSubstance: Substance;
-  direction: CodeDescription;
-  sourceAssessment: CodeDescription | null;
-}
-
-interface DrugFoodInteractionItem {
-  side: string;
-  interactionInformation: DrugFoodInteractionInfo;
-}
-
-interface DrugFoodInteractionGroup {
-  clinicalRelevance: CodeDescription;
-  interactions: DrugFoodInteractionItem[];
-}
-
-interface DrugFoodInteraction {
-  participant: Participant;
-  interactionGroups: DrugFoodInteractionGroup[];
-}
-
-interface InteractionsResult {
-  interactionMatches: InteractionMatch[];
-  drugFoodInteractions: DrugFoodInteraction[];
-}
-
-interface InteractionsResponse {
-  language: string;
-  participants: Participant[];
-  result: InteractionsResult;
 }
 
 // Display Interfaces
@@ -117,7 +69,7 @@ interface DisplayDrugFoodInteraction {
   templateUrl: './interactions.component.html',
   styleUrls: ['./interactions.component.scss']
 })
-export class InteractionsComponent implements OnInit {
+export class InteractionsComponent implements OnInit, OnDestroy {
   @Output() openNotes = new EventEmitter<{ type: 'drug-drug' | 'drug-food' | 'general', interaction: any }>();
   
   medications: Medication[] = [];
@@ -132,6 +84,8 @@ export class InteractionsComponent implements OnInit {
   drugDrugInteractions: DisplayDrugDrugInteraction[] = [];
   drugFoodInteractions: DisplayDrugFoodInteraction[] = [];
   
+  private cacheSubscription?: Subscription;
+  
   // Severity order for sorting (highest to lowest)
   private severityOrder: { [key: string]: number } = {
     '50': 1, // Ernstig
@@ -143,75 +97,48 @@ export class InteractionsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private stateService: StateService
+    private stateService: StateService,
+    private interactionsCache: InteractionsCacheService
   ) {}
 
   ngOnInit() {
-    this.loadMedications();
-  }
-
-  // Public method to refresh interactions when medications change
-  refreshInteractions() {
-    console.log('[Interactions] Refreshing interactions data');
-    this.loadMedications();
-  }
-
-  loadMedications() {
-    const reviewId = this.stateService.medicationReviewId;
-    if (!reviewId) return;
-
-    this.loading = true;
-    this.error = null;
-
-    this.apiService.getMedications(reviewId).subscribe({
-      next: (medications) => {
-        this.medications = medications;
-        console.log('[Interactions] Loaded medications:', this.medications);
-        
-        if (medications.length > 0) {
-          this.checkInteractions();
-        }
-      },
-      error: (err) => {
-        console.error('[Interactions] Error loading medications:', err);
-        this.error = 'Failed to load medications';
-        this.loading = false;
+    console.log('[Interactions] Component initialized, subscribing to cache');
+    
+    // Subscribe to cache updates
+    this.cacheSubscription = this.interactionsCache.cache$.subscribe(cache => {
+      console.log('[Interactions] Cache updated:', {
+        hasResponse: !!cache.response,
+        medicationsCount: cache.medications.length,
+        loading: cache.loading,
+        error: cache.error
+      });
+      
+      this.medications = cache.medications;
+      this.loading = cache.loading;
+      this.error = cache.error;
+      
+      if (cache.response) {
+        this.processInteractions(cache.response);
+      } else {
+        // Clear interactions if no response
+        this.drugDrugInteractions = [];
+        this.drugFoodInteractions = [];
       }
     });
+
+    // Cache is managed by the service and refreshed automatically when medications change
+    // No need to trigger refresh here as analysis page already handles initial load
   }
 
-  checkInteractions() {
-    const cnks = this.medications
-      .filter(med => med.cnk)
-      .map(med => ({
-        cnk: med.cnk!.toString().padStart(7, '0'),
-        routeOfAdministrationCode: med.routeOfAdministration || 'OR'
-      }));
-
-    if (cnks.length === 0) {
-      this.loading = false;
-      return;
+  ngOnDestroy() {
+    if (this.cacheSubscription) {
+      this.cacheSubscription.unsubscribe();
     }
+  }
 
-    const request = {
-      language: 'NL',
-      cnks
-    };
-
-    console.log('[Interactions] Request:', request);
-
-    this.apiService.checkInteractions(request).subscribe({
-      next: (response) => {
-        console.log('[Interactions] Response:', response);
-        this.processInteractions(response);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('[Interactions] Error checking interactions:', err);
-        this.error = 'Failed to check interactions';
-        this.loading = false;
-      }
-    });
+  // Manual refresh is no longer needed - cache auto-refreshes via state notifications
+  refreshInteractions() {
+    console.log('[Interactions] Refresh requested (cache auto-refreshes on medication changes)');
   }
 
   processInteractions(response: InteractionsResponse) {

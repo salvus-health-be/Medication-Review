@@ -1,8 +1,10 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
+import { Subscription } from 'rxjs';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
+import { ContraindicationsCacheService } from '../../services/contraindications-cache.service';
 import { Medication } from '../../models/api.models';
 
 // API Interfaces
@@ -39,7 +41,7 @@ interface DisplayProductContraindication {
   templateUrl: './contraindications.component.html',
   styleUrls: ['./contraindications.component.scss']
 })
-export class ContraindicationsComponent implements OnInit {
+export class ContraindicationsComponent implements OnInit, OnDestroy {
   @Output() openNotes = new EventEmitter<{ type: 'match' | 'product', contraindication: any }>();
   
   medications: Medication[] = [];
@@ -53,6 +55,8 @@ export class ContraindicationsComponent implements OnInit {
   contraindicationMatches: DisplayContraindicationMatch[] = [];
   productContraindications: DisplayProductContraindication[] = [];
   
+  private cacheSubscription?: Subscription;
+  
   // Severity order for sorting (highest to lowest)
   private severityOrder: { [key: string]: number } = {
     'CI': 1, // Contraindication (absolute)
@@ -61,113 +65,70 @@ export class ContraindicationsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private stateService: StateService
+    private stateService: StateService,
+    private contraindicationsCache: ContraindicationsCacheService
   ) {}
 
   ngOnInit() {
-    this.loadData();
+    console.log('[Contraindications] Component initialized, subscribing to cache');
     
-    // Subscribe to contraindication changes
-    this.stateService.contraindicationsChanged$.subscribe(() => {
-      console.log('[Contraindications] Contraindications changed, reloading...');
-      this.loadData();
+    // Subscribe to cache updates
+    this.cacheSubscription = this.contraindicationsCache.cache$.subscribe(cache => {
+      console.log('[Contraindications] Cache updated:', {
+        hasMatchesResponse: !!cache.matchesResponse,
+        productResponsesCount: cache.productResponses.length,
+        medicationsCount: cache.medications.length,
+        loading: cache.loading,
+        error: cache.error
+      });
+      
+      this.medications = cache.medications;
+      this.patientContraindications = cache.patientContraindications;
+      this.loading = cache.loading;
+      this.error = cache.error;
+      
+      if (cache.matchesResponse) {
+        this.processContraindicationMatches(cache.matchesResponse);
+      } else {
+        this.contraindicationMatches = [];
+      }
+      
+      if (cache.productResponses.length > 0) {
+        this.processProductContraindications(cache.productResponses);
+      } else {
+        this.productContraindications = [];
+      }
     });
+
+    // Cache is managed by the service and refreshed automatically when medications/contraindications change
+    // No need to trigger refresh here as analysis page already handles initial load
   }
 
-  // Public method to refresh contraindications when medications or conditions change
+  ngOnDestroy() {
+    if (this.cacheSubscription) {
+      this.cacheSubscription.unsubscribe();
+    }
+  }
+
+  // Manual refresh is no longer needed - cache auto-refreshes via state notifications
   refreshContraindications() {
-    console.log('[Contraindications] Refreshing contraindications data');
-    this.loadData();
+    console.log('[Contraindications] Refresh requested (cache auto-refreshes on medication/contraindication changes)');
   }
 
-  loadData() {
-    const reviewId = this.stateService.medicationReviewId;
-    if (!reviewId) return;
-
-    this.loading = true;
-    this.error = null;
-
-    // Load medications and patient contraindications in parallel
-    Promise.all([
-      this.apiService.getMedications(reviewId).toPromise(),
-      this.apiService.getContraindications(reviewId).toPromise()
-    ])
-      .then(([medications, contraindications]) => {
-        this.medications = medications || [];
-        this.patientContraindications = contraindications || [];
-        
-        console.log('[Contraindications] Loaded medications:', this.medications);
-        console.log('[Contraindications] Loaded patient contraindications:', this.patientContraindications);
-        
-        if (this.medications.length > 0) {
-          this.checkContraindications();
-        } else {
-          this.loading = false;
-        }
-      })
-      .catch(err => {
-        console.error('[Contraindications] Error loading data:', err);
-        this.error = 'Failed to load data';
-        this.loading = false;
-      });
+  loadAdditionalContraindications() {
+    console.log('[Contraindications] Loading additional contraindications');
+    this.contraindicationsCache.loadProductContraindications();
   }
 
-  checkContraindications() {
-    // Get CNK codes from medications
-    const cnkCodes = this.medications
-      .filter(med => med.cnk)
-      .map(med => med.cnk!.toString().padStart(7, '0'));
-
-    // Get condition codes from patient contraindications
-    const conditionCodes = this.patientContraindications
-      .filter(ci => ci.contraindicationCode)
-      .map(ci => ci.contraindicationCode);
-
-    console.log('[Contraindications] CNK codes:', cnkCodes);
-    console.log('[Contraindications] Condition codes:', conditionCodes);
-
-    // Check matches (Type 1: medications vs patient conditions)
-    if (cnkCodes.length > 0 && conditionCodes.length > 0) {
-      const matchRequest = {
-        language: 'NL',
-        participatingProductCodes: cnkCodes,
-        participatingPhysioPathologicalConditionCodes: conditionCodes
-      };
-
-      this.apiService.getContraindicationMatches(matchRequest).subscribe({
-        next: (response) => {
-          console.log('[Contraindications] Matches response:', response);
-          this.processContraindicationMatches(response);
-        },
-        error: (err) => {
-          console.error('[Contraindications] Error checking matches:', err);
-        }
-      });
-    }
-
-    // Get product contraindications for each medication (Type 2: all contraindications per medication)
-    if (cnkCodes.length > 0) {
-      const productRequests = cnkCodes.map(cnk => 
-        this.apiService.getProductContraindications(cnk, 'NL').toPromise()
-          .catch(err => {
-            console.error(`[Contraindications] Error getting contraindications for CNK ${cnk}:`, err);
-            return null;
-          })
-      );
-
-      Promise.all(productRequests)
-        .then(results => {
-          this.processProductContraindications(results.filter(r => r !== null));
-          this.loading = false;
-        })
-        .catch(err => {
-          console.error('[Contraindications] Error processing product contraindications:', err);
-          this.loading = false;
-        });
-    } else {
-      this.loading = false;
-    }
+  get productContraindicationsLoaded(): boolean {
+    return this.contraindicationsCache.getCacheData().productContraindicationsLoaded;
   }
+
+  get loadingProductContraindications(): boolean {
+    return this.contraindicationsCache.getCacheData().loadingProductContraindications;
+  }
+
+
 
   processContraindicationMatches(response: any) {
     this.contraindicationMatches = [];

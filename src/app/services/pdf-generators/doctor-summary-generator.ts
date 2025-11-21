@@ -18,18 +18,25 @@ export class DoctorSummaryGenerator extends BasePdfGenerator {
   ): TDocumentDefinitions {
     const content: Content[] = [];
 
-    // Header with decorative line
-    content.push(this.createHeader(this.transloco.translate('pdf.doctor_summary')));
-    content.push(this.createDecorativeLine());
-    content.push(this.createSpacer(12));
+    // Simple letter-style header
+    content.push(this.createLetterHeader());
+    content.push(this.createSpacer(20));
 
-    // Patient Info
-    content.push(this.createPatientInfoSection(patient, review));
-    content.push(this.createSpacer(12));
+    // Date
+    content.push(this.createDate());
+    content.push(this.createSpacer(20));
 
-    // Professional Introduction
-    content.push(this.createDoctorIntroduction());
-    content.push(this.createSpacer(18));
+    // Patient Info - compact
+    content.push(this.createCompactPatientInfo(patient, review));
+    content.push(this.createSpacer(15));
+
+    // Opening salutation
+    content.push(this.createSalutation());
+    content.push(this.createSpacer(10));
+
+    // Introduction paragraph
+    content.push(this.createIntroductionParagraph());
+    content.push(this.createSpacer(12));
 
     // Get Part 1 action items and notes for doctor
     const part1Actions = this.getDoctorPart1Actions(questionAnswers);
@@ -38,125 +45,227 @@ export class DoctorSummaryGenerator extends BasePdfGenerator {
     const hasAnyContent = part1Actions.length > 0 || doctorNotes.length > 0;
     
     if (hasAnyContent) {
-      content.push(this.createSectionTitle(this.transloco.translate('pdf.pharmacist_notes')));
-      content.push(this.createSpacer(3));
-      content.push(this.createSubtitle(this.getDoctorIntroText('notes_intro')));
+      // Observations heading
+      content.push(this.createObservationsHeading());
       content.push(this.createSpacer(8));
       
-      // Part 1 Clinical Observations first
-      if (part1Actions.length > 0) {
-        content.push(this.createSubsectionTitle(this.getDoctorIntroText('clinical_observations')));
-        content.push(this.createSpacer(5));
-        part1Actions.forEach((action: { label: string, value: string }) => {
-          content.push(this.createDoctorActionCard(action));
-          content.push(this.createSpacer(6));
-        });
-        content.push(this.createSpacer(3));
-      }
+      // Collect all observations into a simple list
+      const allObservations: Array<{ text: string, context?: string }> = [];
       
-      // Group review notes by medication
+      // Add Part 1 actions
+      part1Actions.forEach((action: { label: string, value: string }) => {
+        allObservations.push({
+          text: action.value,
+          context: action.label
+        });
+      });
+      
+      // Group review notes
       const groupedNotes = this.groupNotesByMedication(doctorNotes, medications, questionAnswers);
       
-      // General clinical notes
-      if (groupedNotes.general.length > 0) {
-        if (part1Actions.length === 0) {
-          content.push(this.createSubsectionTitle(this.getDoctorIntroText('clinical_observations')));
-          content.push(this.createSpacer(8));
+      // Add general notes
+      groupedNotes.general.forEach(note => {
+        const commentKey = `note_comment_${note.rowKey}`;
+        const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
+        const text = commentAnswer?.value || note.text || '';
+        if (text) {
+          allObservations.push({ text });
         }
-        groupedNotes.general.forEach(note => {
-          content.push(this.createEnhancedDoctorNoteCard(note, null, questionAnswers));
-          content.push(this.createSpacer(6));
-        });
-        content.push(this.createSpacer(3));
-      }
-      
-      // Medication-specific clinical notes
-      if (groupedNotes.byMedication.length > 0) {
-        groupedNotes.byMedication.forEach(group => {
-          content.push(this.createSubsectionTitle(`${this.getDoctorIntroText('regarding')} ${group.medicationName}`));
-          content.push(this.createSpacer(5));
-          group.notes.forEach(note => {
-            content.push(this.createEnhancedDoctorNoteCard(note, group.medicationName, questionAnswers));
-            content.push(this.createSpacer(6));
-          });
-          content.push(this.createSpacer(3));
-        });
-      }
-    } else {
-      content.push(this.createSectionTitle(this.transloco.translate('pdf.pharmacist_notes')));
-      content.push(this.createSpacer(6));
-      content.push({
-        text: this.getDoctorIntroText('no_observations'),
-        style: 'emptyState'
       });
+      
+      // Add medication-specific notes
+      groupedNotes.byMedication.forEach(group => {
+        group.notes.forEach(note => {
+          const commentKey = `note_comment_${note.rowKey}`;
+          const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
+          const text = commentAnswer?.value || note.text || '';
+          if (text) {
+            allObservations.push({
+              text,
+              context: group.medicationName
+            });
+          }
+        });
+      });
+      
+      // Render observations as a simple bullet list
+      content.push(this.createObservationsList(allObservations));
+      content.push(this.createSpacer(12));
+    } else {
+      content.push(this.createNoObservationsParagraph());
+      content.push(this.createSpacer(12));
     }
 
-    // Professional footer
-    content.push(this.createSpacer(15));
-    content.push(this.createDoctorFooter());
+    // Closing paragraph
+    content.push(this.createClosingParagraph());
+    content.push(this.createSpacer(20));
+
+    // Sign-off
+    content.push(this.createSignOff());
 
     return {
       content,
       styles: this.getStyles(),
-      pageMargins: [50, 70, 50, 70],
+      pageMargins: [60, 60, 60, 60],
       defaultStyle: {
-        font: 'Roboto'
+        font: 'Roboto',
+        fontSize: 10,
+        lineHeight: 1.4
       }
     };
   }
 
-  private createDecorativeLine(): Content {
+  private createLetterHeader(): Content {
     return {
-      canvas: [
-        {
-          type: 'line',
-          x1: 0, y1: 0,
-          x2: 515, y2: 0,
-          lineWidth: 2,
-          lineColor: this.brandAccent
-        }
-      ],
-      margin: [0, 8, 0, 0]
+      text: this.transloco.translate('pdf.doctor_summary') || 'Doctor Summary',
+      style: 'letterHeader'
     };
   }
 
-  private createDoctorIntroduction(): Content {
+  private createDate(): Content {
     const lang = this.transloco.getActiveLang();
-    let introText = '';
+    const date = new Date().toLocaleDateString(lang === 'nl' ? 'nl-BE' : lang === 'fr' ? 'fr-BE' : 'en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
     
-    if (lang === 'nl') {
-      introText = 'Geachte collega,\n\nHierbij ontvangt u een samenvatting van het medicatiereview dat ik heb uitgevoerd met bovengenoemde patiënt. Dit rapport bevat klinische observaties en aanbevelingen die uw aandacht vereisen. De vermelde punten kunnen implicaties hebben voor de behandeling en medicatie van de patiënt.';
-    } else if (lang === 'fr') {
-      introText = 'Cher confrère,\n\nVoici un résumé de l\'examen de médication que j\'ai effectué avec le patient susmentionné. Ce rapport contient des observations cliniques et des recommandations nécessitant votre attention. Les points mentionnés peuvent avoir des implications pour le traitement et les médicaments du patient.';
-    } else {
-      introText = 'Dear Colleague,\n\nPlease find enclosed a summary of the medication review I conducted with the above-mentioned patient. This report contains clinical observations and recommendations requiring your attention. The points mentioned may have implications for the patient\'s treatment and medication management.';
+    return {
+      text: date,
+      style: 'dateText'
+    };
+  }
+
+  private createCompactPatientInfo(patient: Patient | null, review: MedicationReview | null): Content {
+    const lang = this.transloco.getActiveLang();
+    let prefix = 'Betreft: ';
+    if (lang === 'fr') prefix = 'Concernant : ';
+    else if (lang === 'en') prefix = 'Regarding: ';
+
+    const name = [review?.firstNameAtTimeOfReview, review?.lastNameAtTimeOfReview]
+      .filter(Boolean)
+      .join(' ') || this.transloco.translate('pdf.unknown_patient');
+    
+    let dateStr = '';
+    if (patient?.dateOfBirth) {
+      const dob = patient.dateOfBirth.split('T')[0];
+      dateStr = ` (${this.transloco.translate('patient.birth_date')}: ${dob})`;
     }
 
     return {
-      stack: [
-        {
-          text: introText,
-          style: 'introduction',
-          alignment: 'justify'
-        }
-      ],
-      style: 'introCard'
+      text: `${prefix}${name}${dateStr}`,
+      style: 'patientReference'
     };
   }
 
-  private createSubtitle(text: string): Content {
+  private createSalutation(): Content {
+    const lang = this.transloco.getActiveLang();
+    let salutation = 'Geachte collega,';
+    if (lang === 'fr') salutation = 'Cher confrère, chère consœur,';
+    else if (lang === 'en') salutation = 'Dear Colleague,';
+
     return {
-      text: text,
-      style: 'subtitle',
-      margin: [0, 0, 0, 15]
+      text: salutation,
+      style: 'bodyText'
     };
   }
 
-  private createSubsectionTitle(text: string): Content {
+  private createIntroductionParagraph(): Content {
+    const lang = this.transloco.getActiveLang();
+    let text = '';
+    
+    if (lang === 'nl') {
+      text = 'Ik heb recent een medicatiereview uitgevoerd met bovengenoemde patiënt. Ik zou graag enkele observaties met u willen delen die mogelijk relevant kunnen zijn voor de verdere behandeling. Ik presenteer deze punten louter ter overweging en sta natuurlijk open voor uw professioneel oordeel.';
+    } else if (lang === 'fr') {
+      text = 'J\'ai récemment effectué un examen de médication avec le patient susmentionné. Je souhaiterais partager avec vous quelques observations qui pourraient être pertinentes pour la poursuite du traitement. Je présente ces points uniquement à titre de considération et je reste bien entendu ouvert à votre jugement professionnel.';
+    } else {
+      text = 'I recently conducted a medication review with the above-mentioned patient. I would like to share some observations that may be relevant for continued treatment. I present these points merely for consideration and remain open to your professional judgment.';
+    }
+
     return {
-      text: text.toUpperCase(),
-      style: 'subsectionTitle',
-      margin: [0, 10, 0, 5]
+      text,
+      style: 'bodyText',
+      alignment: 'justify'
+    };
+  }
+
+  private createObservationsHeading(): Content {
+    const lang = this.transloco.getActiveLang();
+    let heading = 'Observaties en suggesties:';
+    if (lang === 'fr') heading = 'Observations et suggestions :';
+    else if (lang === 'en') heading = 'Observations and suggestions:';
+
+    return {
+      text: heading,
+      style: 'observationsHeading'
+    };
+  }
+
+  private createObservationsList(observations: Array<{ text: string, context?: string }>): Content {
+    const items = observations.map(obs => {
+      let text = obs.text;
+      if (obs.context) {
+        text = `${obs.context}: ${text}`;
+      }
+      return {
+        text,
+        style: 'listItem'
+      };
+    });
+
+    return {
+      ul: items,
+      margin: [20, 0, 0, 0]
+    };
+  }
+
+  private createNoObservationsParagraph(): Content {
+    const lang = this.transloco.getActiveLang();
+    let text = '';
+    
+    if (lang === 'nl') {
+      text = 'Het medicatiereview heeft geen specifieke aandachtspunten opgeleverd die verdere opvolging vereisen.';
+    } else if (lang === 'fr') {
+      text = 'L\'examen de médication n\'a révélé aucun point d\'attention spécifique nécessitant un suivi supplémentaire.';
+    } else {
+      text = 'The medication review did not identify any specific points requiring further follow-up.';
+    }
+
+    return {
+      text,
+      style: 'bodyText',
+      alignment: 'justify'
+    };
+  }
+
+  private createClosingParagraph(): Content {
+    const lang = this.transloco.getActiveLang();
+    let text = '';
+    
+    if (lang === 'nl') {
+      text = 'Indien u vragen heeft of deze punten verder wenst te bespreken, aarzel dan niet om contact met mij op te nemen. Ik waardeer uw expertise en sta graag tot uw beschikking.';
+    } else if (lang === 'fr') {
+      text = 'Si vous avez des questions ou souhaitez discuter de ces points plus en détail, n\'hésitez pas à me contacter. J\'apprécie votre expertise et reste à votre disposition.';
+    } else {
+      text = 'Should you have any questions or wish to discuss these points further, please do not hesitate to contact me. I value your expertise and remain at your disposal.';
+    }
+
+    return {
+      text,
+      style: 'bodyText',
+      alignment: 'justify'
+    };
+  }
+
+  private createSignOff(): Content {
+    const lang = this.transloco.getActiveLang();
+    let signOff = 'Met collegiale groet,';
+    if (lang === 'fr') signOff = 'Cordialement,';
+    else if (lang === 'en') signOff = 'With kind regards,';
+
+    return {
+      text: signOff,
+      style: 'bodyText'
     };
   }
 
@@ -194,59 +303,6 @@ export class DoctorSummaryGenerator extends BasePdfGenerator {
     return actions;
   }
 
-  private createDoctorActionCard(action: { label: string, value: string }): Content {
-    const stack: any[] = [];
-    
-    stack.push({
-      columns: [
-        {
-          width: 24,
-          text: '▸',
-          style: 'doctorNoteIcon',
-          color: this.brandPrimary
-        },
-        {
-          width: '*',
-          stack: [
-            {
-              text: action.label,
-              style: 'doctorNoteTitle',
-              margin: [0, 2, 0, 4]
-            },
-            {
-              text: action.value,
-              style: 'doctorNoteContent',
-              margin: [0, 0, 0, 0]
-            }
-          ]
-        }
-      ]
-    });
-    
-    return {
-      table: {
-        widths: ['*'],
-        body: [[
-          {
-            stack,
-            style: 'actionCard'
-          }
-        ]]
-      },
-      layout: {
-        hLineWidth: () => 2,
-        vLineWidth: () => 2,
-        hLineColor: () => this.brandPrimary,
-        vLineColor: () => this.brandPrimary,
-        paddingLeft: () => 12,
-        paddingRight: () => 12,
-        paddingTop: () => 10,
-        paddingBottom: () => 10
-      },
-      margin: [0, 0, 0, 8]
-    } as Content;
-  }
-
   private groupNotesByMedication(notes: ReviewNote[], medications: Medication[], questionAnswers: any[]): {
     general: ReviewNote[],
     byMedication: Array<{ medicationName: string, notes: ReviewNote[] }>
@@ -272,208 +328,41 @@ export class DoctorSummaryGenerator extends BasePdfGenerator {
     return { general, byMedication };
   }
 
-  private createEnhancedDoctorNoteCard(note: ReviewNote, medicationName: string | null, questionAnswers: any[]): Content {
-    const stack: any[] = [];
-    
-    if (note.category) {
-      stack.push({
-        text: this.formatCategory(note.category).toUpperCase(),
-        style: 'doctorCategoryBadge',
-        margin: [0, 0, 0, 8]
-      });
-    }
-    
-    if (note.text) {
-      stack.push({
-        columns: [
-          {
-            width: 24,
-            text: '▸',
-            style: 'doctorNoteIcon',
-            color: this.brandPrimary
-          },
-          {
-            width: '*',
-            stack: [
-              {
-                text: note.text,
-                style: 'doctorNoteTitle',
-                margin: [0, 2, 0, 4]
-              }
-            ]
-          }
-        ]
-      });
-    }
-    
-    const commentKey = `note_comment_${note.rowKey}`;
-    const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
-    
-    if (commentAnswer && commentAnswer.value) {
-      stack.push({
-        text: commentAnswer.value,
-        style: 'doctorNoteContent',
-        margin: [24, 4, 0, 0]
-      });
-    }
-    
-    return {
-      table: {
-        widths: ['*'],
-        body: [[
-          {
-            stack,
-            style: 'noteCard'
-          }
-        ]]
-      },
-      layout: {
-        hLineWidth: () => 2,
-        vLineWidth: () => 2,
-        hLineColor: () => '#d1d5db',
-        vLineColor: () => '#d1d5db',
-        paddingLeft: () => 12,
-        paddingRight: () => 12,
-        paddingTop: () => 10,
-        paddingBottom: () => 10
-      },
-      margin: [0, 0, 0, 8]
-    } as Content;
-  }
-
-  private formatCategory(category: string): string {
-    const categoryMap: Record<string, string> = {
-      'TherapyAdherence': this.transloco.translate('pdf.medication_adherence') || 'Therapy Adherence',
-      'Effectiveness': this.transloco.translate('pdf.effectiveness_side_effects') || 'Effectiveness',
-      'SideEffects': this.transloco.translate('pdf.effectiveness_side_effects') || 'Side Effects',
-      'MedicationSchema': this.transloco.translate('pdf.medication') || 'Medication',
-      'PatientConcerns': this.transloco.translate('pdf.patient_concerns') || 'Patient Concerns',
-      'PracticalProblems': this.transloco.translate('pdf.practical_problems') || 'Practical Problems'
-    };
-    
-    return categoryMap[category] || category;
-  }
-
-  private createDoctorFooter(): Content {
-    const lang = this.transloco.getActiveLang();
-    let footerText = '';
-    
-    if (lang === 'nl') {
-      footerText = 'Indien u vragen heeft over deze bevindingen of verdere toelichting wenst, aarzel dan niet om contact met mij op te nemen. Ik sta graag tot uw beschikking voor overleg.';
-    } else if (lang === 'fr') {
-      footerText = 'Si vous avez des questions sur ces constatations ou si vous souhaitez des éclaircissements supplémentaires, n\'hésitez pas à me contacter. Je reste à votre disposition pour toute consultation.';
-    } else {
-      footerText = 'Should you have any questions regarding these findings or require further clarification, please do not hesitate to contact me. I remain at your disposal for consultation.';
-    }
-
-    return {
-      stack: [
-        {
-          canvas: [
-            {
-              type: 'line',
-              x1: 0, y1: 0,
-              x2: 515, y2: 0,
-              lineWidth: 1,
-              lineColor: this.borderColor
-            }
-          ],
-          margin: [0, 0, 0, 12]
-        },
-        {
-          text: footerText,
-          style: 'footer',
-          alignment: 'left'
-        }
-      ]
-    };
-  }
-
-  private getDoctorIntroText(key: string): string {
-    const lang = this.transloco.getActiveLang();
-    
-    const translations: Record<string, Record<string, string>> = {
-      'notes_intro': {
-        'nl': 'Hieronder vindt u de klinische observaties en aanbevelingen die voortkomen uit het medicatiereview:',
-        'fr': 'Vous trouverez ci-dessous les observations cliniques et les recommandations issues de l\'examen de médication :',
-        'en': 'Below you will find the clinical observations and recommendations arising from the medication review:'
-      },
-      'clinical_observations': {
-        'nl': 'Klinische observaties en aanbevelingen',
-        'fr': 'Observations cliniques et recommandations',
-        'en': 'Clinical Observations and Recommendations'
-      },
-      'regarding': {
-        'nl': 'Betreffende',
-        'fr': 'Concernant',
-        'en': 'Regarding'
-      },
-      'no_observations': {
-        'nl': 'Geen klinische observaties gemarkeerd voor beoordeling.',
-        'fr': 'Aucune observation clinique marquée pour examen.',
-        'en': 'No clinical observations marked for review.'
-      }
-    };
-    
-    return translations[key]?.[lang] || translations[key]?.['en'] || '';
-  }
-
   protected override getStyles(): any {
-    const baseStyles = super.getStyles();
     return {
-      ...baseStyles,
-      introCard: {
-        fillColor: '#f8fafc', // Clinical light blue
-        margin: [0, 0, 0, 0],
-        padding: [16, 12, 16, 12],
-        border: [0, 0, 0, 4],
-        borderColor: this.brandPrimary
-      },
-      introduction: {
-        fontSize: 11,
-        color: this.textPrimary,
-        lineHeight: 1.6
-      },
-      subtitle: {
-        fontSize: 12,
-        color: this.textSecondary,
-        italics: true,
+      letterHeader: {
+        fontSize: 14,
+        bold: true,
+        color: '#333333',
         margin: [0, 0, 0, 0]
       },
-      doctorCategoryBadge: {
-        fontSize: 8,
+      dateText: {
+        fontSize: 10,
+        color: '#666666',
+        margin: [0, 0, 0, 0]
+      },
+      patientReference: {
+        fontSize: 10,
         bold: true,
-        color: '#fff',
-        background: this.brandPrimary,
-        fillColor: this.brandPrimary,
-        padding: [6, 2, 6, 2],
-        borderRadius: 2,
-        alignment: 'left'
+        color: '#333333',
+        margin: [0, 0, 0, 0]
       },
-      doctorNoteIcon: {
-        fontSize: 14,
-        bold: true
-      },
-      doctorNoteTitle: {
-        fontSize: 11,
-        bold: true,
-        color: this.textPrimary,
-        lineHeight: 1.4
-      },
-      doctorNoteContent: {
-        fontSize: 11,
-        color: this.textPrimary,
+      bodyText: {
+        fontSize: 10,
+        color: '#333333',
         lineHeight: 1.5
       },
-      actionCard: {
-        fillColor: '#f8fafc',
-        margin: [0, 0, 0, 8]
-      },
-      footer: {
+      observationsHeading: {
         fontSize: 10,
-        color: this.textSecondary,
-        italics: true,
-        lineHeight: 1.4
+        bold: true,
+        color: '#333333',
+        margin: [0, 0, 0, 0]
+      },
+      listItem: {
+        fontSize: 10,
+        color: '#333333',
+        lineHeight: 1.5,
+        margin: [0, 2, 0, 2]
       }
     };
   }

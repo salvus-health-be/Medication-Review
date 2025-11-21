@@ -225,6 +225,7 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
       next: (response) => {
         console.log('[MedicationItem] ✓ Save successful');
         console.log('[MedicationItem] Response:', JSON.stringify(response, null, 2));
+        this.stateService.notifyMedicationsChanged();
       },
       error: (error: any) => {
         console.error('[MedicationItem] ✗ Save failed');
@@ -284,12 +285,15 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
       return;
     }
 
-    // Check if already loaded
+    // Check if already loaded from database
     if (this.medication.activeIngredient) {
       this.activeIngredient = this.medication.activeIngredient;
+      console.log('[MedicationItem] Active ingredient from database:', this.activeIngredient);
       return;
     }
 
+    // Only fetch from API if not in database
+    console.log('[MedicationItem] Active ingredient not in database, fetching from APB API');
     this.loadingActiveIngredient = true;
     this.apiService.getProductComposition(this.medication.cnk.toString()).subscribe({
       next: (response) => {
@@ -300,14 +304,38 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
           if (activeIngredientData) {
             this.activeIngredient = activeIngredientData.substanceName;
             this.medication.activeIngredient = activeIngredientData.substanceName;
-            console.log('[MedicationItem] Active ingredient loaded:', this.activeIngredient);
+            console.log('[MedicationItem] Active ingredient loaded from API:', this.activeIngredient);
+            
+            // Save to database for future use
+            this.saveActiveIngredientToDatabase();
           }
         }
         this.loadingActiveIngredient = false;
       },
       error: (error) => {
-        console.error('[MedicationItem] Failed to load active ingredient:', error);
+        console.error('[MedicationItem] Failed to load active ingredient from API:', error);
         this.loadingActiveIngredient = false;
+      }
+    });
+  }
+
+  private saveActiveIngredientToDatabase() {
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId || !this.medication.activeIngredient) {
+      return;
+    }
+
+    console.log('[MedicationItem] Saving active ingredient to database:', this.medication.activeIngredient);
+    this.apiService.updateMedication(
+      reviewId,
+      this.medication.medicationId,
+      { activeIngredient: this.medication.activeIngredient }
+    ).subscribe({
+      next: () => {
+        console.log('[MedicationItem] Active ingredient saved to database');
+      },
+      error: (error) => {
+        console.error('[MedicationItem] Failed to save active ingredient to database:', error);
       }
     });
   }

@@ -27,89 +27,106 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
   ): TDocumentDefinitions {
     const content: Content[] = [];
 
-    // Header with decorative line
-    content.push(this.createHeader(this.transloco.translate('pdf.pharmacy_summary')));
-    content.push(this.createDecorativeLine());
-    content.push(this.createSpacer(12));
+    // Simple letter-style header
+    content.push(this.createLetterHeader());
+    content.push(this.createSpacer(20));
 
-    // Patient Info
-    content.push(this.createPatientInfoSection(patient, review));
-    content.push(this.createSpacer(12));
+    // Date
+    content.push(this.createDate());
+    content.push(this.createSpacer(20));
 
-    // Introduction
-    content.push(this.createPharmacyIntroduction());
+    // Patient Info - compact
+    content.push(this.createCompactPatientInfo(patient, review));
     content.push(this.createSpacer(15));
 
-    // Medications with Schema
+    // Internal use notice
+    content.push(this.createInternalNotice());
+    content.push(this.createSpacer(12));
+
+    // Current medications
     if (medications.length > 0) {
-      content.push(this.createSectionTitle(this.transloco.translate('pdf.current_medications')));
+      content.push(this.createSimpleHeading(this.transloco.translate('pdf.current_medications') || 'Current Medications'));
       content.push(this.createSpacer(6));
       content.push(this.createMedicationScheduleTable(medications));
       content.push(this.createSpacer(12));
     }
 
-    // Contraindications Section
+    // Contraindications
     if (contraindications.length > 0) {
-      content.push(this.createSectionTitle(this.transloco.translate('tools.contraindications')));
+      content.push(this.createSimpleHeading(this.transloco.translate('tools.contraindications') || 'Contraindications'));
       content.push(this.createSpacer(6));
-      contraindications.forEach(ci => {
-        content.push(this.createContraindicationCard(ci));
-        content.push(this.createSpacer(4));
-      });
+      const ciList = contraindications.map(ci => ({
+        text: ci.name || ci.contraindicationCode,
+        style: 'listItem'
+      }));
+      content.push({ ul: ciList, margin: [20, 0, 0, 0] });
       content.push(this.createSpacer(12));
     }
 
-    // All Review Notes with Actions
+    // Review notes and actions
     const allNotes = notes.filter(note => note.text);
     const part1Actions = this.getPharmacyPart1Actions(questionAnswers);
     
     if (allNotes.length > 0 || part1Actions.length > 0) {
-      content.push(this.createSectionTitle(this.getPharmacyText('review_notes')));
-      content.push(this.createSpacer(3));
-      content.push(this.createSubtitle(this.getPharmacyText('comprehensive_notes')));
+      content.push(this.createSimpleHeading(this.getPharmacyText('review_notes')));
       content.push(this.createSpacer(8));
       
-      // Part 1 Actions
-      if (part1Actions.length > 0) {
-        content.push(this.createSubsectionTitle(this.getPharmacyText('anamnesis_actions')));
-        content.push(this.createSpacer(5));
-        part1Actions.forEach((action: { label: string, value: string }) => {
-          content.push(this.createPharmacyActionCard(action));
-          content.push(this.createSpacer(6));
-        });
-        content.push(this.createSpacer(3));
-      }
+      // Collect all items into a simple list
+      const allItems: Array<{ text: string, context?: string }> = [];
       
-      // Group review notes by medication
+      // Add Part 1 actions
+      part1Actions.forEach((action: { label: string, value: string }) => {
+        allItems.push({
+          text: action.value,
+          context: action.label
+        });
+      });
+      
+      // Group review notes
       const groupedNotes = this.groupNotesByMedication(allNotes, medications, questionAnswers);
       
-      // General notes
-      if (groupedNotes.general.length > 0) {
-        if (part1Actions.length === 0) {
-          content.push(this.createSubsectionTitle(this.getPharmacyText('general_observations')));
-          content.push(this.createSpacer(8));
+      // Add general notes
+      groupedNotes.general.forEach(note => {
+        const commentKey = `note_comment_${note.rowKey}`;
+        const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
+        const text = commentAnswer?.value || note.text || '';
+        if (text) {
+          let displayText = text;
+          if (note.discussWithPatient || note.communicateToDoctor) {
+            const flags = [];
+            if (note.discussWithPatient) flags.push('[Patient]');
+            if (note.communicateToDoctor) flags.push('[Doctor]');
+            displayText = `${flags.join(' ')} ${text}`;
+          }
+          allItems.push({ text: displayText });
         }
-        groupedNotes.general.forEach(note => {
-          content.push(this.createEnhancedPharmacyNoteCard(note, null, questionAnswers));
-          content.push(this.createSpacer(6));
-        });
-        content.push(this.createSpacer(3));
-      }
+      });
       
-      // Medication-specific notes
-      if (groupedNotes.byMedication.length > 0) {
-        groupedNotes.byMedication.forEach(group => {
-          content.push(this.createSubsectionTitle(`${this.getPharmacyText('regarding')} ${group.medicationName}`));
-          content.push(this.createSpacer(5));
-          group.notes.forEach(note => {
-            content.push(this.createEnhancedPharmacyNoteCard(note, group.medicationName, questionAnswers));
-            content.push(this.createSpacer(6));
-          });
-          content.push(this.createSpacer(3));
+      // Add medication-specific notes
+      groupedNotes.byMedication.forEach(group => {
+        group.notes.forEach(note => {
+          const commentKey = `note_comment_${note.rowKey}`;
+          const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
+          const text = commentAnswer?.value || note.text || '';
+          if (text) {
+            let displayText = text;
+            if (note.discussWithPatient || note.communicateToDoctor) {
+              const flags = [];
+              if (note.discussWithPatient) flags.push('[Patient]');
+              if (note.communicateToDoctor) flags.push('[Doctor]');
+              displayText = `${flags.join(' ')} ${text}`;
+            }
+            allItems.push({
+              text: displayText,
+              context: group.medicationName
+            });
+          }
         });
-      }
+      });
       
-      content.push(this.createSpacer(6));
+      // Render as simple bullet list
+      content.push(this.createSimpleList(allItems));
+      content.push(this.createSpacer(12));
     }
 
     // Comprehensive Anamnesis - Part 1
@@ -128,90 +145,111 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     return {
       content,
       styles: this.getStyles(),
-      pageMargins: [50, 70, 50, 70],
+      pageMargins: [60, 60, 60, 60],
       defaultStyle: {
-        font: 'Roboto'
+        font: 'Roboto',
+        fontSize: 10,
+        lineHeight: 1.4
       }
     };
   }
 
-  private createDecorativeLine(): Content {
+  private createLetterHeader(): Content {
     return {
-      canvas: [
-        {
-          type: 'line',
-          x1: 0, y1: 0,
-          x2: 515, y2: 0,
-          lineWidth: 2,
-          lineColor: this.brandAccent
-        }
-      ],
-      margin: [0, 8, 0, 0]
+      text: this.transloco.translate('pdf.pharmacy_summary') || 'Pharmacy Summary',
+      style: 'letterHeader'
     };
   }
 
-  private createPharmacyIntroduction(): Content {
+  private createDate(): Content {
     const lang = this.transloco.getActiveLang();
-    let introText = '';
+    const date = new Date().toLocaleDateString(lang === 'nl' ? 'nl-BE' : lang === 'fr' ? 'fr-BE' : 'en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
     
-    if (lang === 'nl') {
-      introText = 'Dit document bevat een uitgebreide samenvatting van het uitgevoerde medicatiereview, inclusief alle klinische bevindingen, anamnesegegevens, therapietrouw en werkzaamheid van medicatie. Deze informatie dient ter ondersteuning van farmaceutische begeleiding en interdisciplinaire samenwerking.';
-    } else if (lang === 'fr') {
-      introText = 'Ce document contient un résumé complet de l\'examen de médication effectué, incluant toutes les observations cliniques, les données d\'anamnèse, l\'observance thérapeutique et l\'efficacité des médicaments. Ces informations servent à soutenir l\'accompagnement pharmaceutique et la collaboration interdisciplinaire.';
-    } else {
-      introText = 'This document contains a comprehensive summary of the medication review conducted, including all clinical findings, anamnesis data, therapy adherence, and medication effectiveness. This information serves to support pharmaceutical care and interdisciplinary collaboration.';
+    return {
+      text: date,
+      style: 'dateText'
+    };
+  }
+
+  private createCompactPatientInfo(patient: Patient | null, review: MedicationReview | null): Content {
+    const lang = this.transloco.getActiveLang();
+    let prefix = 'Voor: ';
+    if (lang === 'fr') prefix = 'Pour : ';
+    else if (lang === 'en') prefix = 'For: ';
+
+    const name = [review?.firstNameAtTimeOfReview, review?.lastNameAtTimeOfReview]
+      .filter(Boolean)
+      .join(' ') || this.transloco.translate('pdf.unknown_patient');
+    
+    let dateStr = '';
+    if (patient?.dateOfBirth) {
+      const dob = patient.dateOfBirth.split('T')[0];
+      dateStr = ` (${this.transloco.translate('patient.birth_date')}: ${dob})`;
     }
 
     return {
-      stack: [
-        {
-          text: introText,
-          style: 'introduction',
-          alignment: 'justify'
-        }
-      ],
-      style: 'introCard'
+      text: `${prefix}${name}${dateStr}`,
+      style: 'patientReference'
     };
   }
 
-  private createSubtitle(text: string): Content {
+  private createInternalNotice(): Content {
+    const lang = this.transloco.getActiveLang();
+    let text = '';
+    
+    if (lang === 'nl') {
+      text = 'Interne farmaceutische samenvatting met volledige reviewgegevens.';
+    } else if (lang === 'fr') {
+      text = 'Résumé pharmaceutique interne avec données complètes de l\'examen.';
+    } else {
+      text = 'Internal pharmaceutical summary with complete review data.';
+    }
+
     return {
-      text: text,
-      style: 'subtitle',
-      margin: [0, 0, 0, 15]
+      text,
+      style: 'bodyText',
+      alignment: 'justify'
+    };
+  }
+
+  private createSimpleHeading(text: string): Content {
+    return {
+      text,
+      style: 'simpleHeading'
+    };
+  }
+
+  private createSimpleList(items: Array<{ text: string, context?: string }>): Content {
+    const listItems = items.map(item => {
+      let text = item.text;
+      if (item.context) {
+        text = `${item.context}: ${text}`;
+      }
+      return {
+        text,
+        style: 'listItem'
+      };
+    });
+
+    return {
+      ul: listItems,
+      margin: [20, 0, 0, 0]
     };
   }
 
   private createSubsectionTitle(text: string): Content {
     return {
-      text: text.toUpperCase(),
+      text: text,
       style: 'subsectionTitle',
-      margin: [0, 10, 0, 5]
+      margin: [0, 8, 0, 5]
     };
   }
 
-  private createContraindicationCard(ci: Contraindication): Content {
-    return {
-      stack: [
-        {
-          columns: [
-            {
-              width: 24,
-              text: '⚠',
-              style: 'warningIcon',
-              color: '#b45309'
-            },
-            {
-              width: '*',
-              text: ci.name || ci.contraindicationCode,
-              style: 'contraindicationText'
-            }
-          ]
-        }
-      ],
-      style: 'warningCard'
-    };
-  }
+
 
   private getPharmacyPart1Actions(questionAnswers: QuestionAnswer[]): Array<{ label: string, value: string }> {
     const actions: Array<{ label: string, value: string }> = [];
@@ -247,58 +285,7 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     return actions;
   }
 
-  private createPharmacyActionCard(action: { label: string, value: string }): Content {
-    const stack: any[] = [];
-    
-    stack.push({
-      columns: [
-        {
-          width: 24,
-          text: '▸',
-          style: 'pharmacyNoteIcon',
-          color: this.brandSecondary
-        },
-        {
-          width: '*',
-          stack: [
-            {
-              text: action.label,
-              style: 'pharmacyNoteTitle',
-              margin: [0, 2, 0, 4]
-            },
-            {
-              text: action.value,
-              style: 'pharmacyNoteContent',
-              margin: [0, 0, 0, 0]
-            }
-          ]
-        }
-      ]
-    });
-    
-    return {
-      table: {
-        widths: ['*'],
-        body: [[
-          {
-            stack,
-            style: 'actionCard'
-          }
-        ]]
-      },
-      layout: {
-        hLineWidth: () => 2,
-        vLineWidth: () => 2,
-        hLineColor: () => this.brandSecondary,
-        vLineColor: () => this.brandSecondary,
-        paddingLeft: () => 12,
-        paddingRight: () => 12,
-        paddingTop: () => 10,
-        paddingBottom: () => 10
-      },
-      margin: [0, 0, 0, 8]
-    } as Content;
-  }
+
 
   private groupNotesByMedication(notes: ReviewNote[], medications: Medication[], questionAnswers: QuestionAnswer[]): {
     general: ReviewNote[],
@@ -325,87 +312,7 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     return { general, byMedication };
   }
 
-  private createEnhancedPharmacyNoteCard(note: ReviewNote, medicationName: string | null, questionAnswers: QuestionAnswer[]): Content {
-    const stack: any[] = [];
-    
-    if (note.category) {
-      stack.push({
-        text: this.formatCategory(note.category).toUpperCase(),
-        style: 'pharmacyCategoryBadge',
-        margin: [0, 0, 0, 8]
-      });
-    }
-    
-    // Add flags if note is shared
-    const flags: string[] = [];
-    if (note.discussWithPatient) flags.push(this.getPharmacyText('shared_patient'));
-    if (note.communicateToDoctor) flags.push(this.getPharmacyText('shared_doctor'));
-    
-    if (flags.length > 0) {
-      stack.push({
-        text: flags.join(' • '),
-        style: 'shareFlags',
-        margin: [0, 0, 0, 8]
-      });
-    }
-    
-    if (note.text) {
-      stack.push({
-        columns: [
-          {
-            width: 24,
-            text: '▸',
-            style: 'pharmacyNoteIcon',
-            color: this.brandSecondary
-          },
-          {
-            width: '*',
-            stack: [
-              {
-                text: note.text,
-                style: 'pharmacyNoteTitle',
-                margin: [0, 2, 0, 4]
-              }
-            ]
-          }
-        ]
-      });
-    }
-    
-    const commentKey = `note_comment_${note.rowKey}`;
-    const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
-    
-    if (commentAnswer && commentAnswer.value) {
-      stack.push({
-        text: commentAnswer.value,
-        style: 'pharmacyNoteContent',
-        margin: [24, 4, 0, 0]
-      });
-    }
-    
-    return {
-      table: {
-        widths: ['*'],
-        body: [[
-          {
-            stack,
-            style: 'noteCard'
-          }
-        ]]
-      },
-      layout: {
-        hLineWidth: () => 2,
-        vLineWidth: () => 2,
-        hLineColor: () => '#d1d5db',
-        vLineColor: () => '#d1d5db',
-        paddingLeft: () => 12,
-        paddingRight: () => 12,
-        paddingTop: () => 10,
-        paddingBottom: () => 10
-      },
-      margin: [0, 0, 0, 8]
-    } as Content;
-  }
+
 
   private formatCategory(category: string): string {
     const categoryMap: Record<string, string> = {
@@ -422,36 +329,20 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
 
   private createPharmacyFooter(): Content {
     const lang = this.transloco.getActiveLang();
-    let footerText = '';
+    let text = '';
     
     if (lang === 'nl') {
-      footerText = 'Deze samenvatting is bedoeld voor intern farmaceutisch gebruik en interdisciplinaire samenwerking. De informatie dient vertrouwelijk te worden behandeld conform de geldende privacywetgeving.';
+      text = 'Voor intern farmaceutisch gebruik. Vertrouwelijke informatie.';
     } else if (lang === 'fr') {
-      footerText = 'Ce résumé est destiné à un usage pharmaceutique interne et à la collaboration interdisciplinaire. Les informations doivent être traitées de manière confidentielle conformément à la législation en vigueur sur la protection de la vie privée.';
+      text = 'Pour usage pharmaceutique interne. Informations confidentielles.';
     } else {
-      footerText = 'This summary is intended for internal pharmaceutical use and interdisciplinary collaboration. The information must be treated confidentially in accordance with applicable privacy legislation.';
+      text = 'For internal pharmaceutical use. Confidential information.';
     }
 
     return {
-      stack: [
-        {
-          canvas: [
-            {
-              type: 'line',
-              x1: 0, y1: 0,
-              x2: 515, y2: 0,
-              lineWidth: 1,
-              lineColor: this.borderColor
-            }
-          ],
-          margin: [0, 0, 0, 12]
-        },
-        {
-          text: footerText,
-          style: 'footer',
-          alignment: 'left'
-        }
-      ]
+      text,
+      style: 'bodyText',
+      alignment: 'left'
     };
   }
 
@@ -500,90 +391,62 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
   }
 
   protected override getStyles(): any {
-    const baseStyles = super.getStyles();
     return {
-      ...baseStyles,
-      introCard: {
-        fillColor: '#f0f9ff', // Clinical light teal
-        margin: [0, 0, 0, 0],
-        padding: [16, 12, 16, 12],
-        border: [0, 0, 0, 4],
-        borderColor: this.brandSecondary
-      },
-      introduction: {
-        fontSize: 11,
-        color: this.textPrimary,
-        lineHeight: 1.6
-      },
-      subtitle: {
-        fontSize: 12,
-        color: this.textSecondary,
-        italics: true,
+      letterHeader: {
+        fontSize: 14,
+        bold: true,
+        color: '#333333',
         margin: [0, 0, 0, 0]
       },
-      pharmacyCategoryBadge: {
-        fontSize: 8,
+      dateText: {
+        fontSize: 10,
+        color: '#666666',
+        margin: [0, 0, 0, 0]
+      },
+      patientReference: {
+        fontSize: 10,
         bold: true,
-        color: '#fff',
-        background: this.brandSecondary,
-        fillColor: this.brandSecondary,
-        padding: [6, 2, 6, 2],
-        borderRadius: 2,
-        alignment: 'left'
+        color: '#333333',
+        margin: [0, 0, 0, 0]
       },
-      shareFlags: {
-        fontSize: 9,
-        color: this.brandAccent,
-        bold: true,
-        margin: [0, 0, 0, 4]
-      },
-      pharmacyNoteIcon: {
-        fontSize: 14,
-        bold: true
-      },
-      pharmacyNoteTitle: {
-        fontSize: 11,
-        bold: true,
-        color: this.textPrimary,
-        lineHeight: 1.4
-      },
-      pharmacyNoteContent: {
-        fontSize: 11,
-        color: this.textPrimary,
+      bodyText: {
+        fontSize: 10,
+        color: '#333333',
         lineHeight: 1.5
       },
-      warningIcon: {
-        fontSize: 14,
-        bold: true
-      },
-      contraindicationText: {
+      simpleHeading: {
         fontSize: 11,
-        color: '#92400e',
         bold: true,
-        lineHeight: 1.4
+        color: '#333333',
+        margin: [0, 0, 0, 0]
       },
-      warningCard: {
-        fillColor: '#fef3c7',
-        margin: [0, 0, 0, 8],
-        padding: [14, 10, 14, 10],
-        border: [0, 0, 0, 4],
-        borderColor: '#f59e0b'
-      },
-      actionCard: {
-        fillColor: '#f8fafc',
-        margin: [0, 0, 0, 8]
-      },
-      footer: {
+      subsectionTitle: {
         fontSize: 10,
-        color: this.textSecondary,
-        italics: true,
-        lineHeight: 1.4
+        bold: true,
+        color: '#333333',
+        margin: [0, 8, 0, 5]
+      },
+      listItem: {
+        fontSize: 10,
+        color: '#333333',
+        lineHeight: 1.5,
+        margin: [0, 2, 0, 2]
+      },
+      questionLabel: {
+        fontSize: 10,
+        color: '#666666',
+        bold: false
+      },
+      answerValue: {
+        fontSize: 10,
+        color: '#333333',
+        bold: false
       }
     };
   }
 
   private addPart1QuestionsToPharmacySummary(content: Content[], questionAnswers: QuestionAnswer[]) {
-    content.push(this.createSectionTitle(this.transloco.translate('pdf.part_1')));
+    content.push(this.createSimpleHeading(this.transloco.translate('pdf.part_1') || 'Part 1: Anamnesis'));
     content.push(this.createSpacer(6));
 
     // Patient Concerns
@@ -661,7 +524,7 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     const part2Answers = questionAnswers.filter(qa => qa.questionName.startsWith('p2_med_'));
     if (part2Answers.length === 0) return;
 
-    content.push(this.createSectionTitle(this.transloco.translate('pdf.part_2')));
+    content.push(this.createSimpleHeading(this.transloco.translate('pdf.part_2') || 'Part 2: Medication Adherence'));
     content.push(this.createSpacer(6));
 
     // Group by medication
@@ -686,7 +549,7 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     const part3Answers = questionAnswers.filter(qa => qa.questionName.startsWith('p3_med_'));
     if (part3Answers.length === 0) return;
 
-    content.push(this.createSectionTitle(this.transloco.translate('pdf.part_3')));
+    content.push(this.createSimpleHeading(this.transloco.translate('pdf.part_3') || 'Part 3: Effectiveness & Side Effects'));
     content.push(this.createSpacer(6));
 
     // Group by medication

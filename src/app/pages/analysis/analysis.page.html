@@ -1,6 +1,8 @@
 <div class="analysis-page">
   <app-analysis-toolbar 
-    [activeTool]="activeTool" 
+    [activeTool]="activeTool"
+    [interactionCount]="interactionCount"
+    [contraindicationCount]="contraindicationCount"
     (toolSelected)="onToolSelected($event)">
   </app-analysis-toolbar>
   

@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { 
   LoginRequest, 
   LoginResponse, 
@@ -47,6 +46,7 @@ export class ApiService {
   // Development: Uses '/api' with proxy to http://localhost:7071/api
   // Production: Update environment.prod.ts with the production API URL
   private readonly API_BASE_URL = environment.apiBaseUrl;
+  private contraindicationsCache: Map<string, APBContraindicationsResponse> = new Map();
 
   constructor(private http: HttpClient) {}
 
@@ -102,7 +102,15 @@ export class ApiService {
   // APB Contraindications
   getAPBContraindications(request: APBContraindicationsRequest): Observable<APBContraindicationsResponse> {
     const headers = this.getHeaders();
+    const cacheKey = `contraindications-${request.language}`;
 
+    // Check cache first
+    if (this.contraindicationsCache.has(cacheKey)) {
+      console.log('[ApiService] Returning cached contraindications for', request.language);
+      return of(this.contraindicationsCache.get(cacheKey)!);
+    }
+
+    console.log('[ApiService] Fetching contraindications from API for', request.language);
     return this.http.post<APBContraindicationsResponseBackend>(`${this.API_BASE_URL}/get_apb_contraindications`, request, { headers })
       .pipe(
         map(backendResponse => {
@@ -130,9 +138,18 @@ export class ApiService {
               }
             }
           };
+          // Cache the result
+          this.contraindicationsCache.set(cacheKey, response);
+          console.log('[ApiService] Cached contraindications for', request.language);
           return response;
         })
       );
+  }
+
+  // Clear contraindications cache (useful for testing or if data needs refresh)
+  clearContraindicationsCache(): void {
+    this.contraindicationsCache.clear();
+    console.log('[ApiService] Contraindications cache cleared');
   }
 
   // Contraindication CRUD
@@ -227,6 +244,7 @@ export class ApiService {
             asNeeded: (item.asNeeded === true || item.asNeeded === 'true' || item.AsNeeded === true || item.AsNeeded === 'true') ? true : false,
             vmp: item.vmp ?? item.VMP ?? item.Vmp ?? null,
             packageSize: item.packageSize ?? item.PackageSize ?? null,
+            activeIngredient: item.activeIngredient ?? item.ActiveIngredient ?? null,
             dosageMg: item.dosageMg ?? item.DosageMg ?? null,
             routeOfAdministration: item.routeOfAdministration ?? item.RouteOfAdministration ?? null,
             indication: item.indication ?? item.Indication ?? null,
@@ -276,6 +294,7 @@ export class ApiService {
           cnk: item.cnk ?? item.CNK ?? item.Cnk ?? null,
           vmp: item.vmp ?? item.VMP ?? item.Vmp ?? null,
           packageSize: item.packageSize ?? item.PackageSize ?? null,
+          activeIngredient: item.activeIngredient ?? item.ActiveIngredient ?? null,
           dosageMg: item.dosageMg ?? item.DosageMg ?? null,
           routeOfAdministration: item.routeOfAdministration ?? item.RouteOfAdministration ?? null,
           indication: item.indication ?? item.Indication ?? null,
@@ -317,6 +336,7 @@ export class ApiService {
           cnk: item.cnk ?? item.CNK ?? item.Cnk ?? null,
           vmp: item.vmp ?? item.VMP ?? item.Vmp ?? null,
           packageSize: item.packageSize ?? item.PackageSize ?? null,
+          activeIngredient: item.activeIngredient ?? item.ActiveIngredient ?? null,
           dosageMg: item.dosageMg ?? item.DosageMg ?? null,
           routeOfAdministration: item.routeOfAdministration ?? item.RouteOfAdministration ?? null,
           indication: item.indication ?? item.Indication ?? null,

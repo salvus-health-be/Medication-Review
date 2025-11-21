@@ -129,6 +129,51 @@
   }
 }
 
+// Load Button Container
+.load-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: $box-background;
+  border-radius: $box-border-radius;
+  border: 2px dashed $box-border;
+  margin: 1rem 0;
+
+  .load-button {
+    padding: 0.75rem 1.5rem;
+    background-color: $button-primary-background;
+    color: $text-button-primary;
+    border: none;
+    border-radius: $box-border-radius;
+    font-family: $primary-font;
+    font-size: 1rem;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: $button-primary-hover;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .load-warning {
+    margin: 0.75rem 0 0 0;
+    font-family: $primary-font;
+    font-size: 0.9rem;
+    color: $text-secondary;
+    font-style: italic;
+    text-align: center;
+  }
+}
+
 // Table Header
 .contraindications-header {
   display: grid;

@@ -6,7 +6,7 @@
   } @else if (error) {
     <div class="error-state">
       <p class="error-message">{{ error }}</p>
-      <button class="retry-button" (click)="loadData()">{{ 'common.retry' | transloco }}</button>
+      <button class="retry-button" (click)="refreshContraindications()">{{ 'common.retry' | transloco }}</button>
     </div>
   } @else {
     <div class="contraindications-content">
@@ -97,11 +97,23 @@
       <div class="contraindications-section">
         <div class="section-header">
           <h2>{{ 'tools.additional_contraindications' | transloco }}</h2>
-          <span class="count-badge">{{ getFilteredProductContraindications().length }}</span>
+          @if (productContraindicationsLoaded) {
+            <span class="count-badge">{{ getFilteredProductContraindications().length }}</span>
+          }
         </div>
         <p class="section-description">{{ 'tools.other_contraindications' | transloco }}</p>
 
-        @if (getFilteredProductContraindications().length === 0) {
+        @if (!productContraindicationsLoaded && !loadingProductContraindications) {
+          <div class="load-button-container">
+            <button class="load-button" (click)="loadAdditionalContraindications()">
+              {{ 'contraindications.load_additional' | transloco }}
+            </button>
+          </div>
+        } @else if (loadingProductContraindications) {
+          <div class="loading-state">
+            <p>{{ 'contraindications.loading_additional' | transloco }}</p>
+          </div>
+        } @else if (getFilteredProductContraindications().length === 0) {
           <div class="no-contraindications">
             <p>✓ No additional contraindications found</p>
           </div>
