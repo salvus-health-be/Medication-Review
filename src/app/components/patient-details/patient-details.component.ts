@@ -44,7 +44,7 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
         this.lastName = sessionData.review.lastNameAtTimeOfReview;
       }
 
-      // Populate from patient (dateOfBirth, sex, renalFunction)
+      // Populate from patient (dateOfBirth, sex)
       if (sessionData.patient.dateOfBirth) {
         // Convert ISO 8601 to YYYY-MM-DD format for date input
         this.dateOfBirth = sessionData.patient.dateOfBirth.split('T')[0];
@@ -52,20 +52,9 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
       if (sessionData.patient.sex) {
         this.sex = sessionData.patient.sex;
       }
-      // renalFunction may be provided under sessionData.patient.renalFunction or at top-level sessionData.renalFunction
-      let rf: any = undefined;
-      let rfFound = false;
-      if (sessionData.patient && sessionData.patient.renalFunction !== undefined) {
-        rf = sessionData.patient.renalFunction;
-        rfFound = true;
-      } else if ((sessionData as any).renalFunction !== undefined) {
-        rf = (sessionData as any).renalFunction;
-        rfFound = true;
-      }
-
-      if (rfFound) {
-        this.renalFunction = rf === null ? null : String(rf);
-      } else {
+      // renalFunction is now stored in review (not patient)
+      if (sessionData.review && sessionData.review.renalFunction !== undefined) {
+        this.renalFunction = sessionData.review.renalFunction;
       }
     } else {
     }
@@ -113,7 +102,7 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
         distinctUntilChanged(),
         takeUntil(this.destroy$)
       )
-      .subscribe(value => this.savePatientData());
+      .subscribe(value => this.saveMedicationReviewData());
   }
 
   ngOnDestroy() {
@@ -166,15 +155,9 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
     if (this.sex) {
       request.sex = this.sex;
     }
-    
-    // The API accepts renalFunction as string | null per documentation
-    if (this.renalFunction !== null && this.renalFunction !== undefined) {
-      request.renalFunction = this.renalFunction;
-    }
 
     // Only save if we have at least one field to update
-    // Save if at least one updatable field is present. Note: renalFunction may be an empty string to clear the field.
-    if (request.dateOfBirth || request.sex || request.hasOwnProperty('renalFunction')) {
+    if (request.dateOfBirth || request.sex) {
       
       this.apiService.updatePatient(request).subscribe({
         next: (response) => {
@@ -182,9 +165,6 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
           if (sessionData.patient) {
             sessionData.patient.dateOfBirth = response.dateOfBirth;
             sessionData.patient.sex = response.sex;
-            sessionData.patient.renalFunction = response.renalFunction ?? null;
-            // Also set top-level renalFunction for compatibility with different session shapes
-            (sessionData as any).renalFunction = response.renalFunction ?? null;
             this.stateService.setSessionData(sessionData);
           }
         },
@@ -223,8 +203,13 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
       request.lastNameAtTimeOfReview = this.lastName;
     }
 
+    // RenalFunction is now stored in the review (not patient)
+    if (this.renalFunction !== null && this.renalFunction !== undefined) {
+      request.renalFunction = this.renalFunction;
+    }
+
     // Only save if we have at least one field to update
-    if (request.firstNameAtTimeOfReview || request.lastNameAtTimeOfReview) {
+    if (request.firstNameAtTimeOfReview || request.lastNameAtTimeOfReview || request.hasOwnProperty('renalFunction')) {
       
       this.apiService.updateMedicationReview(request).subscribe({
         next: (response) => {
@@ -233,6 +218,7 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
             sessionData.review.firstNameAtTimeOfReview = response.firstNameAtTimeOfReview;
             sessionData.review.lastNameAtTimeOfReview = response.lastNameAtTimeOfReview;
             sessionData.review.reviewDate = response.reviewDate;
+            sessionData.review.renalFunction = response.renalFunction;
             this.stateService.setSessionData(sessionData);
           }
         },

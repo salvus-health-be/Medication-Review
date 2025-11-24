@@ -560,7 +560,9 @@
     "header_type": "Type",
     "header_food": "Food",
     "no_drug_drug": "No drug-drug interactions found!",
-    "no_drug_food": "No drug-food interactions found!"
+    "no_drug_food": "No drug-food interactions found!",
+    "interaction_between": "Interaction between",
+    "and": "and"
   },
   "note_modal": {
     "save_changes": "Save changes",

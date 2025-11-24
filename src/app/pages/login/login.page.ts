@@ -64,7 +64,7 @@ export class LoginPage {
 
     this.apiService.login(request).subscribe({
       next: (response) => {
-        // Get existing session data to preserve values like renalFunction if backend didn't return them
+        // Get existing session data to preserve values if backend didn't return them
         const existingSession = this.stateService.getSessionData();
         const newSession = {
           ...response,
@@ -72,8 +72,9 @@ export class LoginPage {
         };
         
         // Preserve renalFunction from existing session if backend returned null
-        if (existingSession?.patient?.renalFunction && !newSession.patient.renalFunction) {
-          newSession.patient.renalFunction = existingSession.patient.renalFunction;
+        // RenalFunction is now stored in review (not patient)
+        if (existingSession?.review?.renalFunction && !newSession.review.renalFunction) {
+          newSession.review.renalFunction = existingSession.review.renalFunction;
         }
         
         this.stateService.setSessionData(newSession);

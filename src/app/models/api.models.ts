@@ -1,13 +1,13 @@
 export interface Patient {
   dateOfBirth: string | null;
   sex: string | null;
-  renalFunction?: string | null;
 }
 
 export interface MedicationReview {
   reviewDate: string | null;
   firstNameAtTimeOfReview: string | null;
   lastNameAtTimeOfReview: string | null;
+  renalFunction?: string | null;
 }
 
 // Medication Search
@@ -52,14 +52,12 @@ export interface UpdatePatientRequest {
   patientId: string;
   dateOfBirth?: string | null;
   sex?: string | null;
-  renalFunction?: string | null;
 }
 
 export interface UpdatePatientResponse {
   patientId: string;
   dateOfBirth: string | null;
   sex: string | null;
-  renalFunction?: string | null;
   updated: boolean;
 }
 
@@ -70,6 +68,7 @@ export interface UpdateMedicationReviewRequest {
   firstNameAtTimeOfReview?: string | null;
   lastNameAtTimeOfReview?: string | null;
   reviewDate?: string | null;
+  renalFunction?: string | null;
 }
 
 export interface UpdateMedicationReviewResponse {
@@ -77,6 +76,7 @@ export interface UpdateMedicationReviewResponse {
   firstNameAtTimeOfReview: string | null;
   lastNameAtTimeOfReview: string | null;
   reviewDate: string | null;
+  renalFunction: string | null;
   updated: boolean;
 }
 

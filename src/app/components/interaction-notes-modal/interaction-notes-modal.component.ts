@@ -76,7 +76,10 @@ export class InteractionNotesModalComponent {
 
   private buildNoteText(): string {
     // Build a note text that includes interaction context
-    let text = `[Interaction: ${this.getInteractionTitle()}]\n\n`;
+    const interactionBetween = this.transloco.translate('interactions.interaction_between');
+    const andText = this.transloco.translate('interactions.and');
+    const title = this.getInteractionTitle(interactionBetween, andText);
+    let text = `${title}\n\n`;
     text += this.noteText;
     return text;
   }
@@ -88,11 +91,15 @@ export class InteractionNotesModalComponent {
     this.isSubmitting = false;
   }
 
-  getInteractionTitle(): string {
+  getInteractionTitle(interactionBetween?: string, andText?: string): string {
+    // Use provided translations or default to English
+    const between = interactionBetween || this.transloco.translate('interactions.interaction_between');
+    const and = andText || this.transloco.translate('interactions.and');
+    
     if (this.interactionType === 'drug-drug') {
-      return `${this.interaction.leftMedication} â†” ${this.interaction.rightMedication}`;
+      return `${between} ${this.interaction.leftMedication} ${and} ${this.interaction.rightMedication}`;
     } else {
-      return `${this.interaction.medication} â†” ${this.interaction.food}`;
+      return `${between} ${this.interaction.medication} ${and} ${this.interaction.food}`;
     }
   }
 

@@ -560,7 +560,9 @@
     "header_type": "Type",
     "header_food": "Voedsel",
     "no_drug_drug": "Geen geneesmiddel-geneesmiddelinteracties gevonden!",
-    "no_drug_food": "Geen geneesmiddel-voedselinteracties gevonden!"
+    "no_drug_food": "Geen geneesmiddel-voedselinteracties gevonden!",
+    "interaction_between": "Interactie tussen",
+    "and": "en"
   },
   "note_modal": {
     "save_changes": "Wijzigingen opslaan",

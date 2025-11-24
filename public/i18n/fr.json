@@ -172,7 +172,9 @@
     "header_type": "Type",
     "header_food": "Aliment",
     "no_drug_drug": "Aucune interaction médicamenteuse trouvée !",
-    "no_drug_food": "Aucune interaction médicament-aliment trouvée !"
+    "no_drug_food": "Aucune interaction médicament-aliment trouvée !",
+    "interaction_between": "Interaction entre",
+    "and": "et"
   },
   "tools": {
     "therapy_adherence": "Adhésion au traitement",

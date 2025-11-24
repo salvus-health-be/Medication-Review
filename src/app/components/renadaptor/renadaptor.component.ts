@@ -185,15 +185,9 @@ export class RenadaptorComponent implements OnInit {
     const sessionData = this.stateService.getSessionData();
     if (!sessionData) return;
 
-    let rf: any = undefined;
-    if (sessionData.patient && sessionData.patient.renalFunction !== undefined) {
-      rf = sessionData.patient.renalFunction;
-    } else if ((sessionData as any).renalFunction !== undefined) {
-      rf = (sessionData as any).renalFunction;
-    }
-
-    if (rf !== null && rf !== undefined) {
-      this.renalFunction = rf === null ? null : String(rf);
+    // RenalFunction is now stored in review (not patient)
+    if (sessionData.review && sessionData.review.renalFunction !== undefined) {
+      this.renalFunction = sessionData.review.renalFunction;
     }
   }
 
@@ -208,21 +202,19 @@ export class RenadaptorComponent implements OnInit {
     }
 
     const apbNumber = this.stateService.apbNumber;
-    const patientId = this.stateService.patientId;
+    const medicationReviewId = this.stateService.medicationReviewId;
 
     const request: any = {
       apbNumber: apbNumber,
-      patientId: patientId,
+      medicationReviewId: medicationReviewId,
       renalFunction: this.renalFunction
     };
 
-    this.apiService.updatePatient(request).subscribe({
+    this.apiService.updateMedicationReview(request).subscribe({
       next: (response) => {
         // Update session data
-        if (sessionData.patient) {
-          sessionData.patient.renalFunction = response.renalFunction ?? null;
-          // Also set top-level renalFunction for compatibility
-          (sessionData as any).renalFunction = response.renalFunction ?? null;
+        if (sessionData.review) {
+          sessionData.review.renalFunction = response.renalFunction;
           this.stateService.setSessionData(sessionData);
         }
       },
