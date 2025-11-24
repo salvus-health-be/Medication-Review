@@ -70,7 +70,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
   ngOnInit() {
     // Immediately verify session; if missing, redirect to home/login
     if (!this.stateService.medicationReviewId) {
-      console.warn('[Anamnesis] No medicationReviewId in session - redirecting to home');
       this.router.navigate(['/']);
       return;
     }
@@ -100,7 +99,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
   private handleWindowFocus = () => {
     // If session has been cleared, redirect to home/login
     if (!this.stateService.medicationReviewId) {
-      console.warn('[Anamnesis] Session lost on window focus - redirecting to home');
       this.router.navigate(['/']);
     }
   };
@@ -109,7 +107,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     // If session storage was cleared in another tab, redirect
     if (event.key === null || event.key === 'medicationReviewId' || event.key === 'sessionData') {
       if (!this.stateService.medicationReviewId) {
-        console.warn('[Anamnesis] Session change detected via storage event - redirecting to home');
         this.router.navigate(['/']);
       }
     }
@@ -129,7 +126,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
           this.applyLoadedAnswersToParts(['part2', 'part3']);
         },
         error: (err) => {
-          console.error('[Anamnesis] Failed to load medications:', err);
         }
       });
   }
@@ -348,7 +344,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
           this.applyLoadedAnswersToParts(['part1', 'part2', 'part3']);
         },
         error: (err) => {
-          console.error('[Anamnesis] Failed to load question answers:', err);
         }
       });
   }
@@ -364,26 +359,21 @@ export class AnamnesisPage implements OnInit, OnDestroy {
             // Convert string values to appropriate types
             if (q.type === 'checkbox') {
               q.value = savedAnswer.value === 'true';
-              console.log('[Anamnesis] Loaded checkbox:', q.name, 'from:', savedAnswer.value, 'to:', q.value);
               loadedCount++;
             } else if (q.type === 'number') {
               q.value = Number(savedAnswer.value) || 0;
-              console.log('[Anamnesis] Loaded number:', q.name, '=', q.value);
               loadedCount++;
             } else if (q.type === 'radio') {
               // For boolean radio buttons, convert string to boolean
               if (q.options && q.options.length > 0 && typeof q.options[0] === 'boolean') {
                 q.value = savedAnswer.value === 'true';
-                console.log('[Anamnesis] Loaded boolean radio:', q.name, 'from:', savedAnswer.value, 'to:', q.value);
               } else {
                 q.value = savedAnswer.value;
-                console.log('[Anamnesis] Loaded string radio:', q.name, '=', q.value);
               }
               loadedCount++;
             } else {
               q.value = savedAnswer.value;
               if (savedAnswer.value) {
-                console.log('[Anamnesis] Loaded', q.type, ':', q.name, '=', q.value?.substring(0, 50));
                 loadedCount++;
               }
             }
@@ -428,10 +418,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         });
       });
     });
-
-    if (loadedCount > 0) {
-      console.log('[Anamnesis] ✓ Applied', loadedCount, 'question answers to parts:', parts.join(', '));
-    }
   }
 
   private setupAutoSave() {
@@ -456,7 +442,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
   private saveQuestionAnswer(questionName: string, value: any, forceShareFlagsUpdate: boolean = false) {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.warn('[Anamnesis] Cannot save - no medicationReviewId');
       return;
     }
 
@@ -476,8 +461,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     // Convert value to string for storage
     const stringValue = String(value);
 
-    console.log('[Anamnesis] Saving question:', questionName, 'value:', stringValue, 'type:', typeof value);
-
     // Check if answer already exists
     const existingAnswer = this.questionAnswers.get(questionName);
 
@@ -489,11 +472,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
 
       // Don't save if the value hasn't changed AND share flags haven't changed
       if (existingAnswer.value === stringValue && !shareFlagsChanged) {
-        console.log('[Anamnesis] Skipping save - value and share flags unchanged:', questionName, stringValue);
         return;
       }
-
-      console.log('[Anamnesis] Updating existing answer:', questionName, 'old:', existingAnswer.value, 'new:', stringValue, 'shareFlags changed:', shareFlagsChanged);
       
       // Update existing answer
       this.apiService.updateQuestionAnswer({
@@ -505,15 +485,11 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       }).pipe(takeUntil(this.destroy$)).subscribe({
         next: (response) => {
           this.questionAnswers.set(questionName, response);
-          console.log('[Anamnesis] ✓ Updated question answer:', questionName, '=', stringValue);
         },
         error: (err) => {
-          console.error('[Anamnesis] ✗ Failed to update question answer:', questionName, err);
         }
       });
     } else {
-      console.log('[Anamnesis] Creating new answer:', questionName, '=', stringValue);
-      
       // Create new answer
       this.apiService.addQuestionAnswer({
         medicationReviewId: reviewId,
@@ -524,10 +500,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       }).pipe(takeUntil(this.destroy$)).subscribe({
         next: (response) => {
           this.questionAnswers.set(questionName, response);
-          console.log('[Anamnesis] ✓ Added question answer:', questionName, '=', stringValue);
         },
         error: (err) => {
-          console.error('[Anamnesis] ✗ Failed to add question answer:', questionName, err);
         }
       });
     }
@@ -613,8 +587,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     // Show follow-up questions when adherence is false (No)
     const showFollowUpQuestions = adherenceValue === false;
 
-    console.log('[Anamnesis] updatePart2QuestionVisibility for', cnk, 'adherenceValue=', adherenceValue, '-> showFollowUp=', showFollowUpQuestions);
-
     box.questions.forEach(q => {
       if (q.name.includes('_notes')) {
         q.hidden = !showFollowUpQuestions;
@@ -636,8 +608,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     const effectiveValue = effectiveQ ? effectiveQ.value : null;
     const showActionField = effectiveValue === false;
 
-    console.log('[Anamnesis] updatePart3EffectivenessVisibility for', cnk, 'effectiveValue=', effectiveValue, '-> showAction=', showActionField);
-
     const actionField = box.questions.find(q => q.name.includes('_effectiveAction'));
     if (actionField) {
       actionField.hidden = !showActionField;
@@ -657,8 +627,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     const sideQ = box.questions.find(q => q.name.includes('_hasSideEffects'));
     const sideValue = sideQ ? sideQ.value : null;
     const showActionField = sideValue === true;
-
-    console.log('[Anamnesis] updatePart3SideEffectsVisibility for', cnk, 'sideValue=', sideValue, '-> showAction=', showActionField);
 
     const actionField = box.questions.find(q => q.name.includes('_sideEffectsAction'));
     if (actionField) {
@@ -689,8 +657,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         actionQ.shareWithDoctor = false;
         this.saveQuestionAnswer(`p1_concerns_${field}Action`, '', true);
       }
-      
-      console.log('[Anamnesis] updatePart1ConcernsVisibility:', field, 'value=', concernQ.value, '-> showAction=', showAction);
     }
   }
 
@@ -724,9 +690,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       actionQ.shareWithDoctor = false;
       this.saveQuestionAnswer('p1_help_additionalNeededAction', '', true);
     }
-
-    console.log('[Anamnesis] updatePart1MedicationHelpVisibility: hasAssistance=', hasAssistanceQ.value, 
-                'additionalNeeded=', additionalNeededQ.value, '-> showNestedQ=', showNestedQuestion, 'showAction=', showAction);
   }
 
   private updatePart1PracticalProblemsVisibility(questionName: string) {
@@ -752,8 +715,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         actionQ.shareWithDoctor = false;
         this.saveQuestionAnswer(`p1_practical_${field}Action`, '', true);
       }
-      
-      console.log('[Anamnesis] updatePart1PracticalProblemsVisibility:', field, 'value=', problemQ.value, '-> showAction=', showAction);
     }
   }
 
@@ -773,8 +734,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         actionQ.shareWithDoctor = false;
         this.saveQuestionAnswer('p1_incidents_action', '', true);
       }
-      
-      console.log('[Anamnesis] updatePart1IncidentsVisibility: actionNeeded=', value, '-> showAction=', shouldShow);
     }
   }
 
@@ -794,8 +753,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         actionQ.shareWithDoctor = false;
         this.saveQuestionAnswer('p1_followup_action', '', true);
       }
-      
-      console.log('[Anamnesis] updatePart1FollowupVisibility: actionNeeded=', value, '-> showAction=', shouldShow);
     }
   }
 
@@ -917,8 +874,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     const totalAnswered = this.getAnsweredQuestionCount(box);
     const progressPercent = Math.round((totalAnswered / totalVisible) * 100);
     
-    console.log(`[Anamnesis] Progress for box "${box.id}": ${totalAnswered}/${totalVisible} = ${progressPercent}%`);
-    
     return progressPercent;
   }
 
@@ -1035,10 +990,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
 
   // Download PDF directly
   downloadPdf() {
-    console.log('[AnamnesisPage] Generating and downloading PDF');
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.error('[AnamnesisPage] No medication review ID');
       return;
     }
 
@@ -1064,7 +1017,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       false, // download mode
       partTitles
     ).catch(error => {
-      console.error('Error generating PDF:', error);
     });
   }
 
@@ -1085,7 +1037,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         // Skip all hidden questions - they should NEVER appear in the PDF
         // Use originallyHidden to check the initial state, not the current dynamic state
         if (question.originallyHidden) {
-          console.log('[PDF] Skipping originally hidden question:', question.name);
           return; // Skip this question entirely
         }
         
@@ -1099,7 +1050,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
           pdfType = 'text';
         }
         
-        console.log('[PDF] Including question:', question.name, 'originallyHidden:', question.originallyHidden);
         section.questions.push({
           text: question.text,
           type: pdfType,
@@ -1112,7 +1062,6 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       }
     });
     
-    console.log('[PDF] Final sections prepared:', sections);
     return sections;
   }
 

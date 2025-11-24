@@ -61,7 +61,6 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
         this.medications = meds;
       },
       error: (error) => {
-        console.error('[PdfPreviewPage] Failed to load medications:', error);
       }
     });
   }
@@ -69,7 +68,6 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
   generatePdfPreview() {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.error('[PdfPreviewPage] No medication review ID');
       return;
     }
 
@@ -111,18 +109,14 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
           partTitles
         ).then(blob => {
           if (blob) {
-            console.log('[PdfPreviewPage] PDF blob generated, size:', blob.size);
             const url = URL.createObjectURL(blob);
-            console.log('[PdfPreviewPage] Blob URL created:', url);
             // Bypass security without adding fragments that might break iframe rendering
             this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
             this.isLoading = false;
           } else {
-            console.error('[PdfPreviewPage] No blob returned from PDF service');
             this.isLoading = false;
           }
         }).catch(error => {
-          console.error('[PdfPreviewPage] Error generating PDF:', error);
           this.isLoading = false;
         });
       });
@@ -131,7 +125,6 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
   downloadPdf() {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.error('[PdfPreviewPage] No medication review ID');
       return;
     }
 
@@ -157,7 +150,6 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
       false, // download mode
       partTitles
     ).catch(error => {
-      console.error('Error generating PDF:', error);
     });
   }
 

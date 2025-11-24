@@ -93,16 +93,26 @@ export class InteractionsCacheService {
   });
 
   public cache$: Observable<InteractionsCacheData> = this.cacheSubject.asObservable();
+  private enabled = false;
 
   constructor(
     private apiService: ApiService,
     private stateService: StateService
   ) {
-    // Subscribe to medication changes
+    // Subscribe to medication changes, but only refresh if enabled
     this.stateService.medicationsChanged$.subscribe(() => {
-      console.log('[InteractionsCache] Medications changed, refreshing cache');
-      this.refreshCache();
+      if (this.enabled) {
+        this.refreshCache();
+      }
     });
+  }
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    // If enabling, refresh immediately
+    if (enabled) {
+      this.refreshCache();
+    }
   }
 
   private updateCache(partial: Partial<InteractionsCacheData>): void {
@@ -115,7 +125,6 @@ export class InteractionsCacheService {
   refreshCache(): void {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.log('[InteractionsCache] No review ID, clearing cache');
       this.updateCache({
         response: null,
         medications: [],
@@ -131,7 +140,6 @@ export class InteractionsCacheService {
     // First load medications
     this.apiService.getMedications(reviewId).subscribe({
       next: (medications) => {
-        console.log('[InteractionsCache] Loaded medications:', medications.length);
         
         // Check if we have any medications with CNKs
         const cnks = medications
@@ -142,7 +150,6 @@ export class InteractionsCacheService {
           }));
 
         if (cnks.length === 0) {
-          console.log('[InteractionsCache] No CNKs found, clearing interactions');
           this.updateCache({
             response: null,
             medications,
@@ -158,11 +165,8 @@ export class InteractionsCacheService {
           cnks
         };
 
-        console.log('[InteractionsCache] Checking interactions for', cnks.length, 'medications');
-
         this.apiService.checkInteractions(request).subscribe({
           next: (response) => {
-            console.log('[InteractionsCache] Received interactions response');
             this.updateCache({
               response,
               medications,
@@ -171,7 +175,6 @@ export class InteractionsCacheService {
             });
           },
           error: (err) => {
-            console.error('[InteractionsCache] Error checking interactions:', err);
             this.updateCache({
               medications,
               loading: false,
@@ -182,7 +185,6 @@ export class InteractionsCacheService {
         });
       },
       error: (err) => {
-        console.error('[InteractionsCache] Error loading medications:', err);
         this.updateCache({
           loading: false,
           error: 'Failed to load medications'

@@ -65,19 +65,14 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
     // Detect when isNew changes to true and expand the box
     if (changes['isNew'] && changes['isNew'].currentValue === true) {
       this.isExpanded = true;
-      console.log('[MedicationItem] Auto-expanding new medication:', this.medication.name);
     }
   }
 
   ngOnInit() {
-    console.log('[MedicationItem] ngOnInit for medication:', this.medication.name);
-    console.log('[MedicationItem] asNeeded:', this.medication.asNeeded);
-    console.log('[MedicationItem] specialFrequency:', this.medication.specialFrequency);
-    console.log('[MedicationItem] specialDescription:', this.medication.specialDescription);
+    console.log('MedicationItem ngOnInit - medication:', this.medication);
     
     // Initialize notDaily based on whether special frequency is set
     this.notDaily = !!(this.medication.specialFrequency || this.medication.specialDescription);
-    console.log('[MedicationItem] Initialized notDaily to:', this.notDaily);
     
     // Ensure asNeeded is a boolean, not null/undefined
     if (this.medication.asNeeded === null || this.medication.asNeeded === undefined) {
@@ -86,7 +81,10 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
     
     // Load active ingredient if we have a CNK
     if (this.medication.cnk) {
+      console.log('CNK found, loading active ingredient');
       this.loadActiveIngredient();
+    } else {
+      console.log('No CNK found');
     }
     
     // Set up auto-save with debounce
@@ -96,7 +94,6 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        console.log('[MedicationItem] Value changed, triggering save...');
         this.saveToBackend();
       });
   }
@@ -106,7 +103,6 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
     if (this.isNew && this.indicationInput) {
       setTimeout(() => {
         this.indicationInput?.nativeElement.focus();
-        console.log('[MedicationItem] Auto-focused indication field for new medication');
       }, 0);
     }
   }
@@ -123,12 +119,10 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
   }
 
   onValueChange() {
-    console.log('[MedicationItem] onValueChange() called');
     this.valueChanged$.next();
   }
 
   onNotDailyChange() {
-    console.log('[MedicationItem] notDaily changed to:', this.notDaily);
     if (!this.notDaily) {
       // Clear special frequency fields when unchecked
       this.medication.specialFrequency = null;
@@ -169,7 +163,6 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
   saveToBackend() {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[MedicationItem] No medicationReviewId available');
       return;
     }
 
@@ -209,27 +202,15 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
       unitsAtBedtime: parseNumber(this.medication.unitsAtBedtime)
     };
 
-    console.log('[MedicationItem] === SAVING TO BACKEND ===');
-    console.log('[MedicationItem] Medication:', this.medication.name);
-    console.log('[MedicationItem] Special Frequency:', this.medication.specialFrequency);
-    console.log('[MedicationItem] Special Description:', this.medication.specialDescription);
-    console.log('[MedicationItem] Package Size:', this.medication.packageSize);
-    console.log('[MedicationItem] Current medication object:', JSON.stringify(this.medication, null, 2));
-    console.log('[MedicationItem] Update request payload:', JSON.stringify(updateData, null, 2));
-
     this.apiService.updateMedication(
       medicationReviewId,
       this.medication.medicationId,
       updateData
     ).subscribe({
       next: (response) => {
-        console.log('[MedicationItem] ✓ Save successful');
-        console.log('[MedicationItem] Response:', JSON.stringify(response, null, 2));
         this.stateService.notifyMedicationsChanged();
       },
       error: (error: any) => {
-        console.error('[MedicationItem] ✗ Save failed');
-        console.error('[MedicationItem] Error:', error);
       }
     });
   }
@@ -253,23 +234,15 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
 
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[MedicationItem] No medicationReviewId available for deletion');
       return;
     }
 
-    console.log('[MedicationItem] === DELETING MEDICATION ===');
-    console.log('[MedicationItem] Medication:', this.medication.name);
-    console.log('[MedicationItem] MedicationId:', this.medication.medicationId);
-
     this.apiService.deleteMedication(medicationReviewId, this.medication.medicationId).subscribe({
       next: () => {
-        console.log('[MedicationItem] ✓ Delete successful');
         // Emit event to parent component to remove from list
         this.medicationDeleted.emit(this.medication.medicationId);
       },
       error: (error: any) => {
-        console.error('[MedicationItem] ✗ Delete failed');
-        console.error('[MedicationItem] Error:', error);
         const msg = this.transloco.translate('messages.delete_lab_value_error');
         alert(msg);
       }
@@ -281,62 +254,16 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
   }
 
   loadActiveIngredient() {
-    if (!this.medication.cnk) {
-      return;
-    }
-
-    // Check if already loaded from database
+    // Active ingredient is now automatically fetched by the backend when a medication is added
+    // Simply use the activeIngredient property from the medication object
+    console.log('loadActiveIngredient called for:', this.medication.name);
+    console.log('Medication object:', this.medication);
+    console.log('activeIngredient value:', this.medication.activeIngredient);
     if (this.medication.activeIngredient) {
       this.activeIngredient = this.medication.activeIngredient;
-      console.log('[MedicationItem] Active ingredient from database:', this.activeIngredient);
-      return;
+      console.log('Set activeIngredient to:', this.activeIngredient);
+    } else {
+      console.log('No activeIngredient found in medication object');
     }
-
-    // Only fetch from API if not in database
-    console.log('[MedicationItem] Active ingredient not in database, fetching from APB API');
-    this.loadingActiveIngredient = true;
-    this.apiService.getProductComposition(this.medication.cnk.toString()).subscribe({
-      next: (response) => {
-        if (response.result && response.result.length > 0) {
-          const activeIngredientData = response.result[0].detailCompositions.find(
-            (composition: any) => !composition.isExcipient
-          );
-          if (activeIngredientData) {
-            this.activeIngredient = activeIngredientData.substanceName;
-            this.medication.activeIngredient = activeIngredientData.substanceName;
-            console.log('[MedicationItem] Active ingredient loaded from API:', this.activeIngredient);
-            
-            // Save to database for future use
-            this.saveActiveIngredientToDatabase();
-          }
-        }
-        this.loadingActiveIngredient = false;
-      },
-      error: (error) => {
-        console.error('[MedicationItem] Failed to load active ingredient from API:', error);
-        this.loadingActiveIngredient = false;
-      }
-    });
-  }
-
-  private saveActiveIngredientToDatabase() {
-    const reviewId = this.stateService.medicationReviewId;
-    if (!reviewId || !this.medication.activeIngredient) {
-      return;
-    }
-
-    console.log('[MedicationItem] Saving active ingredient to database:', this.medication.activeIngredient);
-    this.apiService.updateMedication(
-      reviewId,
-      this.medication.medicationId,
-      { activeIngredient: this.medication.activeIngredient }
-    ).subscribe({
-      next: () => {
-        console.log('[MedicationItem] Active ingredient saved to database');
-      },
-      error: (error) => {
-        console.error('[MedicationItem] Failed to save active ingredient to database:', error);
-      }
-    });
   }
 }

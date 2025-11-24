@@ -62,7 +62,6 @@ export class ManualDispensingModalComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading medications:', err);
         this.loading = false;
         this.error = 'Failed to load medications';
       }
@@ -190,7 +189,6 @@ export class ManualDispensingModalComponent implements OnInit {
         this.successCount++;
       } catch (err: any) {
         this.failureCount++;
-        console.error('Failed to add moment:', moment, err);
       }
     }
 

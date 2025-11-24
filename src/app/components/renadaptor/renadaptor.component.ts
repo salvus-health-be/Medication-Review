@@ -77,10 +77,8 @@ export class RenadaptorComponent implements OnInit {
         });
         
         this.loading = false;
-        console.log('[Renadaptor] Loaded medications:', this.medications);
       },
       error: (err) => {
-        console.error('[Renadaptor] Error loading medications:', err);
         this.error = 'Failed to load medications';
         this.loading = false;
       }
@@ -88,7 +86,6 @@ export class RenadaptorComponent implements OnInit {
   }
 
   onMedicationClick(medicationId: string) {
-    console.log('[Renadaptor] Medication clicked:', medicationId);
     
     if (this.selectedMedicationId === medicationId) {
       // Deselect if already selected
@@ -122,10 +119,8 @@ export class RenadaptorComponent implements OnInit {
         data.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(response.url);
         data.lastGenerated = new Date();
         data.loading = false;
-        console.log('[Renadaptor] Loaded URL for CNK', data.cnk);
       },
       error: (err) => {
-        console.error('[Renadaptor] Error loading URL:', err);
         data.error = 'Failed to load Renadaptor. Please try again.';
         data.loading = false;
       }
@@ -135,7 +130,6 @@ export class RenadaptorComponent implements OnInit {
   refreshUrl() {
     const data = this.getSelectedRenadaptorData();
     if (data) {
-      console.log('[Renadaptor] Refreshing URL');
       this.loadRenadaptorUrl(data);
     }
   }
@@ -159,10 +153,8 @@ export class RenadaptorComponent implements OnInit {
     
     // If a medication is selected, attach note to it. Otherwise, treat as general note.
     if (medication) {
-      console.log('[Renadaptor] Opening notes for medication:', medication);
       this.openNotes.emit(medication);
     } else {
-      console.log('[Renadaptor] Opening notes for general note (no medication selected)');
       this.openNotes.emit(null as any);
     }
   }
@@ -196,27 +188,22 @@ export class RenadaptorComponent implements OnInit {
     let rf: any = undefined;
     if (sessionData.patient && sessionData.patient.renalFunction !== undefined) {
       rf = sessionData.patient.renalFunction;
-      console.log('[Renadaptor] Found renalFunction under sessionData.patient');
     } else if ((sessionData as any).renalFunction !== undefined) {
       rf = (sessionData as any).renalFunction;
-      console.log('[Renadaptor] Found renalFunction at top-level sessionData');
     }
 
     if (rf !== null && rf !== undefined) {
       this.renalFunction = rf === null ? null : String(rf);
-      console.log('[Renadaptor] Loaded renal function:', this.renalFunction);
     }
   }
 
   onRenalFunctionChange() {
-    console.log('[Renadaptor] Renal function changed to:', this.renalFunction);
     this.saveRenalFunction();
   }
 
   private saveRenalFunction() {
     const sessionData = this.stateService.getSessionData();
     if (!sessionData) {
-      console.warn('[Renadaptor] No session data available, cannot save renal function');
       return;
     }
 
@@ -229,10 +216,8 @@ export class RenadaptorComponent implements OnInit {
       renalFunction: this.renalFunction
     };
 
-    console.log('[Renadaptor] Saving renal function:', this.renalFunction);
     this.apiService.updatePatient(request).subscribe({
       next: (response) => {
-        console.log('[Renadaptor] Renal function updated successfully');
         // Update session data
         if (sessionData.patient) {
           sessionData.patient.renalFunction = response.renalFunction ?? null;
@@ -242,7 +227,6 @@ export class RenadaptorComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('[Renadaptor] Failed to update renal function:', error);
       }
     });
   }

@@ -34,22 +34,33 @@ export class ContraindicationsCacheService {
   });
 
   public cache$: Observable<ContraindicationsCacheData> = this.cacheSubject.asObservable();
+  private enabled = false;
 
   constructor(
     private apiService: ApiService,
     private stateService: StateService
   ) {
-    // Subscribe to medication changes
+    // Subscribe to medication changes, but only refresh if enabled
     this.stateService.medicationsChanged$.subscribe(() => {
-      console.log('[ContraindicationsCache] Medications changed, refreshing cache');
-      this.refreshCache();
+      if (this.enabled) {
+        this.refreshCache();
+      }
     });
 
-    // Subscribe to contraindication changes
+    // Subscribe to contraindication changes, but only refresh if enabled
     this.stateService.contraindicationsChanged$.subscribe(() => {
-      console.log('[ContraindicationsCache] Contraindications changed, refreshing cache');
-      this.refreshCache();
+      if (this.enabled) {
+        this.refreshCache();
+      }
     });
+  }
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    // If enabling, refresh immediately
+    if (enabled) {
+      this.refreshCache();
+    }
   }
 
   private updateCache(partial: Partial<ContraindicationsCacheData>): void {
@@ -62,7 +73,6 @@ export class ContraindicationsCacheService {
   refreshCache(): void {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.log('[ContraindicationsCache] No review ID, clearing cache');
       this.updateCache({
         matchesResponse: null,
         productResponses: [],
@@ -85,8 +95,6 @@ export class ContraindicationsCacheService {
       contraindications: this.apiService.getContraindications(reviewId)
     }).subscribe({
       next: ({ medications, contraindications }) => {
-        console.log('[ContraindicationsCache] Loaded medications:', medications.length);
-        console.log('[ContraindicationsCache] Loaded patient contraindications:', contraindications.length);
 
         const cnkCodes = medications
           .filter(med => med.cnk)
@@ -97,7 +105,6 @@ export class ContraindicationsCacheService {
           .map(ci => ci.contraindicationCode);
 
         if (cnkCodes.length === 0) {
-          console.log('[ContraindicationsCache] No CNKs found, clearing contraindications');
           this.updateCache({
             matchesResponse: null,
             productResponses: [],
@@ -119,12 +126,10 @@ export class ContraindicationsCacheService {
             participatingPhysioPathologicalConditionCodes: conditionCodes
           }).pipe(
             catchError(err => {
-              console.error('[ContraindicationsCache] Error checking matches:', err);
               return of(null);
             })
           ).subscribe({
             next: (matches) => {
-              console.log('[ContraindicationsCache] Received contraindication matches');
               this.updateCache({
                 matchesResponse: matches,
                 medications,
@@ -136,7 +141,6 @@ export class ContraindicationsCacheService {
               });
             },
             error: (err) => {
-              console.error('[ContraindicationsCache] Error loading matches:', err);
               this.updateCache({
                 medications,
                 patientContraindications: contraindications,
@@ -147,7 +151,6 @@ export class ContraindicationsCacheService {
             }
           });
         } else {
-          console.log('[ContraindicationsCache] No matches to check');
           this.updateCache({
             matchesResponse: null,
             medications,
@@ -160,7 +163,6 @@ export class ContraindicationsCacheService {
         }
       },
       error: (err) => {
-        console.error('[ContraindicationsCache] Error loading medications/contraindications:', err);
         this.updateCache({
           loading: false,
           error: 'Failed to load data'
@@ -177,7 +179,6 @@ export class ContraindicationsCacheService {
     const currentCache = this.cacheSubject.value;
     
     if (currentCache.loadingProductContraindications || currentCache.productContraindicationsLoaded) {
-      console.log('[ContraindicationsCache] Product contraindications already loading or loaded');
       return;
     }
 
@@ -186,18 +187,15 @@ export class ContraindicationsCacheService {
       .map(med => med.cnk!.toString().padStart(7, '0'));
 
     if (cnkCodes.length === 0) {
-      console.log('[ContraindicationsCache] No CNKs to load product contraindications for');
       return;
     }
 
-    console.log('[ContraindicationsCache] Loading product contraindications for', cnkCodes.length, 'medications');
     this.updateCache({ loadingProductContraindications: true });
 
     // Get product contraindications for each medication
     const productObservables = cnkCodes.map(cnk =>
       this.apiService.getProductContraindications(cnk, 'NL').pipe(
         catchError(err => {
-          console.error(`[ContraindicationsCache] Error getting contraindications for CNK ${cnk}:`, err);
           return of(null);
         })
       )
@@ -205,7 +203,6 @@ export class ContraindicationsCacheService {
 
     forkJoin(productObservables).subscribe({
       next: (products) => {
-        console.log('[ContraindicationsCache] Received product contraindications');
         this.updateCache({
           productResponses: products.filter(p => p !== null),
           loadingProductContraindications: false,
@@ -213,7 +210,6 @@ export class ContraindicationsCacheService {
         });
       },
       error: (err) => {
-        console.error('[ContraindicationsCache] Error loading product contraindications:', err);
         this.updateCache({
           loadingProductContraindications: false,
           error: 'Failed to load additional contraindications'

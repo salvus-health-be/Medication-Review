@@ -32,7 +32,6 @@ export class App {
   }
 
   onOpenNoteOverview() {
-    console.log('[App] Note overview requested');
     // Emit to state service so analysis page can listen
     this.stateService.openNoteOverviewModal();
   }

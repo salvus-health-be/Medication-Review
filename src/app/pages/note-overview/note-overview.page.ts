@@ -72,7 +72,6 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
     if (!this.selectedNoteToDelete) return;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.error('[NoteOverview] No review ID found');
       this.showDeleteConfirmation = false;
       this.selectedNoteToDelete = null;
       return;
@@ -81,12 +80,10 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
     const rowKey = this.selectedNoteToDelete.rowKey;
     this.reviewNotesService.deleteNote(reviewId, rowKey).subscribe({
       next: () => {
-        console.log('[NoteOverview] Note deleted successfully');
         this.showDeleteConfirmation = false;
         this.selectedNoteToDelete = null;
       },
       error: (error) => {
-        console.error('[NoteOverview] Error deleting note:', error);
         alert('Failed to delete note. Please try again.');
         this.showDeleteConfirmation = false;
         this.selectedNoteToDelete = null;
@@ -107,7 +104,6 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
       discussWithPatient: !note.discussWithPatient
     }).subscribe({
       error: (error) => {
-        console.error('[NoteOverview] Error updating note:', error);
         alert('Failed to update note. Please try again.');
       }
     });
@@ -121,7 +117,6 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
       communicateToDoctor: !note.communicateToDoctor
     }).subscribe({
       error: (error) => {
-        console.error('[NoteOverview] Error updating note:', error);
         alert('Failed to update note. Please try again.');
       }
     });

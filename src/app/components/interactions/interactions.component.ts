@@ -102,17 +102,10 @@ export class InteractionsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    console.log('[Interactions] Component initialized, subscribing to cache');
     
     // Subscribe to cache updates
     this.cacheSubscription = this.interactionsCache.cache$.subscribe(cache => {
-      console.log('[Interactions] Cache updated:', {
-        hasResponse: !!cache.response,
-        medicationsCount: cache.medications.length,
-        loading: cache.loading,
-        error: cache.error
-      });
-      
+
       this.medications = cache.medications;
       this.loading = cache.loading;
       this.error = cache.error;
@@ -138,7 +131,6 @@ export class InteractionsComponent implements OnInit, OnDestroy {
 
   // Manual refresh is no longer needed - cache auto-refreshes via state notifications
   refreshInteractions() {
-    console.log('[Interactions] Refresh requested (cache auto-refreshes on medication changes)');
   }
 
   processInteractions(response: InteractionsResponse) {
@@ -195,8 +187,6 @@ export class InteractionsComponent implements OnInit, OnDestroy {
       return (this.severityOrder[a.severityCode] || 999) - (this.severityOrder[b.severityCode] || 999);
     });
 
-    console.log('[Interactions] Processed drug-drug:', this.drugDrugInteractions);
-    console.log('[Interactions] Processed drug-food:', this.drugFoodInteractions);
   }
 
   getMedicationName(cnkCode: string): string {
@@ -236,12 +226,10 @@ export class InteractionsComponent implements OnInit, OnDestroy {
       interactionNumber: interactionNumber
     }).subscribe({
       next: (response: any) => {
-        console.log('[Interactions] Details response:', response);
         this.interactionDetails = response.result;
         this.loadingDetails = false;
       },
       error: (err: any) => {
-        console.error('[Interactions] Error loading details:', err);
         this.loadingDetails = false;
       }
     });
@@ -292,14 +280,12 @@ export class InteractionsComponent implements OnInit, OnDestroy {
   }
 
   openNotesModal(interaction: any): void {
-    console.log('[Interactions] Opening notes for interaction:', interaction);
     // Determine interaction type based on properties
     const type = 'leftMedication' in interaction ? 'drug-drug' : 'drug-food';
     this.openNotes.emit({ type, interaction });
   }
 
   openGeneralNotesModal(): void {
-    console.log('[Interactions] Opening notes for general note (no interaction)');
     this.openNotes.emit({ type: 'general', interaction: null });
   }
 
@@ -327,7 +313,7 @@ export class InteractionsComponent implements OnInit, OnDestroy {
       
       // Split by newline or by pattern like "Author et al." followed by journal info
       // This regex matches the pattern: Author(s) et al., Journal details (year)
-      const refPattern = /([A-Z][a-zäöüß]+(?:,?\s+[A-Z]\.?)+\s+et\s+al\.|[A-Z][a-zäöüß]+\s+et\s+al\.|Fachinformation\s+[^,]+)[^n]*?(?:\([12]\d{3}\)|Stand\))/g;
+      const refPattern = /([A-Z][a-zÃ¤Ã¶Ã¼ÃŸ]+(?:,?\s+[A-Z]\.?)+\s+et\s+al\.|[A-Z][a-zÃ¤Ã¶Ã¼ÃŸ]+\s+et\s+al\.|Fachinformation\s+[^,]+)[^n]*?(?:\([12]\d{3}\)|Stand\))/g;
       const references = literatureText.match(refPattern) || [];
       
       if (references.length > 0) {

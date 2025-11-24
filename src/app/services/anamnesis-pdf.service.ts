@@ -13,14 +13,12 @@ export class AnamnesisePdfService {
     let s = String(input);
     const original = s;
 
-    console.log('[Sanitize] Original string:', s);
-
     s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
     // Collapse standard whitespace
     s = s.replace(/\s+/g, ' ');
 
-    // Replace curly quotes → straight
+    // Replace curly quotes â†’ straight
     s = s.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
          .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g, '"');
 
@@ -36,19 +34,18 @@ export class AnamnesisePdfService {
     // Remove zero-width and invisible chars
     s = s.replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, '');
 
-    // Normalize tricky spaces → plain space
+    // Normalize tricky spaces â†’ plain space
     s = s.replace(/[\u00A0\u202F\u2000-\u200A]/g, ' ');
 
     // Remove control characters (keeps \n)
     s = s.replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F\u007F-\u009F]/g, '');
 
-    s = s.replace("↔", "<>");
+    s = s.replace("â†”", "<>");
 
     s = s.trim();
     
     // Log if characters were changed (for debugging)
     if (original !== s) {
-      console.log('Sanitized text:', { original: JSON.stringify(original), sanitized: JSON.stringify(s) });
     }
 
     return s;
@@ -83,7 +80,6 @@ export class AnamnesisePdfService {
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.warn('Failed to load logo:', error);
       return null;
     }
   }
@@ -117,9 +113,6 @@ export class AnamnesisePdfService {
     partTitles?: { part1: string; part2: string; part3: string; part4: string }
   ): Promise<Blob | void> {
     // Console log all notes for debugging
-    console.log('=== PDF Generation Debug ===');
-    console.log('Adherence Notes:', adherenceNotesByMedication);
-    console.log('Effectiveness Notes:', effectivenessNotesByMedication);
     
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -145,7 +138,6 @@ export class AnamnesisePdfService {
         const logoY = margin; // Top aligned
         doc.addImage(logoInfo.data, 'PNG', logoX, logoY, logoWidth, logoHeight);
       } catch (error) {
-        console.warn('Failed to add logo to PDF:', error);
       }
     }
 

@@ -31,12 +31,10 @@ export class CnkSelectionModalComponent {
   @Output() skip = new EventEmitter<void>();
 
   selectMedication(match: MedicationSearchResult) {
-    console.log('[CnkSelectionModal] Medication selected:', match);
     this.medicationSelected.emit(match);
   }
 
   skipMedication() {
-    console.log('[CnkSelectionModal] Skip medication:', this.medication.medicationName);
     this.skip.emit();
   }
 

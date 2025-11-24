@@ -80,7 +80,6 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
     if (!this.selectedNoteToDelete) return;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.error('[NoteOverviewModal] No review ID found');
       this.showDeleteConfirmation = false;
       this.selectedNoteToDelete = null;
       return;
@@ -89,12 +88,10 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
     const rowKey = this.selectedNoteToDelete.rowKey;
     this.reviewNotesService.deleteNote(reviewId, rowKey).subscribe({
       next: () => {
-        console.log('[NoteOverviewModal] Note deleted successfully');
         this.showDeleteConfirmation = false;
         this.selectedNoteToDelete = null;
       },
       error: (error) => {
-        console.error('[NoteOverviewModal] Error deleting note:', error);
         alert('Failed to delete note. Please try again.');
         this.showDeleteConfirmation = false;
         this.selectedNoteToDelete = null;
@@ -115,7 +112,6 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
       discussWithPatient: !note.discussWithPatient
     }).subscribe({
       error: (error) => {
-        console.error('[NoteOverviewModal] Error updating note:', error);
         alert('Failed to update note. Please try again.');
       }
     });
@@ -129,7 +125,6 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
       communicateToDoctor: !note.communicateToDoctor
     }).subscribe({
       error: (error) => {
-        console.error('[NoteOverviewModal] Error updating note:', error);
         alert('Failed to update note. Please try again.');
       }
     });
@@ -156,11 +151,9 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
       text: this.editingNoteText.trim()
     }).subscribe({
       next: () => {
-        console.log('[NoteOverviewModal] Note updated successfully');
         this.cancelEditing();
       },
       error: (error) => {
-        console.error('[NoteOverviewModal] Error updating note:', error);
         alert('Failed to update note. Please try again.');
       }
     });
@@ -213,11 +206,8 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   saveGeneralNote() {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId || !this.newNoteText.trim()) {
-      console.error('[NoteOverviewModal] Cannot save general note - missing review ID or text');
       return;
     }
-
-    console.log('[NoteOverviewModal] Saving general note with category:', this.newNoteCategory);
 
     this.reviewNotesService.addNote(reviewId, {
       text: this.newNoteText.trim(),
@@ -227,12 +217,10 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
       linkedCnk: undefined // No linked CNK for general notes
     }).subscribe({
       next: (note) => {
-        console.log('[NoteOverviewModal] General note saved successfully:', note);
         this.showGeneralNoteForm = false;
         this.newNoteText = '';
       },
       error: (error) => {
-        console.error('[NoteOverviewModal] Error saving general note:', error);
         alert('Failed to save note. Please try again.');
       }
     });

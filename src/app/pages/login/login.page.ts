@@ -23,7 +23,7 @@ export class LoginPage {
   availableLanguages = [
     { code: 'en', name: 'English' },
     { code: 'nl', name: 'Nederlands' },
-    { code: 'fr', name: 'Français' }
+    { code: 'fr', name: 'FranÃ§ais' }
   ];
 
   get currentLanguage(): string {
@@ -64,7 +64,6 @@ export class LoginPage {
 
     this.apiService.login(request).subscribe({
       next: (response) => {
-        console.log('Login successful:', response);
         // Get existing session data to preserve values like renalFunction if backend didn't return them
         const existingSession = this.stateService.getSessionData();
         const newSession = {
@@ -74,16 +73,13 @@ export class LoginPage {
         
         // Preserve renalFunction from existing session if backend returned null
         if (existingSession?.patient?.renalFunction && !newSession.patient.renalFunction) {
-          console.log('[LoginPage] Preserving renalFunction from existing session:', existingSession.patient.renalFunction);
           newSession.patient.renalFunction = existingSession.patient.renalFunction;
         }
         
-        console.log('[LoginPage] Final session data to store:', newSession);
         this.stateService.setSessionData(newSession);
         this.router.navigate(['/disclaimer']);
       },
       error: (error) => {
-        console.error('Login failed:', error);
         this.isLoading = false;
         const serverMsg = error.error?.message;
         this.errorMessage = serverMsg ? serverMsg : this.transloco.translate('login.login_failed');

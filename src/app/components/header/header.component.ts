@@ -100,7 +100,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.stateService.contraindicationsChanged$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        console.log('[Header] Contraindications changed notification received');
         this.loadContraindications();
       });
 
@@ -110,7 +109,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .subscribe(count => {
         // Detect increases in notes count to trigger animation
         this.notesCount = count;
-        console.log('[Header] Notes count updated:', count);
         if (count > this.previousNotesCount) {
           this.triggerNotesAnimation();
         }
@@ -125,7 +123,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.transloco.setActiveLang(lang);
       this.activeLang = lang;
     } catch (e) {
-      console.error('[Header] Failed to change language', e);
     }
   }
 
@@ -235,11 +232,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   save() {
     // Save functionality will be implemented later
-    console.log('Save clicked');
   }
 
   openConversation() {
-    console.log('[Header] Opening note overview modal');
     this.openNoteOverview.emit();
   }
 
@@ -253,12 +248,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     this.apiService.deleteContraindication(reviewId, contraindication.contraindicationId).subscribe({
       next: () => {
-        console.log('[Header] Contraindication deleted:', contraindication.contraindicationId);
         this.loadContraindications();
         this.stateService.notifyContraindicationsChanged();
       },
       error: (error) => {
-        console.error('[Header] Failed to delete contraindication:', error);
         alert('Failed to remove contra-indication. Please try again.');
       }
     });
@@ -284,10 +277,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.apiService.getContraindications(reviewId).subscribe({
       next: (contraindications) => {
         this.contraIndications = contraindications;
-        console.log('[Header] Loaded contraindications:', contraindications);
       },
       error: (error) => {
-        console.error('[Header] Failed to load contraindications:', error);
         this.contraIndications = [];
       }
     });

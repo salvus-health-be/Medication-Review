@@ -48,9 +48,6 @@ export class ManageMomentsModalComponent implements OnInit {
 
     this.apiService.queryDispensingHistory(apbNumber, reviewId).subscribe({
       next: (response) => {
-        console.log('[ManageMoments] Dispensing history loaded:', response);
-        console.log('[ManageMoments] First CNK group:', response.dispensingData?.[0]);
-        console.log('[ManageMoments] First moment in first CNK:', response.dispensingData?.[0]?.dispensingMoments?.[0]);
         
         this.dispensingHistory = response;
         this.loading = false;
@@ -62,7 +59,6 @@ export class ManageMomentsModalComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Error loading dispensing history:', err);
         this.loading = false;
         this.error = err.status === 404 
           ? 'No dispensing history found. Please upload a CSV file or add manual moments first.'
@@ -86,8 +82,6 @@ export class ManageMomentsModalComponent implements OnInit {
       this.filteredMoments = cnkGroup.dispensingMoments.filter(
         moment => moment.source === 'manual'
       );
-      console.log('[ManageMoments] Filtered moments for CNK', this.selectedCnk, ':', this.filteredMoments);
-      console.log('[ManageMoments] First moment ID:', this.filteredMoments[0]?.id);
     } else {
       this.filteredMoments = [];
     }
@@ -117,14 +111,9 @@ export class ManageMomentsModalComponent implements OnInit {
   }
 
   deleteMoment(moment: DispensingMoment) {
-    console.log('[ManageMoments] Delete moment called:', moment);
-    console.log('[ManageMoments] Moment ID value:', moment.id);
-    console.log('[ManageMoments] Moment ID type:', typeof moment.id);
-    console.log('[ManageMoments] Full moment object:', moment);
     
     if (!moment.id || moment.id.trim?.() === '' || moment.id === null) {
       this.error = 'Cannot delete: moment ID is missing or empty. ID value: "' + moment.id + '". Properties: ' + Object.keys(moment).join(', ') + '. Values: ' + JSON.stringify(moment);
-      console.error('[ManageMoments] Moment missing or empty ID. Full moment object:', moment);
       return;
     }
 
@@ -141,7 +130,6 @@ export class ManageMomentsModalComponent implements OnInit {
 
     this.apiService.deleteManualDispensingMoment(apbNumber, reviewId, moment.id).subscribe({
       next: (response) => {
-        console.log('Deleted manual dispensing moment:', response);
         this.deletingIds.delete(moment.id!);
         
         // Remove from local data
@@ -161,7 +149,6 @@ export class ManageMomentsModalComponent implements OnInit {
           this.error = err.error?.error || 'Failed to delete dispensing moment';
         }
         
-        console.error('Delete manual dispensing moment failed:', err);
       }
     });
   }

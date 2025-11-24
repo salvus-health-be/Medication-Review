@@ -27,6 +27,20 @@
       object-fit: contain;
     }
 
+    .beta-warning {
+      font-family: $primary-font;
+      font-weight: $font-weight-bold;
+      font-size: 0.65rem;
+      color: #dc3545;
+      background-color: rgba(220, 53, 69, 0.08);
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      border: 1px solid rgba(220, 53, 69, 0.2);
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+      flex-shrink: 0;
+    }
+
     .patient-icon {
       display: flex;
       align-items: center;

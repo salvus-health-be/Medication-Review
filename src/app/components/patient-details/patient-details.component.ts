@@ -33,11 +33,9 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    console.log('[PatientDetails] ngOnInit - loading from session');
     // Prepopulate from session data
     const sessionData = this.stateService.getSessionData();
     if (sessionData) {
-      console.log('[PatientDetails] Session data:', JSON.stringify(sessionData.patient, null, 2));
       // Populate from review (first/last name)
       if (sessionData.review.firstNameAtTimeOfReview) {
         this.firstName = sessionData.review.firstNameAtTimeOfReview;
@@ -60,21 +58,16 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
       if (sessionData.patient && sessionData.patient.renalFunction !== undefined) {
         rf = sessionData.patient.renalFunction;
         rfFound = true;
-        console.log('[PatientDetails] Found renalFunction under sessionData.patient:', rf);
       } else if ((sessionData as any).renalFunction !== undefined) {
         rf = (sessionData as any).renalFunction;
         rfFound = true;
-        console.log('[PatientDetails] Found renalFunction at top-level sessionData:', rf);
       }
 
       if (rfFound) {
         this.renalFunction = rf === null ? null : String(rf);
-        console.log('[PatientDetails] Loaded renal function assigned to field:', this.renalFunction);
       } else {
-        console.log('[PatientDetails] No renalFunction found in session data');
       }
     } else {
-      console.warn('[PatientDetails] No session data available');
     }
 
     // Set up auto-save for dateOfBirth changes (debounced)
@@ -151,7 +144,6 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
   private savePatientData() {
     const sessionData = this.stateService.getSessionData();
     if (!sessionData) {
-      console.warn('[PatientDetails] No session data available, cannot save');
       return;
     }
 
@@ -183,13 +175,9 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
     // Only save if we have at least one field to update
     // Save if at least one updatable field is present. Note: renalFunction may be an empty string to clear the field.
     if (request.dateOfBirth || request.sex || request.hasOwnProperty('renalFunction')) {
-      console.log('[PatientDetails] === SAVING PATIENT DATA ===');
-      console.log('[PatientDetails] Request payload:', JSON.stringify(request, null, 2));
       
       this.apiService.updatePatient(request).subscribe({
         next: (response) => {
-          console.log('[PatientDetails] ✓ Patient updated successfully');
-          console.log('[PatientDetails] Response:', JSON.stringify(response, null, 2));
           // Update session data with new values
           if (sessionData.patient) {
             sessionData.patient.dateOfBirth = response.dateOfBirth;
@@ -197,22 +185,15 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
             sessionData.patient.renalFunction = response.renalFunction ?? null;
             // Also set top-level renalFunction for compatibility with different session shapes
             (sessionData as any).renalFunction = response.renalFunction ?? null;
-            console.log('[PatientDetails] Updated session data - patient.renalFunction:', sessionData.patient.renalFunction);
-            console.log('[PatientDetails] Updated session data - top-level renalFunction:', (sessionData as any).renalFunction);
             this.stateService.setSessionData(sessionData);
-            console.log('[PatientDetails] Session data has been set with renalFunction');
           }
         },
         error: (error) => {
-          console.error('[PatientDetails] ✗ Failed to update patient');
-          console.error('[PatientDetails] Error:', error);
           if (error.status === 404) {
-            console.error('[PatientDetails] Patient not found in database - may not have been created during login');
             // Don't show error to user - this happens when patient doesn't exist yet
             // The login endpoint should have created the patient
           } else {
             // For other errors, you might want to show a user-friendly message
-            console.error('[PatientDetails] Unexpected error updating patient');
           }
         }
       });
@@ -222,7 +203,6 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
   private saveMedicationReviewData() {
     const sessionData = this.stateService.getSessionData();
     if (!sessionData) {
-      console.warn('[PatientDetails] No session data available, cannot save review');
       return;
     }
 
@@ -245,13 +225,9 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
 
     // Only save if we have at least one field to update
     if (request.firstNameAtTimeOfReview || request.lastNameAtTimeOfReview) {
-      console.log('[PatientDetails] === SAVING MEDICATION REVIEW DATA ===');
-      console.log('[PatientDetails] Request payload:', JSON.stringify(request, null, 2));
       
       this.apiService.updateMedicationReview(request).subscribe({
         next: (response) => {
-          console.log('[PatientDetails] ✓ Medication review updated successfully');
-          console.log('[PatientDetails] Response:', JSON.stringify(response, null, 2));
           // Update session data with new values
           if (sessionData.review) {
             sessionData.review.firstNameAtTimeOfReview = response.firstNameAtTimeOfReview;
@@ -261,15 +237,10 @@ export class PatientDetailsComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('[PatientDetails] ✗ Failed to update medication review');
-          console.error('[PatientDetails] Error:', error);
           if (error.status === 404) {
-            console.error('[PatientDetails] Medication review not found in database - may not have been created during login');
             // Don't show error to user - this happens when review doesn't exist yet
           } else if (error.status === 400) {
-            console.error('[PatientDetails] Bad request - check if all required fields are present');
           } else {
-            console.error('[PatientDetails] Unexpected error updating medication review');
           }
         }
       });

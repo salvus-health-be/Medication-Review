@@ -41,7 +41,8 @@
     "save_progress": "Save Progress",
     "notes_overview": "Notes Overview",
     "contraindications": "Contra-indications",
-    "add_contraindication": "Add Contra-indication"
+    "add_contraindication": "Add Contra-indication",
+    "beta_warning": "BETA - Verify all data"
   },
   "disclaimer": {
     "title": "Important Notice",

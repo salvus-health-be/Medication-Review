@@ -70,18 +70,10 @@ export class ContraindicationsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    console.log('[Contraindications] Component initialized, subscribing to cache');
     
     // Subscribe to cache updates
     this.cacheSubscription = this.contraindicationsCache.cache$.subscribe(cache => {
-      console.log('[Contraindications] Cache updated:', {
-        hasMatchesResponse: !!cache.matchesResponse,
-        productResponsesCount: cache.productResponses.length,
-        medicationsCount: cache.medications.length,
-        loading: cache.loading,
-        error: cache.error
-      });
-      
+
       this.medications = cache.medications;
       this.patientContraindications = cache.patientContraindications;
       this.loading = cache.loading;
@@ -112,11 +104,9 @@ export class ContraindicationsComponent implements OnInit, OnDestroy {
 
   // Manual refresh is no longer needed - cache auto-refreshes via state notifications
   refreshContraindications() {
-    console.log('[Contraindications] Refresh requested (cache auto-refreshes on medication/contraindication changes)');
   }
 
   loadAdditionalContraindications() {
-    console.log('[Contraindications] Loading additional contraindications');
     this.contraindicationsCache.loadProductContraindications();
   }
 
@@ -127,8 +117,6 @@ export class ContraindicationsComponent implements OnInit, OnDestroy {
   get loadingProductContraindications(): boolean {
     return this.contraindicationsCache.getCacheData().loadingProductContraindications;
   }
-
-
 
   processContraindicationMatches(response: any) {
     this.contraindicationMatches = [];
@@ -173,7 +161,6 @@ export class ContraindicationsComponent implements OnInit, OnDestroy {
       return (this.severityOrder[a.appreciationCode] || 999) - (this.severityOrder[b.appreciationCode] || 999);
     });
 
-    console.log('[Contraindications] Processed matches:', this.contraindicationMatches);
   }
 
   processProductContraindications(results: any[]) {
@@ -231,7 +218,6 @@ export class ContraindicationsComponent implements OnInit, OnDestroy {
       return (this.severityOrder[a.appreciationCode] || 999) - (this.severityOrder[b.appreciationCode] || 999);
     });
 
-    console.log('[Contraindications] Processed product contraindications:', this.productContraindications);
   }
 
   getMedicationName(cnkCode: string): string {
@@ -303,12 +289,10 @@ export class ContraindicationsComponent implements OnInit, OnDestroy {
   }
 
   openNotesModal(contraindication: any, type: 'match' | 'product'): void {
-    console.log('[Contraindications] Opening notes for contraindication:', contraindication);
     this.openNotes.emit({ type, contraindication });
   }
 
   openGeneralNotesModal(): void {
-    console.log('[Contraindications] Opening notes for general note (no contraindication)');
     this.openNotes.emit({ type: 'general' as any, contraindication: null });
   }
 

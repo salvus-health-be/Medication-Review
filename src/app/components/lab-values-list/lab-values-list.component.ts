@@ -42,7 +42,6 @@ export class LabValuesListComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('[LabValuesList] Failed to load lab values:', error);
         this.labValues = [];
         this.isLoading = false;
       }
@@ -60,7 +59,6 @@ export class LabValuesListComponent implements OnInit {
   onLabValueAdded(data: LabValueData) {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[LabValuesList] No medication review ID');
       return;
     }
 
@@ -73,11 +71,9 @@ export class LabValuesListComponent implements OnInit {
       }
     ).subscribe({
       next: (response) => {
-        console.log('[LabValuesList] Lab value added:', response);
         this.loadLabValues();
       },
       error: (error) => {
-        console.error('[LabValuesList] Failed to add lab value:', error);
         alert('Failed to add lab value. Please try again.');
       }
     });
@@ -86,17 +82,14 @@ export class LabValuesListComponent implements OnInit {
   onLabValueDeleted(labValueId: string) {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[LabValuesList] No medication review ID');
       return;
     }
 
     this.apiService.deleteLabValue(medicationReviewId, labValueId).subscribe({
       next: () => {
-        console.log('[LabValuesList] Lab value deleted:', labValueId);
         this.labValues = this.labValues.filter(lv => lv.labValueId !== labValueId);
       },
       error: (error) => {
-        console.error('[LabValuesList] Failed to delete lab value:', error);
         alert('Failed to delete lab value. Please try again.');
       }
     });

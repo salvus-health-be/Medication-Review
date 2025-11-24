@@ -1,6 +1,9 @@
 <header class="app-header">
   <div class="header-left">
     <img src="/images/Top_bar_logo.png" alt="Salvus Health" class="logo">
+    <div class="beta-warning">
+      {{ 'header.beta_warning' | transloco }}
+    </div>
     
     @if (showPatientInfo) {
       <!-- Patient icon -->

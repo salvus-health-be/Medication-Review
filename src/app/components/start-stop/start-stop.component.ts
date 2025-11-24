@@ -34,29 +34,19 @@ export class StartStopComponent implements OnInit, OnDestroy {
 
     this.apiService.getReferenceDocument('start-stop').subscribe({
       next: (blob) => {
-        console.log('[StartStopComponent] Received blob:', blob.size, 'bytes, type:', blob.type);
         
         // Verify blob is a PDF
         if (!blob.type.includes('pdf')) {
-          console.warn('[StartStopComponent] Received non-PDF blob:', blob.type);
         }
         
         // Create object URL from blob
         this.blobUrl = URL.createObjectURL(blob);
-        console.log('[StartStopComponent] Created blob URL:', this.blobUrl);
         
         // Trust the URL for iframe usage
         this.documentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
-        console.log('[StartStopComponent] Document URL ready for iframe');
       },
       error: (err) => {
-        console.error('[StartStopComponent] Failed to download document:', err);
-        console.error('[StartStopComponent] Error details:', {
-          status: err.status,
-          statusText: err.statusText,
-          message: err.message,
-          url: err.url
-        });
+        
         this.error = 'Failed to load START-STOP document. Click "Open in New Tab" to try in a separate window.';
         this.isLoading = false;
       }
@@ -65,18 +55,15 @@ export class StartStopComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.blobUrl) {
-      console.log('[StartStopComponent] Cleaning up blob URL');
       URL.revokeObjectURL(this.blobUrl);
     }
   }
 
   onIframeLoad() {
-    console.log('[StartStopComponent] Iframe loaded successfully');
     this.isLoading = false;
   }
 
   onIframeError() {
-    console.error('[StartStopComponent] Iframe failed to load');
     this.error = 'Failed to display PDF in iframe. Click "Open in New Tab" to view.';
     this.isLoading = false;
   }

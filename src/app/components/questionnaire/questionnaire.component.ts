@@ -71,7 +71,6 @@ export class QuestionnaireComponent {
     this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
     this.pdfFileName = file.name;
     
-    console.log('[Questionnaire] PDF loaded:', file.name, 'Size:', file.size);
   }
 
   removePdf() {
@@ -88,7 +87,6 @@ export class QuestionnaireComponent {
   }
 
   openNotesModal() {
-    console.log('[Questionnaire] Opening general notes modal');
     this.openNotes.emit();
   }
 

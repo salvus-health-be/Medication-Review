@@ -46,7 +46,6 @@ export class MedicationSearchModalComponent implements AfterViewInit {
     if (this.searchInput) {
       setTimeout(() => {
         this.searchInput.nativeElement.focus();
-        console.log('[MedicationSearchModal] Search input focused');
       }, 100);
     }
   }
@@ -63,12 +62,10 @@ export class MedicationSearchModalComponent implements AfterViewInit {
 
     this.apiService.searchMedications({ searchTerm: term, maxResults: 20 }).subscribe({
       next: (response) => {
-        console.log('[MedicationSearchModal] RAW BACKEND RESPONSE:', JSON.stringify(response, null, 2));
         this.searchResults = response.results;
         this.isSearching = false;
       },
       error: (error) => {
-        console.error('[MedicationSearchModal] Search failed:', error);
         this.errorMessage = 'Search failed. Please try again.';
         this.searchResults = [];
         this.isSearching = false;
@@ -77,7 +74,6 @@ export class MedicationSearchModalComponent implements AfterViewInit {
   }
 
   selectMedication(medication: MedicationSearchResult) {
-    console.log('[MedicationSearchModal] Medication selected:', medication);
     this.medicationSelected.emit(medication);
     this.onCancel();
   }

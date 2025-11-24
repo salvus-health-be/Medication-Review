@@ -96,10 +96,8 @@ export class PosologyComponent implements OnInit {
         });
         
         this.loading = false;
-        console.log('[Posology] Loaded medications:', this.medications);
       },
       error: (err) => {
-        console.error('[Posology] Error loading medications:', err);
         this.error = 'Failed to load medications';
         this.loading = false;
       }
@@ -107,7 +105,6 @@ export class PosologyComponent implements OnInit {
   }
 
   onMedicationClick(medicationId: string) {
-    console.log('[Posology] Medication clicked:', medicationId);
     
     if (this.selectedMedicationId === medicationId) {
       // Deselect if already selected
@@ -132,10 +129,8 @@ export class PosologyComponent implements OnInit {
       next: (response) => {
         medDosage.dosageInfo = response;
         medDosage.loading = false;
-        console.log('[Posology] Loaded dosage info for CNK', medDosage.cnk, response);
       },
       error: (err) => {
-        console.error('[Posology] Error loading dosage info:', err);
         medDosage.error = 'Failed to load dosage information';
         medDosage.loading = false;
       }
@@ -162,7 +157,6 @@ export class PosologyComponent implements OnInit {
     
     if (!medication) return;
     
-    console.log('[Posology] Opening notes for medication:', medication);
     this.openNotes.emit({ 
       medication: medication, 
       dosageInfo: dosageData?.dosageInfo || null
@@ -170,7 +164,6 @@ export class PosologyComponent implements OnInit {
   }
 
   openGeneralNotesModal() {
-    console.log('[Posology] Opening notes for general note (no medication)');
     this.openNotes.emit({ 
       medication: null as any, 
       dosageInfo: null

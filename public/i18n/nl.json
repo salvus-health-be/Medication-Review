@@ -41,7 +41,8 @@
     "save_progress": "Voortgang opslaan",
     "notes_overview": "Notitieoverzicht",
     "contraindications": "Contra-indicaties",
-    "add_contraindication": "Contra-indicatie toevoegen"
+    "add_contraindication": "Contra-indicatie toevoegen",
+    "beta_warning": "BETA - Controleer gegevens"
   },
   "disclaimer": {
     "title": "Belangrijke Mededeling",

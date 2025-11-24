@@ -37,10 +37,8 @@ export class ReviewNotesService {
       next: (notes) => {
         this.notesSubject.next(notes);
         this.notesCount$.next(notes.length);
-        console.log('[ReviewNotesService] Loaded notes:', notes);
       },
       error: (error) => {
-        console.error('[ReviewNotesService] Error loading notes:', error);
       }
     });
   }
@@ -61,12 +59,10 @@ export class ReviewNotesService {
           const updatedNotes = [...currentNotes, newNote];
           this.notesSubject.next(updatedNotes);
           this.notesCount$.next(updatedNotes.length);
-          console.log('[ReviewNotesService] Added note:', newNote);
           observer.next(newNote);
           observer.complete();
         },
         error: (error) => {
-          console.error('[ReviewNotesService] Error adding note:', error);
           observer.error(error);
         }
       });
@@ -86,12 +82,10 @@ export class ReviewNotesService {
             currentNotes[index] = updatedNote;
             this.notesSubject.next([...currentNotes]);
           }
-          console.log('[ReviewNotesService] Updated note:', updatedNote);
           observer.next(updatedNote);
           observer.complete();
         },
         error: (error) => {
-          console.error('[ReviewNotesService] Error updating note:', error);
           observer.error(error);
         }
       });
@@ -109,12 +103,10 @@ export class ReviewNotesService {
           const updatedNotes = currentNotes.filter(n => n.rowKey !== noteId);
           this.notesSubject.next(updatedNotes);
           this.notesCount$.next(updatedNotes.length);
-          console.log('[ReviewNotesService] Deleted note:', noteId);
           observer.next();
           observer.complete();
         },
         error: (error) => {
-          console.error('[ReviewNotesService] Error deleting note:', error);
           observer.error(error);
         }
       });

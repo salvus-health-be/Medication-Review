@@ -44,13 +44,11 @@ export class InteractionNotesModalComponent {
 
   onAddToAnamnesis() {
     if (!this.noteText.trim()) {
-      console.warn('[InteractionNotesModal] Note text is empty');
       return;
     }
 
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.error('[InteractionNotesModal] No review ID found');
       return;
     }
 
@@ -65,16 +63,12 @@ export class InteractionNotesModalComponent {
       communicateToDoctor: this.addToGpReport
     };
 
-    console.log('[InteractionNotesModal] Adding to anamnesis:', noteData);
-
     this.reviewNotesService.addNote(reviewId, noteData).subscribe({
       next: (note) => {
-        console.log('[InteractionNotesModal] Successfully added note:', note);
         this.close.emit();
         this.resetForm();
       },
       error: (error) => {
-        console.error('[InteractionNotesModal] Error adding note:', error);
         this.isSubmitting = false;
       }
     });
@@ -96,9 +90,9 @@ export class InteractionNotesModalComponent {
 
   getInteractionTitle(): string {
     if (this.interactionType === 'drug-drug') {
-      return `${this.interaction.leftMedication} ↔ ${this.interaction.rightMedication}`;
+      return `${this.interaction.leftMedication} â†” ${this.interaction.rightMedication}`;
     } else {
-      return `${this.interaction.medication} ↔ ${this.interaction.food}`;
+      return `${this.interaction.medication} â†” ${this.interaction.food}`;
     }
   }
 

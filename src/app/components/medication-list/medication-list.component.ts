@@ -50,39 +50,41 @@ export class MedicationListComponent implements OnInit {
     }
 
     this.isLoading = true;
-    console.log('[MedicationList] === LOADING MEDICATIONS ===');
-    console.log('[MedicationList] medicationReviewId:', medicationReviewId);
     
     this.apiService.getMedications(medicationReviewId).subscribe({
       next: (medications) => {
-        console.log('[MedicationList] Received medications from backend:', JSON.stringify(medications, null, 2));
+        console.log('MedicationListComponent loadMedications - raw API response:', medications);
         
-        this.medications = medications.map(med => ({
-          medicationId: med.medicationId,
-          name: med.name || '',
-          dosage: med.dosageMg ? `${med.dosageMg}mg` : '',
-          route: med.routeOfAdministration || '',
-          cnk: med.cnk ?? null,
-          vmp: med.vmp ?? null,
-          packageSize: med.packageSize ?? null,
-          indication: med.indication ?? null,
-          asNeeded: med.asNeeded ?? false,
-          specialFrequency: med.specialFrequency ?? null,
-          specialDescription: med.specialDescription ?? null,
-          unitsBeforeBreakfast: med.unitsBeforeBreakfast ?? null,
-          unitsDuringBreakfast: med.unitsDuringBreakfast ?? null,
-          unitsBeforeLunch: med.unitsBeforeLunch ?? null,
-          unitsDuringLunch: med.unitsDuringLunch ?? null,
-          unitsBeforeDinner: med.unitsBeforeDinner ?? null,
-          unitsDuringDinner: med.unitsDuringDinner ?? null,
-          unitsAtBedtime: med.unitsAtBedtime ?? null
-        }));
+        this.medications = medications.map(med => {
+          console.log(`Mapping medication ${med.name}: activeIngredient =`, med.activeIngredient);
+          return {
+            medicationId: med.medicationId,
+            name: med.name || '',
+            dosage: med.dosageMg ? `${med.dosageMg}mg` : '',
+            route: med.routeOfAdministration || '',
+            cnk: med.cnk ?? null,
+            vmp: med.vmp ?? null,
+            packageSize: med.packageSize ?? null,
+            activeIngredient: med.activeIngredient ?? null,
+            indication: med.indication ?? null,
+            asNeeded: med.asNeeded ?? false,
+            specialFrequency: med.specialFrequency ?? null,
+            specialDescription: med.specialDescription ?? null,
+            unitsBeforeBreakfast: med.unitsBeforeBreakfast ?? null,
+            unitsDuringBreakfast: med.unitsDuringBreakfast ?? null,
+            unitsBeforeLunch: med.unitsBeforeLunch ?? null,
+            unitsDuringLunch: med.unitsDuringLunch ?? null,
+            unitsBeforeDinner: med.unitsBeforeDinner ?? null,
+            unitsDuringDinner: med.unitsDuringDinner ?? null,
+            unitsAtBedtime: med.unitsAtBedtime ?? null
+          };
+        });
         
-        console.log('[MedicationList] Mapped medications for display:', JSON.stringify(this.medications, null, 2));
+        console.log('MedicationListComponent final medications array:', this.medications);
+        
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('[MedicationList] Failed to load:', error);
         this.medications = [];
         this.isLoading = false;
       }
@@ -90,7 +92,6 @@ export class MedicationListComponent implements OnInit {
   }
 
   importMedications() {
-    console.log('Import medications clicked');
     // Create a hidden file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -99,12 +100,9 @@ export class MedicationListComponent implements OnInit {
     
     fileInput.onchange = (event: any) => {
       const file = event.target.files[0];
-      console.log('[MedicationList] file input onchange triggered. File present?', !!file);
       if (file) {
-        console.log('[MedicationList] Selected file:', { name: file.name, size: file.size, type: file.type });
         this.handleCsvImport(file);
       } else {
-        console.warn('[MedicationList] No file selected in file input');
       }
       // Clean up
       try {
@@ -119,31 +117,24 @@ export class MedicationListComponent implements OnInit {
   }
 
   private handleCsvImport(file: File) {
-    console.log('[MedicationList] Importing CSV file:', file.name, { size: file.size, type: file.type });
 
     const reader = new FileReader();
     reader.onload = (e: any) => {
       const csvContent = e.target.result;
       // Log the first few hundred characters to help debug format issues
-      console.log('[MedicationList] CSV file first 1000 chars:\n', String(csvContent).slice(0, 1000));
 
       const lines = String(csvContent).split(/\r?\n/).slice(0, 20);
-      console.log('[MedicationList] First 20 lines of CSV:', lines);
 
       const medications = this.parseCsvContent(csvContent);
-      console.log('[MedicationList] Parsed medications count:', medications.length);
-      console.log('[MedicationList] Parsed medications array:', medications);
 
       if (medications.length > 0) {
         this.saveParsedMedications(medications);
       } else {
-        console.warn('[MedicationList] No medications found after parsing the CSV file.');
         alert('No medications found in the CSV file. Please check the file format or try a different export.');
       }
     };
 
     reader.onerror = (error) => {
-      console.error('[MedicationList] Error reading file:', error);
       alert('Failed to read the CSV file. Please try again.');
     };
 
@@ -155,10 +146,8 @@ export class MedicationListComponent implements OnInit {
     const lines = String(csvContent).replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
     const medications: Partial<Medication>[] = [];
     
-    console.log('[MedicationList] Starting CSV parse. Total lines:', lines.length);
     // Log a sample of lines to help diagnose structure
     for (let li = 0; li < Math.min(15, lines.length); li++) {
-      console.log(`[MedicationList] line[${li}]:`, lines[li]);
     }
 
     // Start at row 11 (index 10) - this is where medications begin
@@ -167,12 +156,9 @@ export class MedicationListComponent implements OnInit {
     for (let i = 12; i < lines.length; i++) {
       const columns = lines[i].split(';');
       const columnA = columns[0]?.trim() || '';
-      
-      console.log(`[MedicationList] Row ${i + 1}: Column A = "${columnA}"`);
-      
+
       // Skip empty rows
       if (!columnA) {
-        console.log(`[MedicationList] Row ${i + 1}: Empty, skipping`);
         continue;
       }
       
@@ -182,14 +168,12 @@ export class MedicationListComponent implements OnInit {
           columnA.toLowerCase().includes('opmerking') ||
           columnA.toLowerCase().startsWith('koel bewaren') ||
           columnA.toLowerCase().startsWith('bewaren')) {
-        console.log(`[MedicationList] Row ${i + 1}: Continuation/instruction line, skipping`);
         continue;
       }
       
       // Check for "Indien nodig" section marker
       if (columnA.toLowerCase().includes('indien nodig')) {
         isAsNeeded = true;
-        console.log(`[MedicationList] Row ${i + 1}: Found "Indien nodig" section marker. All subsequent medications will be marked as needed.`);
         continue;
       }
       
@@ -197,13 +181,10 @@ export class MedicationListComponent implements OnInit {
       const medication = this.parseMedicationRow(columns, isAsNeeded, i + 1);
       if (medication) {
         medications.push(medication);
-        console.log(`[MedicationList] Row ${i + 1}: Parsed medication "${medication.name}"`);
       } else {
-        console.log(`[MedicationList] Row ${i + 1}: Could not parse as medication`);
       }
     }
     
-    console.log('[MedicationList] Parsing complete. Total medications found:', medications.length);
     return medications;
   }
 
@@ -214,10 +195,7 @@ export class MedicationListComponent implements OnInit {
     if (!medicationName || medicationName === '') {
       return null;
     }
-    
-    console.log(`[MedicationList] Row ${rowNumber}: Parsing medication "${medicationName}"`);
-    console.log(`[MedicationList] Row ${rowNumber}: Total columns: ${columns.length}`);
-    
+
     // Helper to parse numbers from various formats
     const parseNumber = (value: string | undefined): number | null => {
       if (!value || value.trim() === '') return null;
@@ -225,15 +203,15 @@ export class MedicationListComponent implements OnInit {
 
       // Map common Unicode vulgar fraction characters to decimals
       const unicodeFractions: Record<string, number> = {
-        '¼': 0.25,
-        '½': 0.5,
-        '¾': 0.75,
-        '⅓': 1 / 3,
-        '⅔': 2 / 3,
-        '⅛': 1 / 8,
-        '⅜': 3 / 8,
-        '⅝': 5 / 8,
-        '⅞': 7 / 8
+        'Â¼': 0.25,
+        'Â½': 0.5,
+        'Â¾': 0.75,
+        'â…“': 1 / 3,
+        'â…”': 2 / 3,
+        'â…›': 1 / 8,
+        'â…œ': 3 / 8,
+        'â…': 5 / 8,
+        'â…ž': 7 / 8
       };
 
       // If the string is exactly a unicode fraction or a known replacement char
@@ -241,9 +219,9 @@ export class MedicationListComponent implements OnInit {
         return unicodeFractions[cleaned];
       }
 
-      // Handle mixed numbers with unicode fraction like '1½' or '1 1/2'
-      // e.g., '1½' => 1 + 0.5
-      const mixedUnicodeMatch = cleaned.match(/^(\d+)\s*([¼½¾⅓⅔⅛⅜⅝⅞])$/);
+      // Handle mixed numbers with unicode fraction like '1Â½' or '1 1/2'
+      // e.g., '1Â½' => 1 + 0.5
+      const mixedUnicodeMatch = cleaned.match(/^(\d+)\s*([Â¼Â½Â¾â…“â…”â…›â…œâ…â…ž])$/);
       if (mixedUnicodeMatch) {
         const whole = parseInt(mixedUnicodeMatch[1], 10);
         const frac = unicodeFractions[mixedUnicodeMatch[2]] || 0;
@@ -268,7 +246,7 @@ export class MedicationListComponent implements OnInit {
         return num / den;
       }
 
-      // Replace any unicode fraction characters inside the string (e.g. '1½' where regex didn't match)
+      // Replace any unicode fraction characters inside the string (e.g. '1Â½' where regex didn't match)
       let replaced = cleaned;
       Object.keys(unicodeFractions).forEach(u => {
         if (replaced.indexOf(u) !== -1) {
@@ -341,14 +319,7 @@ export class MedicationListComponent implements OnInit {
     if (indication.includes('Gebruiksaanwijzing:')) {
       indication = indication.split('Gebruiksaanwijzing:')[0].trim();
     }
-    
-    console.log(`[MedicationList] Row ${rowNumber}: Dosing - Before Breakfast: ${beforeBreakfast}, During Breakfast: ${duringBreakfast} (base: ${duringBreakfastBase}, after: ${afterBreakfast})`);
-    console.log(`[MedicationList] Row ${rowNumber}: Before Lunch: ${beforeLunch}, During Lunch: ${duringLunch} (base: ${duringLunchBase}, after: ${afterLunch})`);
-    console.log(`[MedicationList] Row ${rowNumber}: Before Dinner: ${beforeDinner}, During Dinner: ${duringDinner} (base: ${duringDinnerBase}, after: ${afterDinner})`);
-    console.log(`[MedicationList] Row ${rowNumber}: At Bedtime: ${atBedtime}`);
-    console.log(`[MedicationList] Row ${rowNumber}: Indication: "${indication}"`);
-    console.log(`[MedicationList] Row ${rowNumber}: As Needed: ${asNeeded}`);
-    
+
     return {
       name: medicationName,
       indication: indication || undefined,
@@ -364,12 +335,10 @@ export class MedicationListComponent implements OnInit {
   }  private saveParsedMedications(medications: Partial<Medication>[]) {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[MedicationList] No medication review ID');
       alert('Please create or select a medication review first.');
       return;
     }
     
-    console.log('[MedicationList] Starting CNK matching for', medications.length, 'medications');
     this.isLoading = true;
     
     // Step 1: Search for CNK matches for all medications in parallel
@@ -377,7 +346,6 @@ export class MedicationListComponent implements OnInit {
       this.apiService.searchMedications({ searchTerm: med.name || '', maxResults: 10 }).pipe(
         map(response => ({ medication: med, matches: response.results })),
         catchError(error => {
-          console.error('[MedicationList] CNK search failed for:', med.name, error);
           return of({ medication: med, matches: [] });
         })
       )
@@ -385,11 +353,9 @@ export class MedicationListComponent implements OnInit {
     
     forkJoin(searchObservables).subscribe({
       next: (searchResults) => {
-        console.log('[MedicationList] CNK search complete. Results:', searchResults);
         this.processCnkMatches(searchResults);
       },
       error: (error) => {
-        console.error('[MedicationList] CNK matching failed:', error);
         this.isLoading = false;
         alert('Failed to match medications to CNK codes. Please try again.');
       }
@@ -404,22 +370,18 @@ export class MedicationListComponent implements OnInit {
       
       if (matches.length === 0) {
         // No matches found - will save without CNK
-        console.log('[MedicationList] No CNK match for:', medication.name);
         this.pendingMedicationsToSave.push(medication);
       } else if (matches.length === 1) {
         // Single match - auto-select it
-        console.log('[MedicationList] Auto-matching single CNK for:', medication.name, '→', matches[0].cnk);
         this.pendingMedicationsToSave.push({ ...medication, searchResult: matches[0] });
       } else {
         // Multiple matches - need user selection
         const bestMatch = this.findBestMatch(medication.name || '', matches);
         if (bestMatch && this.isCloseMatch(medication.name || '', bestMatch.benaming)) {
           // If there's a very close match (exact or near-exact), auto-select it
-          console.log('[MedicationList] Auto-matching best CNK for:', medication.name, '→', bestMatch.cnk);
           this.pendingMedicationsToSave.push({ ...medication, searchResult: bestMatch });
         } else {
           // Ambiguous - need user selection
-          console.log('[MedicationList] Multiple CNK matches for:', medication.name, '- will prompt user');
           this.pendingMedicationsToSave.push({ ...medication, needsUserSelection: true, matches } as any);
         }
       }
@@ -494,7 +456,6 @@ export class MedicationListComponent implements OnInit {
   }
 
   onCnkSelected(searchResult: MedicationSearchResult) {
-    console.log('[MedicationList] User selected CNK:', searchResult.cnk, 'for medication:', this.currentMedicationForCnkSelection?.medicationName);
     
     // Update the pending medication with the selected CNK
     const med = this.pendingMedicationsToSave[this.currentMedicationIndex] as any;
@@ -509,7 +470,6 @@ export class MedicationListComponent implements OnInit {
   }
 
   onCnkSkipped() {
-    console.log('[MedicationList] User skipped CNK selection for:', this.currentMedicationForCnkSelection?.medicationName);
     
     // Keep the medication without CNK
     const med = this.pendingMedicationsToSave[this.currentMedicationIndex] as any;
@@ -523,7 +483,6 @@ export class MedicationListComponent implements OnInit {
   }
 
   onCnkSelectionCancelled() {
-    console.log('[MedicationList] User cancelled entire import');
     this.showCnkSelectionModal = false;
     this.currentMedicationForCnkSelection = null;
     this.pendingMedicationsToSave = [];
@@ -533,17 +492,14 @@ export class MedicationListComponent implements OnInit {
   private saveAllMedicationsWithCnk() {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[MedicationList] No medication review ID');
       return;
     }
     
-    console.log('[MedicationList] Saving', this.pendingMedicationsToSave.length, 'medications with CNK data to backend');
     this.isLoading = true;
     
     let savedCount = 0;
     const saveNext = (index: number) => {
       if (index >= this.pendingMedicationsToSave.length) {
-        console.log('[MedicationList] All medications saved:', savedCount);
         this.isLoading = false;
         alert(`Successfully imported ${savedCount} medication(s).`);
         this.loadMedications();
@@ -573,15 +529,12 @@ export class MedicationListComponent implements OnInit {
         payload.packageSize = med.searchResult.verpakking || undefined;
       }
       
-      console.log('[MedicationList] Saving medication index', index, 'payload:', payload);
       this.apiService.addMedication(medicationReviewId, payload).subscribe({
         next: (response) => {
-          console.log('[MedicationList] Medication saved:', med.name, 'response:', response);
           savedCount++;
           saveNext(index + 1);
         },
         error: (error) => {
-          console.error('[MedicationList] Failed to save medication:', med.name, error);
           // Continue with next medication
           saveNext(index + 1);
         }
@@ -604,15 +557,11 @@ export class MedicationListComponent implements OnInit {
   onMedicationSelected(medication: MedicationSearchResult) {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[MedicationList] No medication review ID');
       return;
     }
 
     // Check if we're editing an existing medication
     if (this.editingMedication) {
-      console.log('[MedicationList] Replacing medication:', this.editingMedication.name, 'with:', medication.benaming);
-      console.log('[MedicationList] New package size (verpakking):', medication.verpakking);
-      console.log('[MedicationList] Old package size:', this.editingMedication.packageSize);
 
       // Update the existing medication while preserving intake and indication
       this.apiService.updateMedication(
@@ -637,21 +586,17 @@ export class MedicationListComponent implements OnInit {
         }
       ).subscribe({
         next: (response) => {
-          console.log('[MedicationList] Medication updated:', response);
           this.showSearchModal = false;
           this.editingMedication = null;
           this.loadMedications();
           this.stateService.notifyMedicationsChanged();
         },
         error: (error) => {
-          console.error('[MedicationList] Failed to update medication:', error);
           alert('Failed to update medication. Please try again.');
         }
       });
     } else {
       // Adding new medication
-      console.log('[MedicationList] Adding medication:', medication);
-      console.log('[MedicationList] Package size (verpakking):', medication.verpakking);
 
       this.apiService.addMedication(
         medicationReviewId,
@@ -663,7 +608,6 @@ export class MedicationListComponent implements OnInit {
         }
       ).subscribe({
         next: (response) => {
-          console.log('[MedicationList] Medication added:', response);
           this.showSearchModal = false;
           this.loadMedications();
           this.stateService.notifyMedicationsChanged();
@@ -674,7 +618,6 @@ export class MedicationListComponent implements OnInit {
           }, 100);
         },
         error: (error) => {
-          console.error('[MedicationList] Failed to add medication:', error);
           alert('Failed to add medication. Please try again.');
         }
       });
@@ -682,14 +625,12 @@ export class MedicationListComponent implements OnInit {
   }
 
   onMedicationDeleted(medicationId: string) {
-    console.log('[MedicationList] Medication deleted:', medicationId);
     // Remove from local array
     this.medications = this.medications.filter(med => med.medicationId !== medicationId);
     this.stateService.notifyMedicationsChanged();
   }
 
   onEditRequested(medication: Medication) {
-    console.log('[MedicationList] Edit requested for medication:', medication.name);
     this.editingMedication = medication;
     this.showSearchModal = true;
   }
@@ -709,19 +650,16 @@ export class MedicationListComponent implements OnInit {
 
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[MedicationList] No medication review ID');
       alert('Please create or select a medication review first.');
       return;
     }
 
-    console.log('[MedicationList] Deleting all medications. Count:', this.medications.length);
     // Delete sequentially to avoid hitting backend limits
     const medsToDelete = [...this.medications];
     let deletedCount = 0;
 
     const deleteNext = (index: number) => {
       if (index >= medsToDelete.length) {
-        console.log('[MedicationList] Completed deleting medications. Deleted count:', deletedCount);
         alert(`Deleted ${deletedCount} medication(s).`);
         this.loadMedications();
         this.stateService.notifyMedicationsChanged();
@@ -730,19 +668,16 @@ export class MedicationListComponent implements OnInit {
 
       const med = medsToDelete[index];
       if (!med.medicationId) {
-        console.warn('[MedicationList] Skipping medication with no medicationId:', med);
         deleteNext(index + 1);
         return;
       }
 
-      console.log('[MedicationList] Deleting medication:', med.medicationId, med.name);
       this.apiService.deleteMedication(medicationReviewId, med.medicationId).subscribe({
         next: () => {
           deletedCount++;
           deleteNext(index + 1);
         },
         error: (err) => {
-          console.error('[MedicationList] Failed to delete medication:', med.medicationId, err);
           // continue with next
           deleteNext(index + 1);
         }
@@ -753,7 +688,6 @@ export class MedicationListComponent implements OnInit {
   }
 
   onDeleteAllCancelled() {
-    console.log('[MedicationList] deleteAllMedications cancelled by user');
     this.showDeleteAllModal = false;
   }
 
@@ -774,7 +708,6 @@ export class MedicationListComponent implements OnInit {
           if (lastItem) {
             // Scroll the item into view smoothly
             lastItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            console.log('[MedicationList] Scrolled to new medication');
           }
         }
       }, 50);

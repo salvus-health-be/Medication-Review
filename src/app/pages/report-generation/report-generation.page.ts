@@ -159,7 +159,7 @@ export class ReportGenerationPage implements OnInit {
     const lang = this.transloco.getActiveLang();
     
     // Get default salutation with patient name
-    const patientName = this.review?.firstNameAtTimeOfReview || 'patiënt';
+    const patientName = this.review?.firstNameAtTimeOfReview || 'patiÃ«nt';
     let salutation = `Beste ${patientName},`;
     if (lang === 'fr') salutation = `Cher(e) ${patientName},`;
     else if (lang === 'en') salutation = `Dear ${patientName},`;
@@ -169,7 +169,7 @@ export class ReportGenerationPage implements OnInit {
     if (lang === 'nl') {
       introText = 'Hierbij ontvangt u een samenvatting van ons gesprek over uw medicatie. Dit document bevat belangrijke informatie en aanbevelingen om u te helpen het beste uit uw medicatie te halen.';
     } else if (lang === 'fr') {
-      introText = 'Voici un résumé de notre conversation sur vos médicaments. Ce document contient des informations importantes et des recommandations pour vous aider à tirer le meilleur parti de vos médicaments.';
+      introText = 'Voici un rÃ©sumÃ© de notre conversation sur vos mÃ©dicaments. Ce document contient des informations importantes et des recommandations pour vous aider Ã  tirer le meilleur parti de vos mÃ©dicaments.';
     } else {
       introText = 'This is a summary of our conversation about your medication. This document contains important information and recommendations to help you get the most out of your treatment.';
     }
@@ -221,7 +221,7 @@ export class ReportGenerationPage implements OnInit {
     if (lang === 'nl') {
       closingText = 'Heeft u vragen over deze informatie? Neem gerust contact met ons op. Wij staan altijd klaar om u te helpen.';
     } else if (lang === 'fr') {
-      closingText = 'Avez-vous des questions sur ces informations ? N\'hésitez pas à nous contacter. Nous sommes toujours là pour vous aider.';
+      closingText = 'Avez-vous des questions sur ces informations ? N\'hÃ©sitez pas Ã  nous contacter. Nous sommes toujours lÃ  pour vous aider.';
     } else {
       closingText = 'Do you have any questions about this information? Please feel free to contact us. We are always here to help.';
     }
@@ -248,15 +248,15 @@ export class ReportGenerationPage implements OnInit {
     
     // Get default salutation
     let salutation = 'Geachte collega,';
-    if (lang === 'fr') salutation = 'Cher collègue,';
+    if (lang === 'fr') salutation = 'Cher collÃ¨gue,';
     else if (lang === 'en') salutation = 'Dear Colleague,';
 
     // Get default intro text
     let introText = '';
     if (lang === 'nl') {
-      introText = 'Hierbij deel ik de bevindingen van een recent uitgevoerd medicatiereview. De volgende observaties kunnen relevant zijn voor de patiëntenzorg.';
+      introText = 'Hierbij deel ik de bevindingen van een recent uitgevoerd medicatiereview. De volgende observaties kunnen relevant zijn voor de patiÃ«ntenzorg.';
     } else if (lang === 'fr') {
-      introText = 'Je partage avec vous les résultats d\'un examen de médication récemment effectué. Les observations suivantes peuvent être pertinentes pour les soins aux patients.';
+      introText = 'Je partage avec vous les rÃ©sultats d\'un examen de mÃ©dication rÃ©cemment effectuÃ©. Les observations suivantes peuvent Ãªtre pertinentes pour les soins aux patients.';
     } else {
       introText = 'I am sharing the findings from a recent medication review. The following observations may be relevant to patient care.';
     }
@@ -308,7 +308,7 @@ export class ReportGenerationPage implements OnInit {
     if (lang === 'nl') {
       closingText = 'Voor verdere vragen of overleg sta ik graag tot uw beschikking.';
     } else if (lang === 'fr') {
-      closingText = 'Je reste à votre disposition pour toute question ou discussion complémentaire.';
+      closingText = 'Je reste Ã  votre disposition pour toute question ou discussion complÃ©mentaire.';
     } else {
       closingText = 'I remain available for any questions or further discussion.';
     }
@@ -338,7 +338,7 @@ export class ReportGenerationPage implements OnInit {
     if (lang === 'nl') {
       internalNotice = 'Interne farmaceutische samenvatting met volledige reviewgegevens.';
     } else if (lang === 'fr') {
-      internalNotice = 'Résumé pharmaceutique interne avec données complètes de l\'examen.';
+      internalNotice = 'RÃ©sumÃ© pharmaceutique interne avec donnÃ©es complÃ¨tes de l\'examen.';
     } else {
       internalNotice = 'Internal pharmaceutical summary with complete review data.';
     }
@@ -502,7 +502,6 @@ export class ReportGenerationPage implements OnInit {
         this.isGenerating = false;
       });
     } catch (error) {
-      console.error('Failed to generate PDF:', error);
       this.isGenerating = false;
     }
   }
@@ -995,11 +994,7 @@ export class ReportGenerationPage implements OnInit {
       const groupedNotes = new Map<string, string[]>();
       const notesWithoutContext: string[] = [];
 
-      console.log('=== Pharmacy Notes Grouping Debug ===');
-      console.log('Total notes:', this.pharmacyContent.notes.length);
-      
       this.pharmacyContent.notes.forEach(note => {
-        console.log('Note:', { context: note.context, text: note.text });
         if (note.context) {
           if (!groupedNotes.has(note.context)) {
             groupedNotes.set(note.context, []);
@@ -1010,10 +1005,7 @@ export class ReportGenerationPage implements OnInit {
         }
       });
       
-      console.log('Notes without context:', notesWithoutContext.length);
-      console.log('Grouped medications:', groupedNotes.size);
       groupedNotes.forEach((notes, med) => {
-        console.log(`  ${med}: ${notes.length} notes`);
       });
 
       // Build list items with proper nesting
@@ -1037,7 +1029,6 @@ export class ReportGenerationPage implements OnInit {
           });
         } else {
           // Multiple notes: create nested structure with proper parent
-          console.log(`Formatting ${notes.length} notes for ${medicationName}`);
           
           listItems.push([
             medicationName + ':',
@@ -1051,8 +1042,6 @@ export class ReportGenerationPage implements OnInit {
           ]);
         }
       });
-
-      console.log('Total list items:', listItems.length);
 
       content.push({
         ul: listItems,

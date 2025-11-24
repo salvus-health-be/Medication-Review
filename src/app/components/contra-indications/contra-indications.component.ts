@@ -41,7 +41,6 @@ export class ContraIndicationsComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('[ContraIndications] Failed to load:', error);
         this.contraIndications = [];
         this.isLoading = false;
       }
@@ -76,7 +75,6 @@ export class ContraIndicationsComponent implements OnInit {
         this.stateService.notifyContraindicationsChanged();
       },
       error: (error) => {
-        console.error('[ContraIndications] Delete failed:', error);
         alert('Failed to delete contraindication. Please try again.');
       }
     });

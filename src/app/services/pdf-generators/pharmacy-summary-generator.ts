@@ -278,8 +278,6 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     };
   }
 
-
-
   private getPharmacyPart1Actions(questionAnswers: QuestionAnswer[]): Array<{ label: string, value: string }> {
     const actions: Array<{ label: string, value: string }> = [];
     
@@ -314,8 +312,6 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     return actions;
   }
 
-
-
   private groupNotesByMedication(notes: ReviewNote[], medications: Medication[], questionAnswers: QuestionAnswer[]): {
     general: ReviewNote[],
     byMedication: Array<{ medicationName: string, notes: ReviewNote[] }>
@@ -340,8 +336,6 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
 
     return { general, byMedication };
   }
-
-
 
   private formatCategory(category: string): string {
     const categoryMap: Record<string, string> = {

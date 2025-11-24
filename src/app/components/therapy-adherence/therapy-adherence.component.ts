@@ -29,7 +29,7 @@ interface DispensingMomentWithUnits {
   date: Date;
   amount: number;          // Number of packages
   unitsPerPackage: number; // Units in one package
-  totalUnits: number;      // amount × unitsPerPackage
+  totalUnits: number;      // amount Ã— unitsPerPackage
   dateString: string;
   source?: 'csv' | 'manual'; // Source of dispensing moment
 }
@@ -76,17 +76,14 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   ) {}
 
   ngOnInit() {
-    console.log('[TherapyAdherence] ngOnInit - Component initialized');
     this.refreshData();
   }
 
   ngAfterViewInit() {
     // Charts will be created after data is loaded
-    console.log('[TherapyAdherence] ngAfterViewInit - View initialized');
   }
 
   ngOnDestroy() {
-    console.log('[TherapyAdherence] ngOnDestroy - Cleaning up charts');
     // Clean up all charts
     this.charts.forEach(chart => chart.destroy());
     this.charts.clear();
@@ -94,7 +91,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
   // Public method to refresh all data and charts
   refreshData() {
-    console.log('[TherapyAdherence] refreshData - Refreshing medications and dispensing data');
     this.loadMedications();
     this.checkExistingFile();
   }
@@ -106,7 +102,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     this.apiService.getMedications(reviewId).subscribe({
       next: (medications) => {
         this.medications = medications;
-        console.log('Loaded medications:', this.medications);
         
         // If we already have dispensing data, match it
         if (this.dispensingHistory) {
@@ -114,7 +109,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         }
       },
       error: (err) => {
-        console.error('Error loading medications:', err);
       }
     });
   }
@@ -131,10 +125,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     
     this.apiService.queryDispensingHistory(apbNumber, reviewId).subscribe({
       next: (response) => {
-        console.log('[TherapyAdherence] === DISPENSING HISTORY FOUND ===');
-        console.log('[TherapyAdherence] Full response:', JSON.stringify(response, null, 2));
-        console.log('[TherapyAdherence] Has dispensingData?', 'dispensingData' in response);
-        console.log('[TherapyAdherence] Response keys:', Object.keys(response));
         
         this.dispensingHistory = response;
         this.uploadSuccess = true;
@@ -142,30 +132,23 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         
         // Check if we have the new format with dispensingData
         if (response.dispensingData && Array.isArray(response.dispensingData)) {
-          console.log('[TherapyAdherence] Dispensing data array length:', response.dispensingData.length);
           // Match with medications
           this.matchDispensingData();
         } else {
-          console.error('[TherapyAdherence] Backend returned old format without dispensingData array');
           this.queryError = 'Backend API needs to be updated to return dispensing data in the new format';
         }
       },
       error: (err) => {
-        console.log('[TherapyAdherence] === DISPENSING HISTORY CHECK ERROR ===');
-        console.log('[TherapyAdherence] Error status:', err.status);
-        console.log('[TherapyAdherence] Error message:', err.error?.error || err.message);
         
         this.loading = false;
         
         // 404 means no file uploaded yet - show upload form
         if (err.status === 404) {
-          console.log('[TherapyAdherence] No file found (404) - showing upload form');
           this.uploadSuccess = false;
           this.dispensingHistory = null;
           this.medicationsWithData = [];
         } else {
           // Other errors - still try to show upload form but display error
-          console.error('[TherapyAdherence] Error checking existing file:', err);
           this.uploadSuccess = false;
           this.queryError = err.error?.error || 'Failed to load dispensing history';
         }
@@ -175,22 +158,14 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
   matchDispensingData() {
     if (!this.dispensingHistory || this.medications.length === 0) {
-      console.log('Cannot match data:', {
-        hasHistory: !!this.dispensingHistory,
-        medicationCount: this.medications.length
-      });
+      
       return;
     }
 
     if (!this.dispensingHistory.dispensingData) {
-      console.error('Dispensing history does not have dispensingData array');
       return;
     }
 
-    console.log('Matching dispensing data with medications...');
-    console.log('Available CNKs in dispensing data:', this.dispensingHistory.dispensingData.map(d => d.cnk));
-    console.log('Medication CNKs:', this.medications.map(m => ({ name: m.name, cnk: m.cnk })));
-    
     this.medicationsWithData = this.medications.map(medication => {
       // Match by CNK code
       const cnkString = medication.cnk?.toString();
@@ -199,9 +174,7 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         : null;
       
       const chartId = `chart-${medication.medicationId}`;
-      
-      console.log(`Medication ${medication.name} (CNK: ${cnkString}):`, matchingData ? 'Found data' : 'No data');
-      
+
       return {
         medication,
         dispensingData: matchingData || null,
@@ -466,13 +439,11 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
     // Add 20% padding to the max value to prevent points from being above visible area
     this.maxStockValue = Math.ceil(maxStock * 1.2);
-    console.log('[TherapyAdherence] Maximum stock value across all medications:', this.maxStockValue);
   }
 
   createChart(item: MedicationWithDispensingData) {
     const canvas = document.getElementById(item.chartId) as HTMLCanvasElement;
     if (!canvas) {
-      console.warn(`Canvas not found for ${item.chartId}`);
       return;
     }
 
@@ -484,23 +455,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     
     // Get units per package from packageSize (now an integer)
     const unitsPerPackage = item.medication.packageSize ?? 0;
-    
-    console.log(`=== Chart for ${item.medication.name} ===`);
-    console.log('Package size:', item.medication.packageSize);
-    console.log('Units per package:', unitsPerPackage);
-    console.log('Daily usage:', dailyUsage, 'units');
-    console.log('Medication dosage:', {
-      unitsBeforeBreakfast: item.medication.unitsBeforeBreakfast,
-      unitsDuringBreakfast: item.medication.unitsDuringBreakfast,
-      unitsBeforeLunch: item.medication.unitsBeforeLunch,
-      unitsDuringLunch: item.medication.unitsDuringLunch,
-      unitsBeforeDinner: item.medication.unitsBeforeDinner,
-      unitsDuringDinner: item.medication.unitsDuringDinner,
-      unitsAtBedtime: item.medication.unitsAtBedtime
-    });
-    
+
     if (dailyUsage === 0 || unitsPerPackage === 0) {
-      console.warn(`Missing info for ${item.medication.name} (daily usage: ${dailyUsage}, units/package: ${unitsPerPackage}), using fallback scatter chart`);
       // Fall back to simple scatter plot
       this.createSimpleScatterChart(item);
       return;
@@ -516,22 +472,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       source: moment.source || 'csv' // Default to csv if not specified
     })).sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    console.log('Dispensing moments with units:', moments);
-
     // Generate stock timeline with status
     const stockTimeline = this.generateStockTimeline(moments, dailyUsage);
-    
-    console.log('Stock timeline points:', stockTimeline.length);
-    console.log('Sample timeline points (first 5):', stockTimeline.slice(0, 5).map(p => ({
-      date: this.formatDateForTooltip(p.x),
-      stock: p.y,
-      status: p.status
-    })));
-    console.log('Status distribution:', {
-      sufficient: stockTimeline.filter(p => p.status === 'sufficient').length,
-      depleted: stockTimeline.filter(p => p.status === 'depleted').length,
-      oversupply: stockTimeline.filter(p => p.status === 'oversupply').length
-    });
 
     // Create datasets for different statuses - only include points with matching status
     const allStockData: any[] = [];
@@ -560,14 +502,9 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       });
     });
 
-    console.log('[TherapyAdherence] Total stock data points:', allStockData.length);
-    console.log('[TherapyAdherence] Sample stock data (first 10):');
     allStockData.slice(0, 10).forEach((p, i) => {
-      console.log(`  [${i}] x: ${new Date(p.x).toISOString().split('T')[0]}, y: ${p.y}, status: ${p.status}`);
     });
-    console.log('[TherapyAdherence] Dispensing points:');
     dispensingPoints.forEach((p, i) => {
-      console.log(`  [${i}] x: ${new Date(p.x).toISOString().split('T')[0]}, y: ${p.y}, amount: ${p.amount}, totalUnits: ${p.totalUnits}`);
     });
 
     const config: ChartConfiguration<'line'> = {
@@ -761,19 +698,13 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     let currentStock = 0;
     let currentDate = new Date(firstDate.getTime()); // Clone the start date
 
-    console.log('[TherapyAdherence] === GENERATING STOCK TIMELINE ===');
-    console.log('[TherapyAdherence] Total dispensing moments:', moments.length);
-    console.log('[TherapyAdherence] Daily usage:', dailyUsage, 'units');
-    console.log('[TherapyAdherence] Dispensing dates:');
     normalizedMoments.forEach((m, idx) => {
-      console.log(`  [${idx}] ${m.dateString} → UTC normalized: ${m.normalizedDate.toISOString()} → timestamp: ${m.normalizedDate.getTime()} → units: ${m.totalUnits}`);
     });
 
     // Generate daily data points
     let dayCounter = 0;
     let lastDispensingDay = -1; // Track when we last received medication
     let oversupplyUntilDay = -1; // Track how many days the oversupply lasts
-    console.log('[TherapyAdherence] === STARTING DAILY ITERATION ===');
     
     while (currentDate <= extendedEndDate) {
       const currentDateKey = currentDate.getTime();
@@ -787,7 +718,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         if (normalizedMoments[i].normalizedDate.getTime() === currentDateKey) {
           totalUnitsDispensedToday += normalizedMoments[i].totalUnits;
           receivedDispensingToday = true;
-          console.log(`[TherapyAdherence] ✓ MATCH! Day ${dayCounter}: ${currentDate.toISOString().split('T')[0]} (${currentDateKey}) matches dispensing ${i}: ${normalizedMoments[i].totalUnits} units`);
         }
       }
       
@@ -804,10 +734,7 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
           const daysOfOversupply = Math.floor(stockBeforeDispensing / dailyUsage);
           oversupplyUntilDay = dayCounter + daysOfOversupply;
           
-          console.log(`[TherapyAdherence] 📦 DISPENSING on day ${dayCounter} (${currentDate.toISOString().split('T')[0]}): Added ${totalUnitsDispensedToday} units, stock ${stockBeforeDispensing} → ${currentStock}`);
-          console.log(`[TherapyAdherence] 🟣 OVERSUPPLY DETECTED: Had ${stockBeforeDispensing} units left = ${daysOfOversupply} days of supply. Oversupply until day ${oversupplyUntilDay}`);
         } else {
-          console.log(`[TherapyAdherence] 📦 DISPENSING on day ${dayCounter} (${currentDate.toISOString().split('T')[0]}): Added ${totalUnitsDispensedToday} units, stock ${stockBeforeDispensing} → ${currentStock}`);
         }
         
         lastDispensingDay = dayCounter;
@@ -819,19 +746,16 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       if (currentStock <= 0) {
         status = 'depleted';
         if (dayCounter % 50 === 0 || totalUnitsDispensedToday > 0) {
-          console.log(`[TherapyAdherence] 🔴 Day ${dayCounter}: DEPLETED (stock: ${currentStock})`);
         }
       } else if (dayCounter <= oversupplyUntilDay) {
         // Still in oversupply period - consuming medication from previous dispensing
         status = 'oversupply';
         if (dayCounter % 50 === 0 || totalUnitsDispensedToday > 0 || dayCounter === oversupplyUntilDay) {
-          console.log(`[TherapyAdherence] 🟣 Day ${dayCounter}: OVERSUPPLY - still using stock from previous dispensing (oversupply until day ${oversupplyUntilDay})`);
         }
       } else {
         // Normal/sufficient usage
         status = 'sufficient';
         if (dayCounter % 50 === 0 || totalUnitsDispensedToday > 0) {
-          console.log(`[TherapyAdherence] 🔵 Day ${dayCounter}: SUFFICIENT - normal usage (stock: ${currentStock})`);
         }
       }
 
@@ -844,7 +768,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       });
 
       if (dayCounter % 50 === 0 || totalUnitsDispensedToday > 0) {
-        console.log(`[TherapyAdherence] 📊 Day ${dayCounter} timeline point: date=${currentDate.toISOString().split('T')[0]}, stock=${displayStock}, status=${status}`);
       }
 
       // Deplete stock by daily usage at END of day (but don't go below 0)
@@ -854,7 +777,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       }
       
       if (dayCounter % 50 === 0 || totalUnitsDispensedToday > 0) {
-        console.log(`[TherapyAdherence] 💊 Day ${dayCounter} after usage: stock depleted by ${dailyUsage} → ${currentStock}`);
       }
 
       // Move to next day
@@ -862,18 +784,11 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       dayCounter++;
     }
 
-    console.log('[TherapyAdherence] Generated', timeline.length, 'timeline points');
-    
     // Log some sample timeline points to verify data
-    console.log('[TherapyAdherence] === TIMELINE SAMPLES ===');
-    console.log('[TherapyAdherence] First 10 points:');
     timeline.slice(0, 10).forEach((p, i) => {
-      console.log(`  Point ${i}: ${p.x.toISOString().split('T')[0]} - stock: ${p.y}, status: ${p.status}`);
     });
     
-    console.log('[TherapyAdherence] Points around dispensing 1 (day ~100):');
     timeline.slice(98, 103).forEach((p, i) => {
-      console.log(`  Point ${98 + i}: ${p.x.toISOString().split('T')[0]} - stock: ${p.y}, status: ${p.status}`);
     });
 
     return timeline;
@@ -1070,10 +985,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       return;
     }
 
-    console.log('[TherapyAdherence] === UPLOADING FILE ===');
-    console.log('[TherapyAdherence] File name:', this.selectedFile.name);
-    console.log('[TherapyAdherence] File size:', this.selectedFile.size);
-
     this.uploading = true;
     this.uploadSuccess = false;
     this.uploadError = null;
@@ -1081,8 +992,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
     this.apiService.uploadDispensingHistory(apbNumber, reviewId, this.selectedFile).subscribe({
       next: (response) => {
-        console.log('[TherapyAdherence] Upload successful:', response);
-        console.log('[TherapyAdherence] Blob URI:', response.blobUri);
         this.uploading = false;
         this.selectedFile = null;
         
@@ -1094,12 +1003,10 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         
         // Wait a moment for backend to update the MedicationReview record, then query
         setTimeout(() => {
-          console.log('[TherapyAdherence] Querying dispensing history after upload...');
           this.checkExistingFileAfterUpload();
         }, 1000);
       },
       error: (err) => {
-        console.error('[TherapyAdherence] Upload failed:', err);
         this.uploading = false;
         this.uploadSuccess = false;
         this.uploadError = err.error?.error || 'Failed to upload file';
@@ -1126,25 +1033,18 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     
     this.apiService.queryDispensingHistory(apbNumber, reviewId).subscribe({
       next: (response) => {
-        console.log('[TherapyAdherence] === DISPENSING HISTORY LOADED AFTER UPLOAD ===');
-        console.log('[TherapyAdherence] Full response:', JSON.stringify(response, null, 2));
         
         this.dispensingHistory = response;
         this.uploadSuccess = true;
         this.loading = false;
         
         if (response.dispensingData && Array.isArray(response.dispensingData)) {
-          console.log('[TherapyAdherence] Dispensing data array length:', response.dispensingData.length);
           this.matchDispensingData();
         } else {
-          console.error('[TherapyAdherence] Backend returned old format without dispensingData array');
           this.queryError = 'Backend API needs to be updated to return dispensing data in the new format';
         }
       },
       error: (err) => {
-        console.error('[TherapyAdherence] === ERROR LOADING AFTER UPLOAD ===');
-        console.error('[TherapyAdherence] Error status:', err.status);
-        console.error('[TherapyAdherence] Error:', err);
         
         this.loading = false;
         
@@ -1164,7 +1064,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   private currentRetryAttempt = 0;
 
   retryLoadFile() {
-    console.log('[TherapyAdherence] Retrying file load...');
     this.queryError = null;
     this.checkExistingFile();
   }
@@ -1176,43 +1075,35 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
   openNotesModal(medication?: ApiMedication) {
     if (medication) {
-      console.log('[TherapyAdherence] Opening notes for medication:', medication.name);
       this.openNotes.emit(medication);
     } else {
-      console.log('[TherapyAdherence] Opening notes for general note (no medication)');
       this.openNotes.emit(undefined as any); // Emit undefined for general notes
     }
   }
 
   openManualDispensingModal() {
-    console.log('[TherapyAdherence] Opening manual dispensing modal');
     this.showManualDispensingModal = true;
   }
 
   closeManualDispensingModal() {
-    console.log('[TherapyAdherence] Closing manual dispensing modal');
     this.showManualDispensingModal = false;
   }
 
   onManualMomentsAdded() {
-    console.log('[TherapyAdherence] Manual moments added, refreshing data');
     this.showManualDispensingModal = false;
     // Refresh the dispensing history to show the new manual entries
     this.checkExistingFile();
   }
 
   openManageMomentsModal() {
-    console.log('[TherapyAdherence] Opening manage moments modal');
     this.showManageMomentsModal = true;
   }
 
   closeManageMomentsModal() {
-    console.log('[TherapyAdherence] Closing manage moments modal');
     this.showManageMomentsModal = false;
   }
 
   onMomentsDeleted() {
-    console.log('[TherapyAdherence] Moments deleted, refreshing data');
     // Refresh the dispensing history to reflect deletions
     this.checkExistingFile();
   }

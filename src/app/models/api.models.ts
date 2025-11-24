@@ -345,30 +345,3 @@ export interface QuestionAnswerResponse {
   shareWithPatient?: boolean;
   shareWithDoctor?: boolean;
 }
-
-// Product Composition
-export interface ProductCompositionRequest {
-  language?: string;
-  cnk: string;
-}
-
-export interface DetailComposition {
-  substanceName: string;
-  substanceNumber: string;
-  isExcipient: boolean;
-  quantity: number;
-  unit: string | null;
-  equivalent: boolean;
-  prefix: string | null;
-  knownEffectsFilterGroups: string[];
-}
-
-export interface CompositionSection {
-  title: string;
-  detailCompositions: DetailComposition[];
-}
-
-export interface ProductCompositionResponse {
-  cnk: string;
-  result: CompositionSection[];
-}

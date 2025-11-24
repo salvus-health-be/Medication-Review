@@ -92,13 +92,11 @@ export class MedicationNotesModalComponent implements OnInit {
 
   onAddToAnamnesis() {
     if (!this.noteText.trim()) {
-      console.warn('[MedicationNotesModal] Note text is empty');
       return;
     }
 
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
-      console.error('[MedicationNotesModal] No review ID found');
       return;
     }
 
@@ -113,16 +111,12 @@ export class MedicationNotesModalComponent implements OnInit {
       communicateToDoctor: this.addToGpReport
     };
 
-    console.log('[MedicationNotesModal] Adding to anamnesis:', noteData);
-
     this.reviewNotesService.addNote(reviewId, noteData).subscribe({
       next: (note) => {
-        console.log('[MedicationNotesModal] Successfully added note:', note);
         this.close.emit();
         this.resetForm();
       },
       error: (error) => {
-        console.error('[MedicationNotesModal] Error adding note:', error);
         this.isSubmitting = false;
       }
     });

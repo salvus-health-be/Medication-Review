@@ -41,7 +41,8 @@
     "save_progress": "Sauvegarder la progression",
     "notes_overview": "Aperçu des notes",
     "contraindications": "Contre-indications",
-    "add_contraindication": "Ajouter une contre-indication"
+    "add_contraindication": "Ajouter une contre-indication",
+    "beta_warning": "BÊTA - Vérifiez les données"
   },
   "disclaimer": {
     "title": "Avis Important",

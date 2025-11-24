@@ -82,7 +82,6 @@ export class ContraindicationModalComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('[ContraindicationModal] Failed to load:', error);
         this.errorMessage = 'Failed to load contraindications from APB. Please try again.';
         this.isLoading = false;
       }
@@ -176,7 +175,6 @@ export class ContraindicationModalComponent implements OnInit {
         this.close.emit();
       },
       error: (error) => {
-        console.error('[ContraindicationModal] Save failed:', error);
         this.errorMessage = 'Failed to save contraindications. Please try again.';
         this.isSaving = false;
       }

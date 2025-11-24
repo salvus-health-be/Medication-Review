@@ -79,6 +79,10 @@ export class AnalysisPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // Enable cache services for this page
+    this.interactionsCache.setEnabled(true);
+    this.contraindicationsCache.setEnabled(true);
+    
     this.loadMedications();
     
     // Set up debounced auto-save for schema changes
@@ -115,7 +119,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
     // Trigger initial cache load if not already loaded
     const currentCache = this.interactionsCache.getCacheData();
     if (!currentCache.lastUpdated && !currentCache.loading) {
-      console.log('[AnalysisPage] Triggering initial interactions cache load');
       this.interactionsCache.refreshCache();
     }
 
@@ -123,62 +126,44 @@ export class AnalysisPage implements OnInit, OnDestroy {
     this.contraindicationsCache.cache$
       .pipe(takeUntil(this.destroy$))
       .subscribe(cache => {
-        console.log('[AnalysisPage] Contraindications cache update:', {
-          hasMatchesResponse: !!cache.matchesResponse,
-          hasResult: !!(cache.matchesResponse?.result),
-          resultLength: cache.matchesResponse?.result?.length,
-          patientContraindications: cache.patientContraindications.length,
-          loading: cache.loading,
-          error: cache.error
-        });
-        
         // Only count contraindication matches (patient contraindications), not product contraindications
         if (cache.matchesResponse && cache.matchesResponse.result) {
           this.contraindicationCount = cache.matchesResponse.result.length;
-          console.log('[AnalysisPage] Contraindication count from matches:', this.contraindicationCount);
         } else if (cache.patientContraindications && cache.patientContraindications.length > 0 && !cache.loading) {
           // If we have patient contraindications but no matches response, it means either:
           // 1. No medications match the conditions (count = 0, correct)
           // 2. The API failed (we should still show 0, but log the issue)
           this.contraindicationCount = 0;
-          if (cache.error) {
-            console.warn('[AnalysisPage] Contraindication matches API failed, showing 0 count');
-          } else {
-            console.log('[AnalysisPage] No contraindication matches found (patient has', cache.patientContraindications.length, 'conditions)');
-          }
         } else {
           this.contraindicationCount = 0;
         }
-        
-        console.log('[AnalysisPage] Final contraindication count:', this.contraindicationCount);
       });
 
     // Trigger initial contraindications cache load if not already loaded
     const currentContraCache = this.contraindicationsCache.getCacheData();
     if (!currentContraCache.lastUpdated && !currentContraCache.loading) {
-      console.log('[AnalysisPage] Triggering initial contraindications cache load');
       this.contraindicationsCache.refreshCache();
     }
   }
 
   ngOnDestroy() {
+    // Disable cache services when leaving this page
+    this.interactionsCache.setEnabled(false);
+    this.contraindicationsCache.setEnabled(false);
+    
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   onSchemaValueChange(medication: Medication) {
-    console.log('[AnalysisPage] Schema value changed for medication:', medication.name);
     this.schemaChangeSubject.next(medication);
   }
 
   private saveSchemaChanges(medication: Medication) {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[AnalysisPage] No medication review ID');
       return;
     }
-
-    console.log('[AnalysisPage] Auto-saving schema changes for:', medication.name);
 
     // Helper function to convert empty strings and undefined to null, keep valid numbers
     const parseNumber = (value: any): number | null => {
@@ -216,18 +201,14 @@ export class AnalysisPage implements OnInit, OnDestroy {
       unitsAtBedtime: parseNumber(medication.unitsAtBedtime)
     };
 
-    console.log('[AnalysisPage] Update request payload:', JSON.stringify(updateData, null, 2));
-
     this.apiService.updateMedication(
       medicationReviewId,
       medication.medicationId,
       updateData
     ).subscribe({
       next: (response) => {
-        console.log('[AnalysisPage] Schema changes saved for:', medication.name);
       },
       error: (error) => {
-        console.error('[AnalysisPage] Failed to save schema changes:', error);
       }
     });
   }
@@ -235,14 +216,11 @@ export class AnalysisPage implements OnInit, OnDestroy {
   openNotesModal(medication: Medication | ApiMedication | undefined) {
     // Handle general notes (no medication)
     if (!medication) {
-      console.log('[AnalysisPage] Opening general notes modal for therapy adherence');
       this.noteCategory = 'TherapyAdherence';
       this.selectedMedicationForNotes = null as any;
       this.showNotesModal = true;
       return;
     }
-    
-    console.log('[AnalysisPage] Opening notes modal for:', medication.name);
     
     // Convert ApiMedication to Medication format if needed
     let displayMedication: Medication;
@@ -276,15 +254,12 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   openGeneralNotesModal(toolType: string) {
-    console.log('[AnalysisPage] Opening general notes modal for tool:', toolType);
     this.noteCategory = this.getCategoryForTool(toolType as ToolType);
     this.selectedMedicationForNotes = null as any; // General note, no specific medication
     this.showNotesModal = true;
   }
 
   openInteractionNotesModal(data: { type: 'drug-drug' | 'drug-food' | 'general', interaction: any }) {
-    console.log('[AnalysisPage] Opening interaction notes modal:', data);
-    
     // Handle general notes separately
     if (data.type === 'general') {
       this.noteCategory = 'Interactions';
@@ -304,8 +279,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   openReferenceNotesModal(toolType: 'gheops' | 'start-stop-nl') {
-    console.log('[AnalysisPage] Opening reference notes modal for:', toolType);
-    
     // Create a pseudo-medication object with the tool name for context
     const toolNames = {
   'gheops': 'GheOPS Tool',
@@ -328,8 +301,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   openQuestionnaireNotesModal() {
-    console.log('[AnalysisPage] Opening questionnaire notes modal - general notes for Step 1');
-    
     // Set category to map to Part 1 general questions in the actions page
     this.noteCategory = 'General';
     this.selectedMedicationForNotes = null as any; // General note, no specific medication
@@ -337,8 +308,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   openContraindicationNotesModal(data: { type: 'match' | 'product' | 'general', contraindication: any }) {
-    console.log('[AnalysisPage] Opening contraindication notes modal:', data);
-    
     // Handle general notes separately
     if (data.type === 'general' || !data.contraindication) {
       this.noteCategory = 'Contraindications';
@@ -372,12 +341,9 @@ export class AnalysisPage implements OnInit, OnDestroy {
     }
 
     this.isLoading = true;
-    console.log('[AnalysisPage] Loading medications for review:', medicationReviewId);
     
     this.apiService.getMedications(medicationReviewId).subscribe({
       next: (medications) => {
-        console.log('[AnalysisPage] Received medications:', medications);
-        
         this.medications = medications.map(med => ({
           medicationId: med.medicationId,
           name: med.name || '',
@@ -402,7 +368,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('[AnalysisPage] Failed to load medications:', error);
         this.medications = [];
         this.isLoading = false;
       }
@@ -411,11 +376,9 @@ export class AnalysisPage implements OnInit, OnDestroy {
 
   onToolSelected(tool: ToolType) {
     this.activeTool = tool;
-    console.log('[AnalysisPage] Selected tool:', tool);
     
     // Refresh therapy adherence data when that tool is selected
     if (tool === 'therapy-adherence') {
-      console.log('[AnalysisPage] Refreshing therapy adherence data');
       setTimeout(() => {
         if (this.therapyAdherenceComponent) {
           this.therapyAdherenceComponent.refreshData();
@@ -464,7 +427,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   onMedicationDeleted(medicationId: string) {
-    console.log('[AnalysisPage] Medication deleted:', medicationId);
     this.medications = this.medications.filter(med => med.medicationId !== medicationId);
     
     // Refresh child components
@@ -472,13 +434,11 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   onEditRequested(medication: Medication) {
-    console.log('[AnalysisPage] Edit requested for medication:', medication.name);
     this.editingMedication = medication;
     this.showSearchModal = true;
   }
 
   addMedication() {
-    console.log('[AnalysisPage] Add medication clicked');
     this.editingMedication = null;
     this.showSearchModal = true;
   }
@@ -491,14 +451,11 @@ export class AnalysisPage implements OnInit, OnDestroy {
   onMedicationSelected(medication: MedicationSearchResult) {
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
-      console.error('[AnalysisPage] No medication review ID');
       return;
     }
 
     // Check if we're editing an existing medication
     if (this.editingMedication) {
-      console.log('[AnalysisPage] Replacing medication:', this.editingMedication.name, 'with:', medication.benaming);
-
       // Update the existing medication while preserving intake and indication
       this.apiService.updateMedication(
         medicationReviewId,
@@ -519,7 +476,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
         }
       ).subscribe({
         next: (response) => {
-          console.log('[AnalysisPage] Medication updated:', response);
           this.showSearchModal = false;
           this.editingMedication = null;
           this.loadMedications();
@@ -528,14 +484,11 @@ export class AnalysisPage implements OnInit, OnDestroy {
           setTimeout(() => this.refreshChildComponents(), 100);
         },
         error: (error) => {
-          console.error('[AnalysisPage] Failed to update medication:', error);
           alert('Failed to update medication. Please try again.');
         }
       });
     } else {
       // Adding new medication
-      console.log('[AnalysisPage] Adding medication:', medication);
-
       this.apiService.addMedication(
         medicationReviewId,
         {
@@ -545,7 +498,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
         }
       ).subscribe({
         next: (response) => {
-          console.log('[AnalysisPage] Medication added:', response);
           this.showSearchModal = false;
           this.loadMedications();
           
@@ -553,7 +505,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
           setTimeout(() => this.refreshChildComponents(), 100);
         },
         error: (error) => {
-          console.error('[AnalysisPage] Failed to add medication:', error);
           alert('Failed to add medication. Please try again.');
         }
       });
@@ -561,8 +512,6 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
   
   private refreshChildComponents() {
-    console.log('[AnalysisPage] Refreshing child components');
-    
     // Refresh therapy adherence component
     if (this.therapyAdherenceComponent) {
       this.therapyAdherenceComponent.refreshData();
@@ -573,17 +522,14 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   openNoteOverview() {
-    console.log('[AnalysisPage] Opening note overview modal');
     this.showNoteOverviewModal = true;
   }
 
   closeNoteOverview() {
-    console.log('[AnalysisPage] Closing note overview modal');
     this.showNoteOverviewModal = false;
   }
 
   onCreatePatientConversation() {
-    console.log('[AnalysisPage] Creating patient conversation - navigating to anamnesis');
     this.showNoteOverviewModal = false;
     this.router.navigate(['/anamnesis']);
   }

@@ -32,9 +32,7 @@ import {
   QuestionAnswer,
   AddQuestionAnswerRequest,
   UpdateQuestionAnswerRequest,
-  QuestionAnswerResponse,
-  ProductCompositionRequest,
-  ProductCompositionResponse
+  QuestionAnswerResponse
 } from '../models/api.models';
 import { environment } from '../../environments/environment';
 
@@ -64,7 +62,6 @@ export class ApiService {
 
     return this.http.post<any>(`${this.API_BASE_URL}/login`, request, { headers })
       .pipe(
-        tap(rawResponse => console.log('[ApiService] RAW Login response:', rawResponse)),
         map(response => ({
           patientCreated: response.patientCreated ?? response.PatientCreated ?? false,
           reviewCreated: response.reviewCreated ?? response.ReviewCreated ?? false,
@@ -80,8 +77,7 @@ export class ApiService {
             firstNameAtTimeOfReview: response.review?.firstNameAtTimeOfReview ?? response.review?.FirstNameAtTimeOfReview ?? response.Review?.firstNameAtTimeOfReview ?? response.Review?.FirstNameAtTimeOfReview ?? null,
             lastNameAtTimeOfReview: response.review?.lastNameAtTimeOfReview ?? response.review?.LastNameAtTimeOfReview ?? response.Review?.lastNameAtTimeOfReview ?? response.Review?.LastNameAtTimeOfReview ?? null
           }
-        })),
-        tap(mappedResponse => console.log('[ApiService] Mapped Login response:', mappedResponse))
+        }))
       );
   }
 
@@ -89,14 +85,14 @@ export class ApiService {
     const headers = this.getHeaders();
 
     return this.http.put<UpdatePatientResponse>(`${this.API_BASE_URL}/update_patient`, request, { headers })
-      .pipe(tap(response => console.log('[ApiService] Update patient response:', response)));
+      ;
   }
 
   updateMedicationReview(request: UpdateMedicationReviewRequest): Observable<UpdateMedicationReviewResponse> {
     const headers = this.getHeaders();
 
     return this.http.put<UpdateMedicationReviewResponse>(`${this.API_BASE_URL}/update_medication_review`, request, { headers })
-      .pipe(tap(response => console.log('[ApiService] Update review response:', response)));
+      ;
   }
 
   // APB Contraindications
@@ -106,11 +102,9 @@ export class ApiService {
 
     // Check cache first
     if (this.contraindicationsCache.has(cacheKey)) {
-      console.log('[ApiService] Returning cached contraindications for', request.language);
       return of(this.contraindicationsCache.get(cacheKey)!);
     }
 
-    console.log('[ApiService] Fetching contraindications from API for', request.language);
     return this.http.post<APBContraindicationsResponseBackend>(`${this.API_BASE_URL}/get_apb_contraindications`, request, { headers })
       .pipe(
         map(backendResponse => {
@@ -140,7 +134,6 @@ export class ApiService {
           };
           // Cache the result
           this.contraindicationsCache.set(cacheKey, response);
-          console.log('[ApiService] Cached contraindications for', request.language);
           return response;
         })
       );
@@ -149,7 +142,6 @@ export class ApiService {
   // Clear contraindications cache (useful for testing or if data needs refresh)
   clearContraindicationsCache(): void {
     this.contraindicationsCache.clear();
-    console.log('[ApiService] Contraindications cache cleared');
   }
 
   // Contraindication CRUD
@@ -210,7 +202,6 @@ export class ApiService {
 
     return this.http.post<any>(`${this.API_BASE_URL}/search_medications`, request, { headers })
       .pipe(
-        tap(rawResponse => console.log('[ApiService] RAW search_medications response:', JSON.stringify(rawResponse, null, 2))),
         map(backendResponse => ({
           searchTerm: backendResponse.searchTerm || backendResponse.SearchTerm,
           count: backendResponse.count || backendResponse.Count,
@@ -226,15 +217,16 @@ export class ApiService {
 
   // Medication CRUD
   getMedications(medicationReviewId: string): Observable<Medication[]> {
-    console.log('[ApiService] === GET MEDICATIONS ===');
-    console.log('[ApiService] URL: GET', `${this.API_BASE_URL}/manage_medications?medicationReviewId=${medicationReviewId}`);
     
     return this.http.get<any[]>(`${this.API_BASE_URL}/manage_medications?medicationReviewId=${medicationReviewId}`, { 
       headers: this.getHeaders() 
     })
       .pipe(
         tap(rawResponse => {
-          console.log('[ApiService] RAW backend response:', JSON.stringify(rawResponse, null, 2));
+          console.log('API getMedications response:', rawResponse);
+          rawResponse?.forEach(med => {
+            console.log(`Medication ${med.name || med.Name}: activeIngredient =`, med.activeIngredient || med.ActiveIngredient);
+          });
         }),
         map(items => {
           const mapped = items.map(item => ({
@@ -268,7 +260,6 @@ export class ApiService {
             return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
           });
           
-          console.log('[ApiService] Medications sorted by timestamp:', mapped.length);
           return mapped;
         })
       );
@@ -279,13 +270,11 @@ export class ApiService {
 
     const request = { medicationReviewId: reviewId, ...medication };
 
-    console.log('[ApiService] === ADD MEDICATION ===');
-    console.log('[ApiService] Request:', JSON.stringify(request, null, 2));
-
     return this.http.post<any>(`${this.API_BASE_URL}/manage_medications`, request, { headers })
       .pipe(
         tap(rawResponse => {
-          console.log('[ApiService] RAW add medication response:', JSON.stringify(rawResponse, null, 2));
+          console.log('API addMedication response:', rawResponse);
+          console.log('Active ingredient from backend:', rawResponse?.activeIngredient || rawResponse?.ActiveIngredient);
         }),
         map(item => ({
           medicationId: item.rowKey ?? item.MedicationId ?? item.medicationId,
@@ -320,14 +309,9 @@ export class ApiService {
       ...medication 
     };
 
-    console.log('[ApiService] === UPDATE MEDICATION REQUEST ===');
-    console.log('[ApiService] URL: PUT', `${this.API_BASE_URL}/manage_medications`);
-    console.log('[ApiService] Request body:', JSON.stringify(request, null, 2));
-
     return this.http.put<any>(`${this.API_BASE_URL}/manage_medications`, request, { headers })
       .pipe(
         tap(rawResponse => {
-          console.log('[ApiService] RAW backend response:', JSON.stringify(rawResponse, null, 2));
         }),
         map(item => ({
           medicationId: item.rowKey ?? item.MedicationId ?? item.medicationId,
@@ -420,7 +404,7 @@ export class ApiService {
     return this.http.post(
       `${this.API_BASE_URL}/upload_dispensing_history?apbNumber=${apbNumber}&medicationReviewId=${reviewId}`,
       formData
-    ).pipe(tap(response => console.log('[ApiService] Upload dispensing history response:', response)));
+    );
   }
 
   queryDispensingHistory(apbNumber: string, reviewId: string): Observable<DispensingHistoryResponse> {
@@ -428,9 +412,7 @@ export class ApiService {
       `${this.API_BASE_URL}/query_dispensing_history?apbNumber=${apbNumber}&medicationReviewId=${reviewId}`
     ).pipe(
       tap(response => {
-        console.log('[ApiService] Query dispensing history raw response:', JSON.stringify(response, null, 2));
         if (response.dispensingData?.[0]?.dispensingMoments?.[0]) {
-          console.log('[ApiService] First raw moment:', response.dispensingData[0].dispensingMoments[0]);
         }
       }),
       map(response => ({
@@ -445,7 +427,6 @@ export class ApiService {
           description: cnkGroup.description ?? cnkGroup.Description,
           dispensingMoments: (cnkGroup.dispensingMoments ?? cnkGroup.DispensingMoments ?? []).map((moment: any) => {
             const extractedId = moment.id ?? moment.Id ?? moment.rowKey ?? moment.RowKey;
-            console.log('[ApiService] Extracting ID from moment:', { rawId: moment.id, rawId_PascalCase: moment.Id, rawRowKey: moment.rowKey, rawRowKey_PascalCase: moment.RowKey, extractedId });
             return {
               date: moment.date ?? moment.Date,
               amount: moment.amount ?? moment.Amount,
@@ -456,9 +437,7 @@ export class ApiService {
         }))
       })),
       tap(response => {
-        console.log('[ApiService] Query dispensing history mapped response:', JSON.stringify(response, null, 2));
         if (response.dispensingData?.[0]?.dispensingMoments?.[0]) {
-          console.log('[ApiService] First mapped moment:', response.dispensingData[0].dispensingMoments[0]);
         }
       })
     );
@@ -475,7 +454,7 @@ export class ApiService {
       `${this.API_BASE_URL}/add_manual_dispensing_moment?apbNumber=${apbNumber}&medicationReviewId=${reviewId}`,
       moment,
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Add manual dispensing moment response:', response)));
+    );
   }
 
   deleteManualDispensingMoment(
@@ -485,7 +464,7 @@ export class ApiService {
   ): Observable<any> {
     return this.http.delete<any>(
       `${this.API_BASE_URL}/delete_manual_dispensing_moment?apbNumber=${apbNumber}&medicationReviewId=${reviewId}&id=${id}`
-    ).pipe(tap(response => console.log('[ApiService] Delete manual dispensing moment response:', response)));
+    );
   }
 
   checkInteractions(request: any): Observable<any> {
@@ -497,7 +476,7 @@ export class ApiService {
       `${this.API_BASE_URL}/get_interactions`,
       request,
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Interactions response:', response)));
+    );
   }
 
   getInteractionDetails(request: any): Observable<any> {
@@ -509,7 +488,7 @@ export class ApiService {
       `${this.API_BASE_URL}/get_interaction_details`,
       request,
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Interaction details response:', response)));
+    );
   }
 
   // Contraindication Matching
@@ -522,7 +501,7 @@ export class ApiService {
       `${this.API_BASE_URL}/get_contraindication_matches`,
       request,
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Contraindication matches response:', response)));
+    );
   }
 
   getProductContraindications(cnk: string, language?: string): Observable<any> {
@@ -534,7 +513,7 @@ export class ApiService {
       `${this.API_BASE_URL}/get_product_contraindications`,
       { cnk, language: language || 'NL' },
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Product contraindications response:', response)));
+    );
   }
 
   // Product Dosage (Posology)
@@ -547,7 +526,7 @@ export class ApiService {
       `${this.API_BASE_URL}/get_product_dosage`,
       { cnk, language: language || 'NL' },
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Product dosage response:', response)));
+    );
   }
 
   // Product Renadaptor (Renal Dosing)
@@ -560,7 +539,7 @@ export class ApiService {
       `${this.API_BASE_URL}/get_product_renadaptor`,
       { cnk, language: language || 'NL' },
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Product renadaptor response:', response)));
+    );
   }
 
   // Reference Documents
@@ -571,18 +550,14 @@ export class ApiService {
   getReferenceDocument(type: 'gheops' | 'start-stop'): Observable<Blob> {
     return this.http.get(`${this.API_BASE_URL}/get_reference_document?type=${type}`, {
       responseType: 'blob'
-    }).pipe(
-      tap(() => console.log(`[ApiService] Retrieved reference document: ${type}`))
-    );
+    });
   }
 
   // Review Notes CRUD
   getReviewNotes(medicationReviewId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.API_BASE_URL}/manage_review_notes?medicationReviewId=${medicationReviewId}`, {
       headers: this.getHeaders()
-    }).pipe(
-      tap(response => console.log('[ApiService] Get review notes response:', response))
-    );
+    });
   }
 
   addReviewNote(reviewId: string, note: any): Observable<any> {
@@ -590,7 +565,7 @@ export class ApiService {
     const request = { medicationReviewId: reviewId, ...note };
 
     return this.http.post<any>(`${this.API_BASE_URL}/manage_review_notes`, request, { headers })
-      .pipe(tap(response => console.log('[ApiService] Add review note response:', response)));
+      ;
   }
 
   updateReviewNote(reviewId: string, reviewNoteId: string, updates: any): Observable<any> {
@@ -602,14 +577,14 @@ export class ApiService {
     };
 
     return this.http.put<any>(`${this.API_BASE_URL}/manage_review_notes`, request, { headers })
-      .pipe(tap(response => console.log('[ApiService] Update review note response:', response)));
+      ;
   }
 
   deleteReviewNote(medicationReviewId: string, reviewNoteId: string): Observable<any> {
     return this.http.delete<any>(
       `${this.API_BASE_URL}/manage_review_notes?medicationReviewId=${medicationReviewId}&reviewNoteId=${reviewNoteId}`,
       { headers: this.getHeaders() }
-    ).pipe(tap(response => console.log('[ApiService] Delete review note response:', response)));
+    );
   }
 
   // Question Answer CRUD
@@ -617,14 +592,14 @@ export class ApiService {
     return this.http.get<QuestionAnswer[]>(
       `${this.API_BASE_URL}/manage_question_answers?medicationReviewId=${medicationReviewId}`,
       { headers: this.getHeaders() }
-    ).pipe(tap(response => console.log('[ApiService] Get question answers response:', response)));
+    );
   }
 
   getQuestionAnswer(medicationReviewId: string, questionName: string): Observable<QuestionAnswerResponse> {
     return this.http.get<QuestionAnswerResponse>(
       `${this.API_BASE_URL}/manage_question_answers?medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
       { headers: this.getHeaders() }
-    ).pipe(tap(response => console.log('[ApiService] Get question answer response:', response)));
+    );
   }
 
   addQuestionAnswer(request: AddQuestionAnswerRequest): Observable<QuestionAnswerResponse> {
@@ -634,7 +609,7 @@ export class ApiService {
       `${this.API_BASE_URL}/manage_question_answers`,
       request,
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Add question answer response:', response)));
+    );
   }
 
   updateQuestionAnswer(request: UpdateQuestionAnswerRequest): Observable<QuestionAnswerResponse> {
@@ -644,42 +619,13 @@ export class ApiService {
       `${this.API_BASE_URL}/manage_question_answers`,
       request,
       { headers }
-    ).pipe(tap(response => console.log('[ApiService] Update question answer response:', response)));
+    );
   }
 
   deleteQuestionAnswer(medicationReviewId: string, questionName: string): Observable<any> {
     return this.http.delete<any>(
       `${this.API_BASE_URL}/manage_question_answers?medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
       { headers: this.getHeaders() }
-    ).pipe(tap(response => console.log('[ApiService] Delete question answer response:', response)));
-  }
-
-  // Product Composition
-  getProductComposition(cnk: string, language: string = 'NL'): Observable<ProductCompositionResponse> {
-    const headers = this.getHeaders();
-    const request: ProductCompositionRequest = {
-      language,
-      cnk
-    };
-
-    return this.http.post<ProductCompositionResponse>(
-      `${this.API_BASE_URL}/get_product_composition`,
-      request,
-      { headers }
-    ).pipe(
-      tap(response => console.log('[ApiService] Product composition response:', response)),
-      map(response => {
-        // Cache the active ingredient name for easy access
-        if (response.result && response.result.length > 0) {
-          const activeIngredient = response.result[0].detailCompositions.find(
-            (composition: any) => !composition.isExcipient
-          );
-          if (activeIngredient) {
-            console.log('[ApiService] Active ingredient found:', activeIngredient.substanceName);
-          }
-        }
-        return response;
-      })
     );
   }
 }
