@@ -101,9 +101,11 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
   ngAfterViewInit() {
     // Auto-focus indication field for newly created medications
     if (this.isNew && this.indicationInput) {
+      // Use a longer delay to ensure the DOM has been fully updated after expansion
       setTimeout(() => {
         this.indicationInput?.nativeElement.focus();
-      }, 0);
+        this.indicationInput?.nativeElement.select();
+      }, 100);
     }
   }
 

@@ -343,19 +343,38 @@ export class AnamnesisePdfService {
     const generalEffectivenessNotes = effectivenessNotesByMedication['General'] || effectivenessNotesByMedication['general'] || [];
     
     if (generalAdherenceNotes.length > 0 || generalEffectivenessNotes.length > 0) {
+      // Calculate estimated height for general notes using actual text measurement
+      const estimateNoteHeight = (notes: ReviewNote[], columnWidth: number = 100) => {
+        if (notes.length === 0) return 0;
+        let totalHeight = 0;
+        notes.forEach(note => {
+          const noteText = this.sanitizeForPdf(note.text);
+          const textLines = doc.splitTextToSize('- ' + noteText, columnWidth - 12);
+          // Each note needs: actual text lines (3mm each) + writing space (min 12mm) + padding (6mm)
+          totalHeight += (textLines.length * 3) + 18;
+        });
+        return totalHeight;
+      };
+      
+      const adherenceHeight = estimateNoteHeight(generalAdherenceNotes);
+      const effectivenessHeight = estimateNoteHeight(generalEffectivenessNotes);
+      const estimatedHeight = Math.max(adherenceHeight, effectivenessHeight, 55);
+      
       combinedTableData.push([
         this.sanitizeForPdf('General Notes'),
         { 
           adherenceNotes: generalAdherenceNotes, 
           effectivenessNotes: [], 
           isGeneral: true,
-          maxNoteCount: Math.max(generalAdherenceNotes.length, generalEffectivenessNotes.length)
+          maxNoteCount: Math.max(generalAdherenceNotes.length, generalEffectivenessNotes.length),
+          estimatedHeight
         },
         { 
           adherenceNotes: [], 
           effectivenessNotes: generalEffectivenessNotes, 
           isGeneral: true,
-          maxNoteCount: Math.max(generalAdherenceNotes.length, generalEffectivenessNotes.length)
+          maxNoteCount: Math.max(generalAdherenceNotes.length, generalEffectivenessNotes.length),
+          estimatedHeight
         }
       ]);
     }
@@ -367,10 +386,27 @@ export class AnamnesisePdfService {
       const effectivenessNotes = effectivenessNotesByMedication[medName] || [];
       const maxNoteCount = Math.max(adherenceNotes.length, effectivenessNotes.length);
       
+      // Calculate estimated height needed based on actual text measurement
+      const estimateNoteHeight = (notes: ReviewNote[], columnWidth: number = 100) => {
+        if (notes.length === 0) return 0;
+        let totalHeight = 0;
+        notes.forEach(note => {
+          const noteText = this.sanitizeForPdf(note.text);
+          const textLines = doc.splitTextToSize('- ' + noteText, columnWidth - 12);
+          // Each note needs: actual text lines (3mm each) + writing space (min 12mm) + padding (6mm)
+          totalHeight += (textLines.length * 3) + 18;
+        });
+        return totalHeight;
+      };
+      
+      const adherenceHeight = estimateNoteHeight(adherenceNotes);
+      const effectivenessHeight = estimateNoteHeight(effectivenessNotes);
+      const estimatedHeight = Math.max(adherenceHeight, effectivenessHeight, 55);
+      
       combinedTableData.push([
         this.sanitizeForPdf(medName),
-        { adherenceNotes, effectivenessNotes: [], isGeneral: false, maxNoteCount },
-        { adherenceNotes: [], effectivenessNotes, isGeneral: false, maxNoteCount }
+        { adherenceNotes, effectivenessNotes: [], isGeneral: false, maxNoteCount, estimatedHeight },
+        { adherenceNotes: [], effectivenessNotes, isGeneral: false, maxNoteCount, estimatedHeight }
       ]);
     });
 
@@ -416,21 +452,12 @@ export class AnamnesisePdfService {
         fillColor: [250, 250, 250]
       },
       didParseCell: (data: any) => {
-        // Set row height early in the process based on max note count
+        // Set row height based on estimated height from note text length
         if (data.section === 'body') {
-          const cellData = data.row.raw[1]; // Check column 1 for maxNoteCount
-          if (typeof cellData === 'object' && cellData !== null && cellData.maxNoteCount) {
-            const maxNoteCount = cellData.maxNoteCount;
-            
-            // Calculate height dynamically based on note count
-            // Each note needs space for text + at least 2 writing lines
-            // Use a more conservative formula to avoid huge rows
-            let dynamicHeight = 55; // Minimum height for 1-3 notes
-            
-            if (maxNoteCount > 3) {
-              // For each note beyond 3, add 20mm (not 26mm)
-              dynamicHeight = 55 + ((maxNoteCount - 3) * 20);
-            }
+          const cellData = data.row.raw[1]; // Check column 1 for estimatedHeight
+          if (typeof cellData === 'object' && cellData !== null && cellData.estimatedHeight) {
+            // Use the pre-calculated estimated height based on actual text length
+            const dynamicHeight = cellData.estimatedHeight;
             
             // Set the row's minCellHeight
             data.row.height = dynamicHeight;
@@ -459,17 +486,43 @@ export class AnamnesisePdfService {
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
             
-            // Calculate available space - distribute equally among all notes
+            // Calculate available space
             const availableWidth = cell.width - (cellPadding * 2);
             const availableHeight = cell.height - (cellPadding * 2);
             const displayNotes = notes; // Use all notes, don't limit them
-            const noteCount = displayNotes.length > 0 ? displayNotes.length : 3; // Default to 3 empty sections
-            const noteHeight = availableHeight / noteCount;
+            
+            // Calculate individual heights for each note based on text length
+            const noteHeights: number[] = [];
+            let totalWeightedHeight = 0;
+            
+            if (displayNotes.length > 0) {
+              // Calculate relative space needed for each note based on text length
+              displayNotes.forEach((note: ReviewNote) => {
+                const noteText = this.sanitizeForPdf(note.text);
+                const textLines = doc.splitTextToSize('- ' + noteText, availableWidth - 6);
+                // Each note needs: text lines + minimum writing space
+                const neededHeight = (textLines.length * 3) + 18; // 3mm per line + 18mm for writing space
+                noteHeights.push(neededHeight);
+                totalWeightedHeight += neededHeight;
+              });
+              
+              // Scale heights proportionally to fit available space
+              const scaleFactor = availableHeight / totalWeightedHeight;
+              for (let i = 0; i < noteHeights.length; i++) {
+                noteHeights[i] = noteHeights[i] * scaleFactor;
+              }
+            } else {
+              // Default: 3 equal sections if no notes
+              const defaultHeight = availableHeight / 3;
+              noteHeights.push(defaultHeight, defaultHeight, defaultHeight);
+            }
             
             // If no notes, create equal sections with lines for writing
             if (displayNotes.length === 0) {
+              let cumulativeY = currentY;
               for (let section = 0; section < 3; section++) {
-                const sectionY = currentY + (section * noteHeight);
+                const sectionHeight = noteHeights[section];
+                const sectionY = cumulativeY;
                 
                 // Draw separator line between sections
                 if (section > 0) {
@@ -488,12 +541,12 @@ export class AnamnesisePdfService {
                 doc.setLineWidth(0.15);
                 const lineSpacing = 6;
                 const startY = sectionY + 3;
-                const sectionHeight = noteHeight - 3;
-                const lineCount = Math.floor(sectionHeight / lineSpacing);
+                const writableHeight = sectionHeight - 3;
+                const lineCount = Math.floor(writableHeight / lineSpacing);
                 
                 for (let i = 0; i < lineCount; i++) {
                   const lineY = startY + (i * lineSpacing);
-                  if (lineY < sectionY + noteHeight - 1) {
+                  if (lineY < sectionY + sectionHeight - 1) {
                     doc.line(
                       cell.x + cellPadding + 2,
                       lineY,
@@ -502,11 +555,15 @@ export class AnamnesisePdfService {
                     );
                   }
                 }
+                
+                cumulativeY += sectionHeight;
               }
             } else {
-              // Draw each note in its own section - all notes get equal space
+              // Draw each note in its own section - heights based on actual text length
+              let cumulativeY = currentY;
               displayNotes.forEach((note: ReviewNote, index: number) => {
-                const fieldY = currentY + (index * noteHeight);
+                const noteHeight = noteHeights[index];
+                const fieldY = cumulativeY;
                 
                 // Draw separator line between notes
                 if (index > 0) {
@@ -529,31 +586,43 @@ export class AnamnesisePdfService {
                 // Use a simple bullet character that works in PDF
                 const bulletText = '- ' + noteText;
                 const textLines = doc.splitTextToSize(bulletText, availableWidth - 6);
-                const maxLines = 2; // Limit to 2 lines for the note itself
-                const displayLines = textLines.slice(0, maxLines);
+                
+                // Display ALL text lines without artificial limiting
+                const lineHeight = 3;
+                const maxTextHeight = noteHeight - 6; // Leave 6mm total padding (4 top + 2 bottom)
+                const maxPossibleLines = Math.floor(maxTextHeight / lineHeight);
+                
+                // Use all text lines up to what fits in the allocated space
+                const displayLines = textLines.slice(0, Math.min(maxPossibleLines, textLines.length));
                 
                 doc.text(displayLines, cell.x + cellPadding + 3, fieldY + 4);
                 
-                // Add horizontal lines for writing below the note - use ALL remaining space
+                // Add horizontal lines for writing below the note - use whatever space remains
                 doc.setDrawColor(200, 200, 200);
                 doc.setLineWidth(0.15);
-                const textHeight = displayLines.length * 3;
+                const textHeight = displayLines.length * lineHeight;
                 const startLineY = fieldY + 4 + textHeight + 2;
                 const remainingHeight = noteHeight - (4 + textHeight + 2);
-                const lineSpacing = 6;
-                const lineCount = Math.floor(remainingHeight / lineSpacing);
                 
-                for (let j = 0; j < lineCount; j++) {
-                  const lineY = startLineY + (j * lineSpacing);
-                  if (lineY < fieldY + noteHeight - 1) {
-                    doc.line(
-                      cell.x + cellPadding + 2,
-                      lineY,
-                      cell.x + cell.width - cellPadding - 2,
-                      lineY
-                    );
+                // Only add writing lines if there's actually space (at least 1 line worth)
+                if (remainingHeight >= 6) {
+                  const lineSpacing = 6;
+                  const lineCount = Math.floor(remainingHeight / lineSpacing);
+                  
+                  for (let j = 0; j < lineCount; j++) {
+                    const lineY = startLineY + (j * lineSpacing);
+                    if (lineY < fieldY + noteHeight - 1) {
+                      doc.line(
+                        cell.x + cellPadding + 2,
+                        lineY,
+                        cell.x + cell.width - cellPadding - 2,
+                        lineY
+                      );
+                    }
                   }
                 }
+                
+                cumulativeY += noteHeight;
               });
             }
           }

@@ -462,8 +462,11 @@ export class ApiService {
     reviewId: string,
     id: string
   ): Observable<any> {
+    // Strip Azure Table Storage suffix (:1, :2, etc.) from ID if present
+    const cleanId = id.includes(':') ? id.split(':')[0] : id;
+    
     return this.http.delete<any>(
-      `${this.API_BASE_URL}/delete_manual_dispensing_moment?apbNumber=${apbNumber}&medicationReviewId=${reviewId}&id=${id}`
+      `${this.API_BASE_URL}/delete_manual_dispensing_moment?apbNumber=${apbNumber}&medicationReviewId=${reviewId}&id=${cleanId}`
     );
   }
 
