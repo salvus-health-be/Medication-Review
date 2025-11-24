@@ -363,6 +363,7 @@ export interface ImportedMedication {
   success: boolean;
   medicationId: string | null;
   cnk: number | null;
+  foundMedicationName: string | null;  // Medication name from geneesmiddeldatabank (for user verification)
   vmp: number | null;
   packageSize: number | null;
   activeIngredient: string | null;

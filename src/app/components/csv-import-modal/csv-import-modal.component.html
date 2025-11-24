@@ -102,7 +102,10 @@
               <div class="detail-row" [class.missing]="isCnkMissing(med)">
                 <span class="label">{{ 'csv_import.cnk' | transloco }}:</span>
                 <span class="value" *ngIf="!isEditing(med, 'cnk')">
-                  <span *ngIf="med.cnk">{{ med.cnk }}</span>
+                  <span *ngIf="med.cnk">
+                    {{ med.cnk }}
+                    <span *ngIf="med.foundMedicationName" class="medication-name-hint"> ({{ med.foundMedicationName }})</span>
+                  </span>
                   <span *ngIf="!med.cnk" class="missing-text">{{ 'csv_import.not_found' | transloco }}</span>
                 </span>
                 <div class="edit-inline-cnk" *ngIf="isEditing(med, 'cnk')">
