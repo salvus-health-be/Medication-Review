@@ -115,6 +115,10 @@ export class InteractionsCacheService {
     }
   }
 
+  forceRefresh(): void {
+    this.refreshCache();
+  }
+
   private updateCache(partial: Partial<InteractionsCacheData>): void {
     this.cacheSubject.next({
       ...this.cacheSubject.value,

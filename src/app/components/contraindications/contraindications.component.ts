@@ -102,8 +102,9 @@ export class ContraindicationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Manual refresh is no longer needed - cache auto-refreshes via state notifications
+  // Manual refresh to re-fetch contraindication data from APB API
   refreshContraindications() {
+    this.contraindicationsCache.forceRefresh();
   }
 
   loadAdditionalContraindications() {

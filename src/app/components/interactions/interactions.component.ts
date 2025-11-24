@@ -129,8 +129,9 @@ export class InteractionsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Manual refresh is no longer needed - cache auto-refreshes via state notifications
+  // Manual refresh to re-fetch interaction data from APB API
   refreshInteractions() {
+    this.interactionsCache.forceRefresh();
   }
 
   processInteractions(response: InteractionsResponse) {

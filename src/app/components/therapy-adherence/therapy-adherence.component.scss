@@ -106,9 +106,47 @@
   // Floating general note button in top right
   .floating-top-right {
     position: absolute;
-    top: 0.5rem;
+    top: 1rem;
     right: 2rem;
     z-index: 10;
+  }
+
+  // Refresh button in top right (next to general note)
+  .refresh-tool-button {
+    position: absolute;
+    top: 1rem;
+    right: 4.5rem;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background-color: transparent;
+    border: 1px solid $box-border;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    svg {
+      color: $text-secondary;
+      transition: all 0.2s ease;
+    }
+
+    &:hover {
+      background-color: rgba($button-primary-background, 0.1);
+      border-color: $button-primary-background;
+
+      svg {
+        color: $button-primary-background;
+        transform: rotate(180deg);
+      }
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
   }
 }
 

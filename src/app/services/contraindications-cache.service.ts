@@ -63,6 +63,10 @@ export class ContraindicationsCacheService {
     }
   }
 
+  forceRefresh(): void {
+    this.refreshCache();
+  }
+
   private updateCache(partial: Partial<ContraindicationsCacheData>): void {
     this.cacheSubject.next({
       ...this.cacheSubject.value,
