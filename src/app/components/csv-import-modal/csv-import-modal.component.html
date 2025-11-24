@@ -1,0 +1,402 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'csv_import.title' | transloco }}</h2>
+      <button class="close-button" (click)="closeModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- File Upload Section -->
+      <div class="upload-section" *ngIf="!importResults">
+        <div class="file-input-wrapper">
+          <input 
+            type="file" 
+            id="csvFileInput"
+            accept=".csv" 
+            (change)="onFileSelected($event)"
+            style="display: none"
+          />
+          <button class="select-file-button" (click)="triggerFileInput()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <span>{{ 'csv_import.select_file' | transloco }}</span>
+          </button>
+          <span class="file-name" *ngIf="selectedFile">{{ selectedFile.name }}</span>
+        </div>
+
+        <div class="upload-instructions">
+          <p>{{ 'csv_import.instructions' | transloco }}</p>
+          <ul>
+            <li>{{ 'csv_import.instruction_1' | transloco }}</li>
+            <li>{{ 'csv_import.instruction_2' | transloco }}</li>
+            <li>{{ 'csv_import.instruction_3' | transloco }}</li>
+          </ul>
+        </div>
+
+        <button 
+          class="import-button"
+          (click)="importMedications()"
+          [disabled]="!selectedFile || importing"
+        >
+          <span *ngIf="!importing">{{ 'csv_import.import_button' | transloco }}</span>
+          <span *ngIf="importing" class="importing-text">
+            <span class="spinner"></span>
+            {{ 'csv_import.importing' | transloco }}
+          </span>
+        </button>
+
+        <div class="error-message" *ngIf="errorMessage">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {{ errorMessage }}
+        </div>
+      </div>
+
+      <!-- Import Results Section -->
+      <div class="import-results" *ngIf="importResults">
+        <h3>{{ 'csv_import.review_title' | transloco }}</h3>
+        <p class="review-subtitle">{{ 'csv_import.review_subtitle' | transloco }}</p>
+        
+        <div class="summary-stats">
+          <div class="stat">
+            <div class="stat-value">{{ importResults.totalProcessed }}</div>
+            <div class="stat-label">{{ 'csv_import.total_processed' | transloco }}</div>
+          </div>
+          <div class="stat success">
+            <div class="stat-value">{{ getApprovedCount() }}</div>
+            <div class="stat-label">{{ 'csv_import.approved' | transloco }}</div>
+          </div>
+          <div class="stat warning">
+            <div class="stat-value">{{ getUnderReviewCount() }}</div>
+            <div class="stat-label">{{ 'csv_import.under_review' | transloco }}</div>
+          </div>
+          <div class="stat failed" *ngIf="importResults.failed > 0">
+            <div class="stat-value">{{ importResults.failed }}</div>
+            <div class="stat-label">{{ 'csv_import.failed' | transloco }}</div>
+          </div>
+        </div>
+
+        <!-- Medications List -->
+        <div class="medications-list">
+          <div 
+            *ngFor="let med of importResults.medications" 
+            [ngClass]="getMedicationBoxClass(med)"
+          >
+            <div class="medication-header">
+              <h4>{{ med.medicationName }}</h4>
+              <div class="badges">
+                <span *ngIf="!med.success" class="badge badge-failed">{{ 'csv_import.failed' | transloco }}</span>
+                <span *ngIf="med.reviewStatus === 'approved'" class="badge badge-approved">{{ 'csv_import.approved' | transloco }}</span>
+                <span *ngIf="med.reviewStatus === 'under_review'" class="badge badge-under-review">{{ 'csv_import.under_review' | transloco }}</span>
+                <span *ngIf="shouldMarkRed(med)" class="badge badge-incomplete">{{ 'csv_import.missing_info' | transloco }}</span>
+              </div>
+            </div>
+
+            <div class="medication-details" *ngIf="med.success">
+              <!-- CNK -->
+              <div class="detail-row" [class.missing]="isCnkMissing(med)">
+                <span class="label">{{ 'csv_import.cnk' | transloco }}:</span>
+                <span class="value" *ngIf="!isEditing(med, 'cnk')">
+                  <span *ngIf="med.cnk">{{ med.cnk }}</span>
+                  <span *ngIf="!med.cnk" class="missing-text">{{ 'csv_import.not_found' | transloco }}</span>
+                </span>
+                <div class="edit-inline-cnk" *ngIf="isEditing(med, 'cnk')">
+                  <div class="cnk-search-wrapper">
+                    <input 
+                      type="text" 
+                      [(ngModel)]="editValues['cnk']" 
+                      (ngModelChange)="searchCnk($event)"
+                      placeholder="Search medication or enter CNK"
+                      class="field-input"
+                      (keyup.enter)="saveField(med, 'cnk')"
+                      (keyup.escape)="cancelEditing()"
+                    />
+                    <button class="save-button-small" (click)="saveField(med, 'cnk')">✓</button>
+                    <button class="cancel-button-small" (click)="cancelEditing()">✕</button>
+                  </div>
+                  <div class="cnk-search-results" *ngIf="cnkSearchResults.length > 0">
+                    <div 
+                      *ngFor="let result of cnkSearchResults" 
+                      class="search-result-item"
+                      (click)="selectCnkFromSearch(med, result)"
+                    >
+                      <div class="result-name">{{ result.benaming }}</div>
+                      <div class="result-cnk">CNK: {{ result.cnk }}</div>
+                    </div>
+                  </div>
+                  <div class="searching-indicator" *ngIf="searchingCnk">
+                    <span class="spinner-small"></span> Searching...
+                  </div>
+                </div>
+                <button 
+                  *ngIf="!isEditing(med, 'cnk') && med.reviewStatus !== 'approved'" 
+                  class="edit-icon-button"
+                  (click)="startEditing(med, 'cnk')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Active Ingredient -->
+              <div class="detail-row" [class.missing]="isActiveIngredientMissing(med)">
+                <span class="label">{{ 'csv_import.active_ingredient' | transloco }}:</span>
+                <span class="value" *ngIf="!isEditing(med, 'activeIngredient')">
+                  <span *ngIf="med.activeIngredient">{{ med.activeIngredient }}</span>
+                  <span *ngIf="!med.activeIngredient" class="missing-text">{{ 'csv_import.not_retrieved' | transloco }}</span>
+                </span>
+                <div class="edit-inline" *ngIf="isEditing(med, 'activeIngredient')">
+                  <input 
+                    type="text" 
+                    [(ngModel)]="editValues['activeIngredient']" 
+                    placeholder="Active ingredient"
+                    class="field-input"
+                    (keyup.enter)="saveField(med, 'activeIngredient')"
+                    (keyup.escape)="cancelEditing()"
+                  />
+                  <button class="save-button-small" (click)="saveField(med, 'activeIngredient')">✓</button>
+                  <button class="cancel-button-small" (click)="cancelEditing()">✕</button>
+                </div>
+                <button 
+                  *ngIf="!isEditing(med, 'activeIngredient') && med.reviewStatus !== 'approved'" 
+                  class="edit-icon-button"
+                  (click)="startEditing(med, 'activeIngredient')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Indication -->
+              <div class="detail-row" [class.missing]="isIndicationMissing(med)">
+                <span class="label">{{ 'csv_import.indication' | transloco }}:</span>
+                <span class="value" *ngIf="!isEditing(med, 'indication')">
+                  <span *ngIf="med.indication">{{ med.indication }}</span>
+                  <span *ngIf="!med.indication" class="missing-text">{{ 'csv_import.not_provided' | transloco }}</span>
+                </span>
+                <div class="edit-inline" *ngIf="isEditing(med, 'indication')">
+                  <input 
+                    type="text" 
+                    [(ngModel)]="editValues['indication']" 
+                    placeholder="Indication"
+                    class="field-input"
+                    (keyup.enter)="saveField(med, 'indication')"
+                    (keyup.escape)="cancelEditing()"
+                  />
+                  <button class="save-button-small" (click)="saveField(med, 'indication')">✓</button>
+                  <button class="cancel-button-small" (click)="cancelEditing()">✕</button>
+                </div>
+                <button 
+                  *ngIf="!isEditing(med, 'indication') && med.reviewStatus !== 'approved'" 
+                  class="edit-icon-button"
+                  (click)="startEditing(med, 'indication')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Intake Moments -->
+              <div class="detail-row detail-row-intake" [class.missing]="isIntakeMomentsMissing(med)">
+                <span class="label">{{ 'csv_import.intake' | transloco }}:</span>
+                <span class="value" *ngIf="!isEditing(med, 'intakeMoments')">{{ getIntakeDisplay(med) }}</span>
+                <div class="edit-inline-intake" *ngIf="isEditing(med, 'intakeMoments')">
+                  <div class="intake-editor">
+                    <label class="as-needed-checkbox">
+                      <input type="checkbox" [(ngModel)]="editValues['intakeMoments'].asNeeded" />
+                      {{ 'csv_import.as_needed' | transloco }}
+                    </label>
+                    <div class="intake-schedule" *ngIf="!editValues['intakeMoments'].asNeeded">
+                      <table class="intake-table">
+                        <thead>
+                          <tr>
+                            <th>{{ 'medication.time' | transloco }}</th>
+                            <th>{{ 'medication.before' | transloco }}</th>
+                            <th>{{ 'medication.during' | transloco }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="time-label">{{ 'medication.breakfast' | transloco }}</td>
+                            <td>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                step="0.5"
+                                [(ngModel)]="editValues['intakeMoments'].unitsBeforeBreakfast" 
+                                placeholder="0"
+                              />
+                            </td>
+                            <td>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                step="0.5"
+                                [(ngModel)]="editValues['intakeMoments'].unitsDuringBreakfast" 
+                                placeholder="0"
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="time-label">{{ 'medication.lunch' | transloco }}</td>
+                            <td>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                step="0.5"
+                                [(ngModel)]="editValues['intakeMoments'].unitsBeforeLunch" 
+                                placeholder="0"
+                              />
+                            </td>
+                            <td>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                step="0.5"
+                                [(ngModel)]="editValues['intakeMoments'].unitsDuringLunch" 
+                                placeholder="0"
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="time-label">{{ 'medication.dinner' | transloco }}</td>
+                            <td>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                step="0.5"
+                                [(ngModel)]="editValues['intakeMoments'].unitsBeforeDinner" 
+                                placeholder="0"
+                              />
+                            </td>
+                            <td>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                step="0.5"
+                                [(ngModel)]="editValues['intakeMoments'].unitsDuringDinner" 
+                                placeholder="0"
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="time-label">{{ 'medication.bedtime' | transloco }}</td>
+                            <td colspan="2">
+                              <input 
+                                type="number" 
+                                min="0" 
+                                step="0.5"
+                                [(ngModel)]="editValues['intakeMoments'].unitsAtBedtime" 
+                                placeholder="0"
+                                class="bedtime-input"
+                              />
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="intake-actions">
+                      <button class="save-button-small" (click)="saveField(med, 'intakeMoments')">✓ {{ 'common.save' | transloco }}</button>
+                      <button class="cancel-button-small" (click)="cancelEditing()">✕ {{ 'common.cancel' | transloco }}</button>
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  *ngIf="!isEditing(med, 'intakeMoments') && med.reviewStatus !== 'approved'" 
+                  class="edit-icon-button"
+                  (click)="startEditing(med, 'intakeMoments')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Missing Information Alert -->
+              <div class="missing-info-alert" *ngIf="med.missingInformation.length > 0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>{{ 'csv_import.missing' | transloco }}: {{ med.missingInformation.join(', ') }}</span>
+              </div>
+
+              <!-- Approval Actions -->
+              <div class="approval-actions" *ngIf="med.reviewStatus === 'under_review'">
+                <button class="approve-button" (click)="approveMedication(med)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  {{ 'csv_import.approve' | transloco }}
+                </button>
+                <button class="delete-button" (click)="deleteMedicationFromImport(med)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  {{ 'common.delete' | transloco }}
+                </button>
+              </div>
+
+              <div class="approval-actions" *ngIf="med.reviewStatus === 'approved'">
+                <button class="undo-button" (click)="undoApproval(med)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                  </svg>
+                  {{ 'csv_import.undo_approval' | transloco }}
+                </button>
+                <button class="delete-button" (click)="deleteMedicationFromImport(med)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  {{ 'common.delete' | transloco }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Error Message -->
+            <div class="error-info" *ngIf="!med.success && med.errorMessage">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ med.errorMessage }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-actions">
+          <button 
+            class="finish-button" 
+            [disabled]="!canFinishImport()"
+            (click)="finishImport()"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            {{ 'csv_import.finish_import' | transloco }}
+          </button>
+          <button class="cancel-button" (click)="closeModal()">
+            {{ 'common.cancel' | transloco }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

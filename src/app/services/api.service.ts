@@ -32,7 +32,8 @@ import {
   QuestionAnswer,
   AddQuestionAnswerRequest,
   UpdateQuestionAnswerRequest,
-  QuestionAnswerResponse
+  QuestionAnswerResponse,
+  ImportMedicationsResponse
 } from '../models/api.models';
 import { environment } from '../../environments/environment';
 
@@ -339,6 +340,17 @@ export class ApiService {
 
   deleteMedication(medicationReviewId: string, medicationId: string): Observable<void> {
     return this.http.delete<void>(`${this.API_BASE_URL}/manage_medications?medicationReviewId=${medicationReviewId}&medicationId=${medicationId}`);
+  }
+
+  // CSV Import
+  importMedicationsFromCsv(medicationReviewId: string, csvFile: File): Observable<ImportMedicationsResponse> {
+    const formData = new FormData();
+    formData.append('file', csvFile);
+
+    return this.http.post<ImportMedicationsResponse>(
+      `${this.API_BASE_URL}/import_medications_from_csv?medicationReviewId=${medicationReviewId}`,
+      formData
+    );
   }
 
   // Lab Value CRUD

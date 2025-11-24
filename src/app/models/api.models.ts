@@ -345,3 +345,38 @@ export interface QuestionAnswerResponse {
   shareWithPatient?: boolean;
   shareWithDoctor?: boolean;
 }
+
+// CSV Import
+export interface IntakeMoments {
+  unitsBeforeBreakfast?: number | null;
+  unitsDuringBreakfast?: number | null;
+  unitsBeforeLunch?: number | null;
+  unitsDuringLunch?: number | null;
+  unitsBeforeDinner?: number | null;
+  unitsDuringDinner?: number | null;
+  unitsAtBedtime?: number | null;
+  asNeeded?: boolean | null;
+}
+
+export interface ImportedMedication {
+  medicationName: string;
+  success: boolean;
+  medicationId: string | null;
+  cnk: number | null;
+  vmp: number | null;
+  packageSize: number | null;
+  activeIngredient: string | null;
+  intakeMoments: IntakeMoments | null;
+  indication: string | null;
+  missingInformation: string[];  // Array of: "CNK", "ActiveIngredient", "Indication", "IntakeMoments"
+  errorMessage: string | null;
+  reviewStatus?: 'under_review' | 'approved';  // Add review status
+}
+
+export interface ImportMedicationsResponse {
+  totalProcessed: number;
+  successful: number;
+  failed: number;
+  withMissingInformation: number;
+  medications: ImportedMedication[];
+}

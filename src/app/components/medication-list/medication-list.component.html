@@ -51,3 +51,9 @@
   (confirm)="onDeleteAllConfirmed()"
   (cancel)="onDeleteAllCancelled()"
 ></app-confirmation-modal>
+
+<!-- CSV Import Modal -->
+<app-csv-import-modal
+  *ngIf="showCsvImportModal"
+  (close)="onCsvImportClose($event)"
+></app-csv-import-modal>

@@ -5,6 +5,7 @@ import { MedicationItemComponent, Medication } from '../medication-item/medicati
 import { MedicationSearchModalComponent } from '../medication-search-modal/medication-search-modal.component';
 import { CnkSelectionModalComponent, MedicationWithMatches } from '../cnk-selection-modal/cnk-selection-modal.component';
 import { ConfirmationModalComponent } from '../confirmation-modal/confirmation-modal.component';
+import { CsvImportModalComponent } from '../csv-import-modal/csv-import-modal.component';
 import { MedicationSearchResult } from '../../models/api.models';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
@@ -14,7 +15,7 @@ import { catchError, map } from 'rxjs/operators';
 @Component({
   selector: 'app-medication-list',
   standalone: true,
-  imports: [CommonModule, TranslocoModule, MedicationItemComponent, MedicationSearchModalComponent, CnkSelectionModalComponent, ConfirmationModalComponent],
+  imports: [CommonModule, TranslocoModule, MedicationItemComponent, MedicationSearchModalComponent, CnkSelectionModalComponent, ConfirmationModalComponent, CsvImportModalComponent],
   templateUrl: './medication-list.component.html',
   styleUrls: ['./medication-list.component.scss']
 })
@@ -23,6 +24,7 @@ export class MedicationListComponent implements OnInit {
   showSearchModal = false;
   showCnkSelectionModal = false;
   showDeleteAllModal = false;
+  showCsvImportModal = false;
   isLoading = false;
   editingMedication: Medication | null = null;
   
@@ -92,6 +94,19 @@ export class MedicationListComponent implements OnInit {
   }
 
   importMedications() {
+    this.showCsvImportModal = true;
+  }
+
+  onCsvImportClose(medicationsImported: boolean) {
+    this.showCsvImportModal = false;
+    if (medicationsImported) {
+      // Reload medications list
+      this.loadMedications();
+    }
+  }
+
+  // Legacy CSV import method - kept for backward compatibility but not used
+  importMedicationsLegacy() {
     // Create a hidden file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
