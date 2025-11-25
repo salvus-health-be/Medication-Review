@@ -1,0 +1,76 @@
+// Responsive breakpoints
+$breakpoint-xs: 480px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// Mixins for responsive design
+@mixin xs {
+  @media (max-width: #{$breakpoint-xs}) {
+    @content;
+  }
+}
+
+@mixin sm {
+  @media (max-width: #{$breakpoint-sm}) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (max-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (max-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (max-width: #{$breakpoint-xl}) {
+    @content;
+  }
+}
+
+@mixin min-md {
+  @media (min-width: #{$breakpoint-md + 1}) {
+    @content;
+  }
+}
+
+@mixin min-lg {
+  @media (min-width: #{$breakpoint-lg + 1}) {
+    @content;
+  }
+}
+
+// Responsive font sizes
+@mixin responsive-font($min-size, $max-size, $min-vw: 320px, $max-vw: 1920px) {
+  font-size: $min-size;
+  
+  @media (min-width: $min-vw) {
+    font-size: calc(#{$min-size} + #{($max-size - $min-size) / ($max-vw - $min-vw)} * (100vw - #{$min-vw}));
+  }
+  
+  @media (min-width: $max-vw) {
+    font-size: $max-size;
+  }
+}
+
+// Responsive spacing
+@mixin responsive-padding($mobile, $tablet, $desktop) {
+  padding: $mobile;
+  
+  @include md {
+    padding: $tablet;
+  }
+  
+  @include min-lg {
+    padding: $desktop;
+  }
+}

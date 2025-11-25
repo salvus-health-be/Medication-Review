@@ -24,7 +24,7 @@ export class LoginPage {
   availableLanguages = [
     { code: 'en', name: 'English' },
     { code: 'nl', name: 'Nederlands' },
-    { code: 'fr', name: 'FranÃ§ais' }
+    { code: 'fr', name: 'Français' }
   ];
 
   get currentLanguage(): string {

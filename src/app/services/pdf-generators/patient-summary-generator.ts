@@ -138,22 +138,13 @@ export class PatientSummaryGenerator extends BasePdfGenerator {
 
   private createCompactPatientInfo(patient: Patient | null, review: MedicationReview | null): Content {
     const lang = this.transloco.getActiveLang();
-    let prefix = 'Voor: ';
-    if (lang === 'fr') prefix = 'Pour : ';
-    else if (lang === 'en') prefix = 'For: ';
-
-    const name = [review?.firstNameAtTimeOfReview, review?.lastNameAtTimeOfReview]
-      .filter(Boolean)
-      .join(' ') || this.transloco.translate('pdf.unknown_patient');
-    
-    let dateStr = '';
-    if (patient?.dateOfBirth) {
-      const dob = patient.dateOfBirth.split('T')[0];
-      dateStr = ` (${this.transloco.translate('patient.birth_date')}: ${dob})`;
-    }
+    // Anonymous patient reference for MVP
+    let patientRef = 'Voor: Patiënt';
+    if (lang === 'fr') patientRef = 'Pour : Patient(e)';
+    else if (lang === 'en') patientRef = 'For: Patient';
 
     return {
-      text: `${prefix}${name}${dateStr}`,
+      text: patientRef,
       style: 'patientReference'
     };
   }

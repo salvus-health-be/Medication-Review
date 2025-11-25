@@ -314,7 +314,7 @@ export class InteractionsComponent implements OnInit, OnDestroy {
       
       // Split by newline or by pattern like "Author et al." followed by journal info
       // This regex matches the pattern: Author(s) et al., Journal details (year)
-      const refPattern = /([A-Z][a-zÃ¤Ã¶Ã¼ÃŸ]+(?:,?\s+[A-Z]\.?)+\s+et\s+al\.|[A-Z][a-zÃ¤Ã¶Ã¼ÃŸ]+\s+et\s+al\.|Fachinformation\s+[^,]+)[^n]*?(?:\([12]\d{3}\)|Stand\))/g;
+      const refPattern = /([A-Z][a-zäöüß]+(?:,?\s+[A-Z]\.?)+\s+et\s+al\.|[A-Z][a-zäöüß]+\s+et\s+al\.|Fachinformation\s+[^,]+)[^n]*?(?:\([12]\d{3}\)|Stand\))/g;
       const references = literatureText.match(refPattern) || [];
       
       if (references.length > 0) {

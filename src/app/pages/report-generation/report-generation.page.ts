@@ -159,18 +159,17 @@ export class ReportGenerationPage implements OnInit {
   private initializePatientContent() {
     const lang = this.transloco.getActiveLang();
     
-    // Get default salutation with patient name
-    const patientName = this.review?.firstNameAtTimeOfReview || 'patiÃ«nt';
-    let salutation = `Beste ${patientName},`;
-    if (lang === 'fr') salutation = `Cher(e) ${patientName},`;
-    else if (lang === 'en') salutation = `Dear ${patientName},`;
+    // Use generic salutation for MVP anonymity
+    let salutation = 'Beste,';
+    if (lang === 'fr') salutation = 'Cher(e) patient(e),';
+    else if (lang === 'en') salutation = 'Dear patient,';
 
     // Get default intro text
     let introText = '';
     if (lang === 'nl') {
       introText = 'Hierbij ontvangt u een samenvatting van ons gesprek over uw medicatie. Dit document bevat belangrijke informatie en aanbevelingen om u te helpen het beste uit uw medicatie te halen.';
     } else if (lang === 'fr') {
-      introText = 'Voici un rÃ©sumÃ© de notre conversation sur vos mÃ©dicaments. Ce document contient des informations importantes et des recommandations pour vous aider Ã  tirer le meilleur parti de vos mÃ©dicaments.';
+      introText = 'Voici un résumé de notre conversation sur vos médicaments. Ce document contient des informations importantes et des recommandations pour vous aider à tirer le meilleur parti de vos médicaments.';
     } else {
       introText = 'This is a summary of our conversation about your medication. This document contains important information and recommendations to help you get the most out of your treatment.';
     }
@@ -222,7 +221,7 @@ export class ReportGenerationPage implements OnInit {
     if (lang === 'nl') {
       closingText = 'Heeft u vragen over deze informatie? Neem gerust contact met ons op. Wij staan altijd klaar om u te helpen.';
     } else if (lang === 'fr') {
-      closingText = 'Avez-vous des questions sur ces informations ? N\'hÃ©sitez pas Ã  nous contacter. Nous sommes toujours lÃ  pour vous aider.';
+      closingText = 'Avez-vous des questions sur ces informations ? N\'hésitez pas à nous contacter. Nous sommes toujours là pour vous aider.';
     } else {
       closingText = 'Do you have any questions about this information? Please feel free to contact us. We are always here to help.';
     }
@@ -249,15 +248,15 @@ export class ReportGenerationPage implements OnInit {
     
     // Get default salutation
     let salutation = 'Geachte collega,';
-    if (lang === 'fr') salutation = 'Cher collÃ¨gue,';
+    if (lang === 'fr') salutation = 'Cher collègue,';
     else if (lang === 'en') salutation = 'Dear Colleague,';
 
     // Get default intro text
     let introText = '';
     if (lang === 'nl') {
-      introText = 'Hierbij deel ik de bevindingen van een recent uitgevoerd medicatiereview. De volgende observaties kunnen relevant zijn voor de patiÃ«ntenzorg.';
+      introText = 'Hierbij deel ik de bevindingen van een recent uitgevoerd medicatiereview. De volgende observaties kunnen relevant zijn voor de patiëntenzorg.';
     } else if (lang === 'fr') {
-      introText = 'Je partage avec vous les rÃ©sultats d\'un examen de mÃ©dication rÃ©cemment effectuÃ©. Les observations suivantes peuvent Ãªtre pertinentes pour les soins aux patients.';
+      introText = 'Je partage avec vous les résultats d\'un examen de médication récemment effectué. Les observations suivantes peuvent être pertinentes pour les soins aux patients.';
     } else {
       introText = 'I am sharing the findings from a recent medication review. The following observations may be relevant to patient care.';
     }
@@ -309,7 +308,7 @@ export class ReportGenerationPage implements OnInit {
     if (lang === 'nl') {
       closingText = 'Voor verdere vragen of overleg sta ik graag tot uw beschikking.';
     } else if (lang === 'fr') {
-      closingText = 'Je reste Ã  votre disposition pour toute question ou discussion complÃ©mentaire.';
+      closingText = 'Je reste à votre disposition pour toute question ou discussion complémentaire.';
     } else {
       closingText = 'I remain available for any questions or further discussion.';
     }
@@ -339,7 +338,7 @@ export class ReportGenerationPage implements OnInit {
     if (lang === 'nl') {
       internalNotice = 'Interne farmaceutische samenvatting met volledige reviewgegevens.';
     } else if (lang === 'fr') {
-      internalNotice = 'RÃ©sumÃ© pharmaceutique interne avec donnÃ©es complÃ¨tes de l\'examen.';
+      internalNotice = 'Résumé pharmaceutique interne avec données complètes de l\'examen.';
     } else {
       internalNotice = 'Internal pharmaceutical summary with complete review data.';
     }
@@ -558,23 +557,13 @@ export class ReportGenerationPage implements OnInit {
     });
     content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Patient info
-    let prefix = 'Voor: ';
-    if (lang === 'fr') prefix = 'Pour : ';
-    else if (lang === 'en') prefix = 'For: ';
-
-    const name = [this.review?.firstNameAtTimeOfReview, this.review?.lastNameAtTimeOfReview]
-      .filter(Boolean)
-      .join(' ') || this.transloco.translate('pdf.unknown_patient');
-    
-    let dateStr = '';
-    if (this.patient?.dateOfBirth) {
-      const dob = this.patient.dateOfBirth.split('T')[0];
-      dateStr = ` (${this.transloco.translate('patient.birth_date')}: ${dob})`;
-    }
+    // Patient info - anonymous for MVP
+    let patientRef = 'Voor: Patiënt';
+    if (lang === 'fr') patientRef = 'Pour : Patient(e)';
+    else if (lang === 'en') patientRef = 'For: Patient';
 
     content.push({
-      text: `${prefix}${name}${dateStr}`,
+      text: patientRef,
       style: 'patientReference'
     });
     content.push({ text: '', margin: [0, 15, 0, 0] });
@@ -743,23 +732,13 @@ export class ReportGenerationPage implements OnInit {
     });
     content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Patient info
-    let prefix = 'Betreft: ';
-    if (lang === 'fr') prefix = 'Concernant : ';
-    else if (lang === 'en') prefix = 'Regarding: ';
-
-    const name = [this.review?.firstNameAtTimeOfReview, this.review?.lastNameAtTimeOfReview]
-      .filter(Boolean)
-      .join(' ') || this.transloco.translate('pdf.unknown_patient');
-    
-    let dateStr = '';
-    if (this.patient?.dateOfBirth) {
-      const dob = this.patient.dateOfBirth.split('T')[0];
-      dateStr = ` (${this.transloco.translate('patient.birth_date')}: ${dob})`;
-    }
+    // Patient info - anonymous for MVP
+    let patientRef = 'Betreft: Patiënt';
+    if (lang === 'fr') patientRef = 'Concernant : Patient(e)';
+    else if (lang === 'en') patientRef = 'Regarding: Patient';
 
     content.push({
-      text: `${prefix}${name}${dateStr}`,
+      text: patientRef,
       style: 'patientReference'
     });
     content.push({ text: '', margin: [0, 15, 0, 0] });
@@ -928,23 +907,13 @@ export class ReportGenerationPage implements OnInit {
     });
     content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Patient info
-    let prefix = 'Voor: ';
-    if (lang === 'fr') prefix = 'Pour : ';
-    else if (lang === 'en') prefix = 'For: ';
-
-    const name = [this.review?.firstNameAtTimeOfReview, this.review?.lastNameAtTimeOfReview]
-      .filter(Boolean)
-      .join(' ') || this.transloco.translate('pdf.unknown_patient');
-    
-    let dateStr = '';
-    if (this.patient?.dateOfBirth) {
-      const dob = this.patient.dateOfBirth.split('T')[0];
-      dateStr = ` (${this.transloco.translate('patient.birth_date')}: ${dob})`;
-    }
+    // Patient info - anonymous for MVP
+    let patientRef = 'Voor: Patiënt';
+    if (lang === 'fr') patientRef = 'Pour : Patient(e)';
+    else if (lang === 'en') patientRef = 'For: Patient';
 
     content.push({
-      text: `${prefix}${name}${dateStr}`,
+      text: patientRef,
       style: 'patientReference'
     });
     content.push({ text: '', margin: [0, 15, 0, 0] });

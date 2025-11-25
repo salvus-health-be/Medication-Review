@@ -94,7 +94,8 @@
     "as_needed_with_translation": "As needed",
     "as_needed_short": "As needed",
     "indication_label": "Indication",
-    "plus_add": "+ Add"
+    "plus_add": "+Add",
+    "not_enabled": "Not enabled"
   },
   "input": {
     "start_preparation": "Start Preparation"

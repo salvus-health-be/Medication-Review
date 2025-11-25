@@ -94,7 +94,8 @@
     "as_needed_with_translation": "Si nécessaire",
     "as_needed_short": "Si besoin",
     "indication_label": "Indication",
-    "plus_add": "+ Ajouter"
+    "plus_add": "+ Ajouter",
+    "not_enabled": "Non activé"
   },
   "medication": {
     "medication_schema": "Schéma de médication",

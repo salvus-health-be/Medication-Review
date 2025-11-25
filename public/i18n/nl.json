@@ -94,7 +94,8 @@
     "as_needed_with_translation": "Zo nodig",
     "as_needed_short": "Zo nodig",
     "indication_label": "Indicatie",
-    "plus_add": "+ Toevoegen"
+    "plus_add": "+ Toevoegen",
+    "not_enabled": "Niet ingeschakeld"
   },
   "input": {
     "start_preparation": "Voorbereiding starten"

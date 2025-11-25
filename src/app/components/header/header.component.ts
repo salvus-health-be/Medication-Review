@@ -197,20 +197,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Build patient name from review data
-    const firstName = sessionData.review?.firstNameAtTimeOfReview || '';
-    const lastName = sessionData.review?.lastNameAtTimeOfReview || '';
-    this.patientName = `${firstName} ${lastName}`.trim() || 'Unknown Patient';
+    // For MVP: Use generic "Patiënt" instead of actual name for anonymity
+    this.patientName = 'Patiënt';
 
-    // Calculate age from date of birth
-    if (sessionData.patient?.dateOfBirth) {
-      this.patientAge = this.calculateAge(sessionData.patient.dateOfBirth);
-    } else {
-      this.patientAge = null;
-    }
+    // Don't show age for MVP anonymity
+    this.patientAge = null;
 
-    // Get sex
-    this.patientSex = sessionData.patient?.sex || '';
+    // Don't show sex for MVP anonymity
+    this.patientSex = '';
   }
 
   private calculateAge(dateOfBirth: string): number {

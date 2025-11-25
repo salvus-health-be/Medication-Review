@@ -29,7 +29,7 @@ interface DispensingMomentWithUnits {
   date: Date;
   amount: number;          // Number of packages
   unitsPerPackage: number; // Units in one package
-  totalUnits: number;      // amount Ã— unitsPerPackage
+  totalUnits: number;      // amount × unitsPerPackage
   dateString: string;
   source?: 'csv' | 'manual'; // Source of dispensing moment
 }

@@ -60,43 +60,21 @@ export abstract class BasePdfGenerator {
   }
 
   protected createPatientInfoSection(patient: Patient | null, review: MedicationReview | null): Content {
+    // For MVP: Keep patient info anonymous - don't show name, DOB, or sex
+    // Only show a generic "Patient" label
     const items: any[] = [];
 
-    if (review?.firstNameAtTimeOfReview || review?.lastNameAtTimeOfReview) {
-      const name = [review.firstNameAtTimeOfReview, review.lastNameAtTimeOfReview]
-        .filter(Boolean)
-        .join(' ');
-      items.push({ 
-        stack: [
-          { text: this.transloco.translate('patient.name').toUpperCase(), style: 'infoLabel' },
-          { text: name, style: 'infoValue' }
-        ],
-        width: '*'
-      });
-    }
+    // Use generic "Patient" label instead of actual name for MVP anonymity
+    items.push({ 
+      stack: [
+        { text: this.transloco.translate('patient.name').toUpperCase(), style: 'infoLabel' },
+        { text: 'Patiënt', style: 'infoValue' }
+      ],
+      width: '*'
+    });
 
-    if (patient?.dateOfBirth) {
-      const formattedDate = patient.dateOfBirth.split('T')[0];
-      items.push({ 
-        stack: [
-          { text: this.transloco.translate('patient.birth_date').toUpperCase(), style: 'infoLabel' },
-          { text: formattedDate, style: 'infoValue' }
-        ],
-        width: 'auto',
-        margin: [20, 0, 0, 0]
-      });
-    }
-
-    if (patient?.sex) {
-      items.push({ 
-        stack: [
-          { text: this.transloco.translate('patient.sex').toUpperCase(), style: 'infoLabel' },
-          { text: patient.sex, style: 'infoValue' }
-        ],
-        width: 'auto',
-        margin: [20, 0, 0, 0]
-      });
-    }
+    // Don't include date of birth for MVP anonymity
+    // Don't include sex for MVP anonymity
 
     if (items.length === 0) {
       return { text: '' };

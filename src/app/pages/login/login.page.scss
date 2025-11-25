@@ -1,5 +1,6 @@
 @import '../../../styles/colors';
 @import '../../../styles/fonts';
+@import '../../../styles/responsive';
 
 .login-page {
   display: flex;
@@ -10,6 +11,10 @@
   background-color: #132F52;
   position: relative;
   overflow: hidden;
+
+  @include sm {
+    padding: 1rem;
+  }
 
   &::before {
     content: '';
@@ -32,23 +37,40 @@
     position: relative;
     z-index: 1;
 
+    @include sm {
+      max-width: 100%;
+    }
+
     .login-box {
       background-color: $box-background;
       border: $box-border-width solid $box-border-primary;
       border-radius: $box-border-radius;
       padding: 2.5rem;
 
+      @include sm {
+        padding: 1.5rem;
+      }
+
       .login-title {
         font-size: 1.8rem;
         color: $text-primary;
         margin-bottom: 2rem;
         text-align: center;
+
+        @include sm {
+          font-size: 1.5rem;
+          margin-bottom: 1.5rem;
+        }
       }
 
       .login-form {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+
+        @include sm {
+          gap: 1rem;
+        }
 
         .field-group {
           display: flex;
@@ -136,6 +158,11 @@
       gap: 0.5rem;
       z-index: 10;
 
+      @include sm {
+        bottom: 1rem;
+        right: 1rem;
+      }
+
       .language-button {
         width: 3rem;
         height: 3rem;
@@ -152,6 +179,12 @@
         cursor: pointer;
         transition: all 0.2s ease;
         backdrop-filter: blur(10px);
+
+        @include sm {
+          width: 2.5rem;
+          height: 2.5rem;
+          font-size: 0.7rem;
+        }
 
         &:hover {
           background-color: rgba(255, 255, 255, 0.15);

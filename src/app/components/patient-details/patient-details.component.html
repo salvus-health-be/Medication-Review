@@ -2,24 +2,24 @@
   <h3 class="box-title">{{ 'patient.patient_details' | transloco }}</h3>
   
   <div class="fields-grid">
-    <div class="field-group">
+    <div class="field-group disabled-field">
       <label for="firstName">{{ 'patient.name' | transloco }}</label>
-      <input type="text" id="firstName" [(ngModel)]="firstName" (ngModelChange)="onFirstNameChange()" [placeholder]="'patient.name' | transloco">
+      <input type="text" id="firstName" [(ngModel)]="firstName" disabled [placeholder]="'ui.not_enabled' | transloco">
     </div>
     
-    <div class="field-group">
+    <div class="field-group disabled-field">
       <label for="lastName">{{ 'patient.name' | transloco }}</label>
-      <input type="text" id="lastName" [(ngModel)]="lastName" (ngModelChange)="onLastNameChange()" [placeholder]="'patient.name' | transloco">
+      <input type="text" id="lastName" [(ngModel)]="lastName" disabled [placeholder]="'ui.not_enabled' | transloco">
     </div>
     
-    <div class="field-group">
+    <div class="field-group disabled-field">
       <label for="dateOfBirth">{{ 'patient.birth_date' | transloco }}</label>
-      <input type="date" id="dateOfBirth" [(ngModel)]="dateOfBirth" (ngModelChange)="onDateOfBirthChange()">
+      <input type="date" id="dateOfBirth" [(ngModel)]="dateOfBirth" disabled [placeholder]="'ui.not_enabled' | transloco">
     </div>
     
-    <div class="field-group">
+    <div class="field-group disabled-field">
       <label for="sex">{{ 'patient.sex' | transloco }}</label>
-      <input type="text" id="sex" [(ngModel)]="sex" (ngModelChange)="onSexChange()" [placeholder]="'patient.sex' | transloco">
+      <input type="text" id="sex" [(ngModel)]="sex" disabled [placeholder]="'ui.not_enabled' | transloco">
     </div>
     
     <div class="field-group">

@@ -51,6 +51,23 @@
         &::placeholder {
           color: $text-muted;
         }
+
+        &:disabled {
+          background-color: #f5f5f5;
+          color: #999;
+          cursor: not-allowed;
+          border-color: #ddd;
+
+          &:hover {
+            border-color: #ddd;
+          }
+        }
+      }
+
+      &.disabled-field {
+        label {
+          color: #999;
+        }
       }
 
       &#renalFunction {
