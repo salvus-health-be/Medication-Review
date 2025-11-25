@@ -53,10 +53,11 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
   }
 
   loadMedications() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.apiService.getMedications(reviewId).subscribe({
+    this.apiService.getMedications(apbNumber, reviewId).subscribe({
       next: (meds) => {
         this.medications = meds;
       },
@@ -74,7 +75,8 @@ export class PdfPreviewPage implements OnInit, OnDestroy {
     this.isLoading = true;
 
     // Load notes and generate PDF
-    this.reviewNotesService.loadReviewNotes(reviewId);
+    const apbNumber = this.stateService.apbNumber;
+    this.reviewNotesService.loadReviewNotes(apbNumber, reviewId);
     
     this.reviewNotesService.notes$
       .pipe(takeUntil(this.destroy$))

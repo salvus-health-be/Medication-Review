@@ -51,13 +51,14 @@ export class RenadaptorComponent implements OnInit {
   }
 
   loadMedications() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
     this.loading = true;
     this.error = null;
 
-    this.apiService.getMedications(reviewId).subscribe({
+    this.apiService.getMedications(apbNumber, reviewId).subscribe({
       next: (medications) => {
         this.medications = medications.filter(m => m.cnk); // Only medications with CNK
         

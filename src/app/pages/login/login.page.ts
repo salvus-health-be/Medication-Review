@@ -16,6 +16,7 @@ import { LoginRequest } from '../../models/api.models';
 })
 export class LoginPage {
   apbNumber: string = '';
+  password: string = '';
   medicationReviewId: string = '';
   isLoading: boolean = false;
   errorMessage: string = '';
@@ -42,7 +43,7 @@ export class LoginPage {
   }
 
   get isFormValid(): boolean {
-    return this.apbNumber.trim() !== '';
+    return this.apbNumber.trim() !== '' && this.password.trim() !== '';
   }
 
   onSubmit() {
@@ -54,7 +55,8 @@ export class LoginPage {
     this.errorMessage = '';
 
     const request: LoginRequest = {
-      apbNumber: this.apbNumber.trim()
+      apbNumber: this.apbNumber.trim(),
+      password: this.password
     };
 
     // Add optional medication review ID if provided
@@ -82,8 +84,15 @@ export class LoginPage {
       },
       error: (error) => {
         this.isLoading = false;
-        const serverMsg = error.error?.message;
-        this.errorMessage = serverMsg ? serverMsg : this.transloco.translate('login.login_failed');
+        if (error.status === 401) {
+          this.errorMessage = this.transloco.translate('login.invalid_password');
+        } else if (error.status === 400) {
+          const serverMsg = error.error?.error;
+          this.errorMessage = serverMsg ? serverMsg : this.transloco.translate('login.login_failed');
+        } else {
+          const serverMsg = error.error?.message || error.error?.error;
+          this.errorMessage = serverMsg ? serverMsg : this.transloco.translate('login.login_failed');
+        }
       },
       complete: () => {
         this.isLoading = false;

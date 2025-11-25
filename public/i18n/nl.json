@@ -59,6 +59,8 @@
     "title": "Inloggen",
     "username": "Gebruikersnaam",
     "password": "Wachtwoord",
+    "enter_password": "Voer wachtwoord in",
+    "invalid_password": "Ongeldig APB-nummer of wachtwoord. Controleer uw gegevens.",
     "login_button": "Inloggen",
     "forgot_password": "Wachtwoord vergeten?",
     "remember_me": "Onthoud mij",

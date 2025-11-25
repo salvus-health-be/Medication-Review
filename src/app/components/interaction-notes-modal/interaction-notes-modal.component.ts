@@ -47,6 +47,7 @@ export class InteractionNotesModalComponent {
       return;
     }
 
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       return;
@@ -63,7 +64,7 @@ export class InteractionNotesModalComponent {
       communicateToDoctor: this.addToGpReport
     };
 
-    this.reviewNotesService.addNote(reviewId, noteData).subscribe({
+    this.reviewNotesService.addNote(apbNumber, reviewId, noteData).subscribe({
       next: (note) => {
         this.close.emit();
         this.resetForm();

@@ -163,6 +163,7 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
   }
 
   saveToBackend() {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
@@ -205,6 +206,7 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
     };
 
     this.apiService.updateMedication(
+      apbNumber,
       medicationReviewId,
       this.medication.medicationId,
       updateData
@@ -234,12 +236,13 @@ export class MedicationItemComponent implements OnInit, OnDestroy, OnChanges, Af
   onDeleteConfirm() {
     this.showDeleteConfirmation = false;
 
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
     }
 
-    this.apiService.deleteMedication(medicationReviewId, this.medication.medicationId).subscribe({
+    this.apiService.deleteMedication(apbNumber, medicationReviewId, this.medication.medicationId).subscribe({
       next: () => {
         // Emit event to parent component to remove from list
         this.medicationDeleted.emit(this.medication.medicationId);

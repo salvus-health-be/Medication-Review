@@ -30,10 +30,10 @@ export class ReviewNotesService {
   /**
    * Load all review notes for a specific review
    */
-  loadReviewNotes(reviewId: string): void {
+  loadReviewNotes(apbNumber: string, reviewId: string): void {
     this.currentReviewId = reviewId;
     
-    this.apiService.getReviewNotes(reviewId).subscribe({
+    this.apiService.getReviewNotes(apbNumber, reviewId).subscribe({
       next: (notes) => {
         this.notesSubject.next(notes);
         this.notesCount$.next(notes.length);
@@ -46,9 +46,9 @@ export class ReviewNotesService {
   /**
    * Add a new review note
    */
-  addNote(reviewId: string, note: { text?: string; discussWithPatient?: boolean; communicateToDoctor?: boolean; category?: string; linkedCnk?: string; medicationName?: string }): Observable<ReviewNote> {
+  addNote(apbNumber: string, reviewId: string, note: { text?: string; discussWithPatient?: boolean; communicateToDoctor?: boolean; category?: string; linkedCnk?: string; medicationName?: string }): Observable<ReviewNote> {
     return new Observable(observer => {
-      this.apiService.addReviewNote(reviewId, note).subscribe({
+      this.apiService.addReviewNote(apbNumber, reviewId, note).subscribe({
         next: (newNote) => {
           // Ensure timestamp is set (either from backend or set to current time)
           if (!newNote.timestamp) {
@@ -72,9 +72,9 @@ export class ReviewNotesService {
   /**
    * Update an existing review note
    */
-  updateNote(reviewId: string, noteId: string, updates: Partial<ReviewNote>): Observable<ReviewNote> {
+  updateNote(apbNumber: string, reviewId: string, noteId: string, updates: Partial<ReviewNote>): Observable<ReviewNote> {
     return new Observable(observer => {
-      this.apiService.updateReviewNote(reviewId, noteId, updates).subscribe({
+      this.apiService.updateReviewNote(apbNumber, reviewId, noteId, updates).subscribe({
         next: (updatedNote) => {
           const currentNotes = this.notesSubject.value;
           const index = currentNotes.findIndex(n => n.rowKey === noteId);
@@ -95,9 +95,9 @@ export class ReviewNotesService {
   /**
    * Delete a review note
    */
-  deleteNote(reviewId: string, noteId: string): Observable<void> {
+  deleteNote(apbNumber: string, reviewId: string, noteId: string): Observable<void> {
     return new Observable(observer => {
-      this.apiService.deleteReviewNote(reviewId, noteId).subscribe({
+      this.apiService.deleteReviewNote(apbNumber, reviewId, noteId).subscribe({
         next: () => {
           const currentNotes = this.notesSubject.value;
           const updatedNotes = currentNotes.filter(n => n.rowKey !== noteId);

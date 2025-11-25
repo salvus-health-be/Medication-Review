@@ -45,6 +45,7 @@ export class MedicationListComponent implements OnInit {
   }
 
   loadMedications() {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       this.medications = [];
@@ -53,7 +54,7 @@ export class MedicationListComponent implements OnInit {
 
     this.isLoading = true;
     
-    this.apiService.getMedications(medicationReviewId).subscribe({
+    this.apiService.getMedications(apbNumber, medicationReviewId).subscribe({
       next: (medications) => {
         console.log('MedicationListComponent loadMedications - raw API response:', medications);
         
@@ -505,6 +506,7 @@ export class MedicationListComponent implements OnInit {
   }
 
   private saveAllMedicationsWithCnk() {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
@@ -544,7 +546,7 @@ export class MedicationListComponent implements OnInit {
         payload.packageSize = med.searchResult.verpakking || undefined;
       }
       
-      this.apiService.addMedication(medicationReviewId, payload).subscribe({
+      this.apiService.addMedication(apbNumber, medicationReviewId, payload).subscribe({
         next: (response) => {
           savedCount++;
           saveNext(index + 1);
@@ -570,6 +572,7 @@ export class MedicationListComponent implements OnInit {
   }
 
   onMedicationSelected(medication: MedicationSearchResult) {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
@@ -580,6 +583,7 @@ export class MedicationListComponent implements OnInit {
 
       // Update the existing medication while preserving intake and indication
       this.apiService.updateMedication(
+        apbNumber,
         medicationReviewId,
         this.editingMedication.medicationId,
         {
@@ -614,6 +618,7 @@ export class MedicationListComponent implements OnInit {
       // Adding new medication
 
       this.apiService.addMedication(
+        apbNumber,
         medicationReviewId,
         {
           name: medication.benaming,
@@ -663,6 +668,7 @@ export class MedicationListComponent implements OnInit {
   onDeleteAllConfirmed() {
     this.showDeleteAllModal = false;
 
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       alert('Please create or select a medication review first.');
@@ -687,7 +693,7 @@ export class MedicationListComponent implements OnInit {
         return;
       }
 
-      this.apiService.deleteMedication(medicationReviewId, med.medicationId).subscribe({
+      this.apiService.deleteMedication(apbNumber, medicationReviewId, med.medicationId).subscribe({
         next: () => {
           deletedCount++;
           deleteNext(index + 1);

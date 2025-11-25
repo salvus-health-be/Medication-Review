@@ -243,10 +243,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   removeContraIndication(contraindication: Contraindication) {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.apiService.deleteContraindication(reviewId, contraindication.contraindicationId).subscribe({
+    this.apiService.deleteContraindication(apbNumber, reviewId, contraindication.contraindicationId).subscribe({
       next: () => {
         this.loadContraindications();
         this.stateService.notifyContraindicationsChanged();
@@ -268,13 +269,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private loadContraindications() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       this.contraIndications = [];
       return;
     }
 
-    this.apiService.getContraindications(reviewId).subscribe({
+    this.apiService.getContraindications(apbNumber, reviewId).subscribe({
       next: (contraindications) => {
         this.contraIndications = contraindications;
       },
@@ -285,12 +287,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private loadReviewNotes() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       this.reviewNotesService.clearNotes();
       return;
     }
 
-    this.reviewNotesService.loadReviewNotes(reviewId);
+    this.reviewNotesService.loadReviewNotes(apbNumber, reviewId);
   }
 }

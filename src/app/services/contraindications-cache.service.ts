@@ -94,9 +94,10 @@ export class ContraindicationsCacheService {
     this.updateCache({ loading: true, error: null });
 
     // Load medications and patient contraindications in parallel
+    const apbNumber = this.stateService.apbNumber;
     forkJoin({
-      medications: this.apiService.getMedications(reviewId),
-      contraindications: this.apiService.getContraindications(reviewId)
+      medications: this.apiService.getMedications(apbNumber, reviewId),
+      contraindications: this.apiService.getContraindications(apbNumber, reviewId)
     }).subscribe({
       next: ({ medications, contraindications }) => {
 

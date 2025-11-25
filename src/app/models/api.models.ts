@@ -31,6 +31,7 @@ export interface MedicationSearchResponse {
 
 export interface LoginRequest {
   apbNumber: string;
+  password: string;
   medicationReviewId?: string;
 }
 

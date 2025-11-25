@@ -29,6 +29,7 @@ export class LabValuesListComponent implements OnInit {
   }
 
   loadLabValues() {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       this.labValues = [];
@@ -36,7 +37,7 @@ export class LabValuesListComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.apiService.getLabValues(medicationReviewId).subscribe({
+    this.apiService.getLabValues(apbNumber, medicationReviewId).subscribe({
       next: (labValues) => {
         this.labValues = labValues;
         this.isLoading = false;
@@ -57,12 +58,14 @@ export class LabValuesListComponent implements OnInit {
   }
 
   onLabValueAdded(data: LabValueData) {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
     }
 
     this.apiService.addLabValue(
+      apbNumber,
       medicationReviewId,
       {
         name: data.name,
@@ -80,12 +83,13 @@ export class LabValuesListComponent implements OnInit {
   }
 
   onLabValueDeleted(labValueId: string) {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
     }
 
-    this.apiService.deleteLabValue(medicationReviewId, labValueId).subscribe({
+    this.apiService.deleteLabValue(apbNumber, medicationReviewId, labValueId).subscribe({
       next: () => {
         this.labValues = this.labValues.filter(lv => lv.labValueId !== labValueId);
       },

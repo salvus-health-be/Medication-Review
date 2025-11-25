@@ -40,9 +40,10 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
       });
 
     // Load notes if not already loaded
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (reviewId && this.reviewNotesService.getNotesCount() === 0) {
-      this.reviewNotesService.loadReviewNotes(reviewId);
+      this.reviewNotesService.loadReviewNotes(apbNumber, reviewId);
     }
   }
 
@@ -70,6 +71,7 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
 
   onConfirmDelete() {
     if (!this.selectedNoteToDelete) return;
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       this.showDeleteConfirmation = false;
@@ -78,7 +80,7 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
     }
 
     const rowKey = this.selectedNoteToDelete.rowKey;
-    this.reviewNotesService.deleteNote(reviewId, rowKey).subscribe({
+    this.reviewNotesService.deleteNote(apbNumber, reviewId, rowKey).subscribe({
       next: () => {
         this.showDeleteConfirmation = false;
         this.selectedNoteToDelete = null;
@@ -97,10 +99,11 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
   }
 
   toggleDiscussWithPatient(note: ReviewNote) {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.reviewNotesService.updateNote(reviewId, note.rowKey, {
+    this.reviewNotesService.updateNote(apbNumber, reviewId, note.rowKey, {
       discussWithPatient: !note.discussWithPatient
     }).subscribe({
       error: (error) => {
@@ -110,10 +113,11 @@ export class NoteOverviewPage implements OnInit, OnDestroy {
   }
 
   toggleCommunicateToDoctor(note: ReviewNote) {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.reviewNotesService.updateNote(reviewId, note.rowKey, {
+    this.reviewNotesService.updateNote(apbNumber, reviewId, note.rowKey, {
       communicateToDoctor: !note.communicateToDoctor
     }).subscribe({
       error: (error) => {

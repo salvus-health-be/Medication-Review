@@ -96,10 +96,11 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   loadMedications() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.apiService.getMedications(reviewId).subscribe({
+    this.apiService.getMedications(apbNumber, reviewId).subscribe({
       next: (medications) => {
         this.medications = medications;
         

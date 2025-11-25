@@ -53,9 +53,10 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
       });
 
     // Load notes if not already loaded
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (reviewId && this.reviewNotesService.getNotesCount() === 0) {
-      this.reviewNotesService.loadReviewNotes(reviewId);
+      this.reviewNotesService.loadReviewNotes(apbNumber, reviewId);
     }
   }
 
@@ -78,6 +79,7 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
 
   onConfirmDelete() {
     if (!this.selectedNoteToDelete) return;
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       this.showDeleteConfirmation = false;
@@ -86,7 +88,7 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
     }
 
     const rowKey = this.selectedNoteToDelete.rowKey;
-    this.reviewNotesService.deleteNote(reviewId, rowKey).subscribe({
+    this.reviewNotesService.deleteNote(apbNumber, reviewId, rowKey).subscribe({
       next: () => {
         this.showDeleteConfirmation = false;
         this.selectedNoteToDelete = null;
@@ -105,10 +107,11 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   }
 
   toggleDiscussWithPatient(note: ReviewNote) {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.reviewNotesService.updateNote(reviewId, note.rowKey, {
+    this.reviewNotesService.updateNote(apbNumber, reviewId, note.rowKey, {
       discussWithPatient: !note.discussWithPatient
     }).subscribe({
       error: (error) => {
@@ -118,10 +121,11 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   }
 
   toggleCommunicateToDoctor(note: ReviewNote) {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.reviewNotesService.updateNote(reviewId, note.rowKey, {
+    this.reviewNotesService.updateNote(apbNumber, reviewId, note.rowKey, {
       communicateToDoctor: !note.communicateToDoctor
     }).subscribe({
       error: (error) => {
@@ -141,13 +145,14 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   }
 
   saveEdit(note: ReviewNote) {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId || !this.editingNoteText.trim()) {
       this.cancelEditing();
       return;
     }
 
-    this.reviewNotesService.updateNote(reviewId, note.rowKey, {
+    this.reviewNotesService.updateNote(apbNumber, reviewId, note.rowKey, {
       text: this.editingNoteText.trim()
     }).subscribe({
       next: () => {
@@ -204,12 +209,13 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   }
 
   saveGeneralNote() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId || !this.newNoteText.trim()) {
       return;
     }
 
-    this.reviewNotesService.addNote(reviewId, {
+    this.reviewNotesService.addNote(apbNumber, reviewId, {
       text: this.newNoteText.trim(),
       discussWithPatient: true,
       communicateToDoctor: false,

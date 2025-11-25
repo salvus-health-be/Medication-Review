@@ -201,7 +201,9 @@ export class AnalysisPage implements OnInit, OnDestroy {
       unitsAtBedtime: parseNumber(medication.unitsAtBedtime)
     };
 
+    const apbNumber = this.stateService.apbNumber;
     this.apiService.updateMedication(
+      apbNumber,
       medicationReviewId,
       medication.medicationId,
       updateData
@@ -334,6 +336,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   loadMedications() {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       this.medications = [];
@@ -342,7 +345,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
 
     this.isLoading = true;
     
-    this.apiService.getMedications(medicationReviewId).subscribe({
+    this.apiService.getMedications(apbNumber, medicationReviewId).subscribe({
       next: (medications) => {
         this.medications = medications.map(med => ({
           medicationId: med.medicationId,
@@ -449,6 +452,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
   }
 
   onMedicationSelected(medication: MedicationSearchResult) {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
@@ -458,6 +462,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
     if (this.editingMedication) {
       // Update the existing medication while preserving intake and indication
       this.apiService.updateMedication(
+        apbNumber,
         medicationReviewId,
         this.editingMedication.medicationId,
         {
@@ -490,6 +495,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
     } else {
       // Adding new medication
       this.apiService.addMedication(
+        apbNumber,
         medicationReviewId,
         {
           name: medication.benaming,

@@ -113,10 +113,11 @@ export class AnamnesisPage implements OnInit, OnDestroy {
   };
 
   private loadMedications() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.apiService.getMedications(reviewId)
+    this.apiService.getMedications(apbNumber, reviewId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (meds) => {
@@ -145,7 +146,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       });
 
     if (this.reviewNotesService.getNotesCount() === 0) {
-      this.reviewNotesService.loadReviewNotes(reviewId);
+      const apbNumber = this.stateService.apbNumber;
+      this.reviewNotesService.loadReviewNotes(apbNumber, reviewId);
     }
   }
 
@@ -328,10 +330,11 @@ export class AnamnesisPage implements OnInit, OnDestroy {
   }
 
   private loadQuestionAnswers() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.apiService.getQuestionAnswers(reviewId)
+    this.apiService.getQuestionAnswers(apbNumber, reviewId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (answers) => {
@@ -476,7 +479,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       }
       
       // Update existing answer
-      this.apiService.updateQuestionAnswer({
+      const apbNumber = this.stateService.apbNumber;
+      this.apiService.updateQuestionAnswer(apbNumber, {
         medicationReviewId: reviewId,
         questionName,
         value: stringValue,
@@ -491,7 +495,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       });
     } else {
       // Create new answer
-      this.apiService.addQuestionAnswer({
+      const apbNumber = this.stateService.apbNumber;
+      this.apiService.addQuestionAnswer(apbNumber, {
         medicationReviewId: reviewId,
         questionName,
         value: stringValue,

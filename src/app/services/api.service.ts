@@ -146,8 +146,8 @@ export class ApiService {
   }
 
   // Contraindication CRUD
-  getContraindications(medicationReviewId: string): Observable<Contraindication[]> {
-    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_contraindications?medicationReviewId=${medicationReviewId}`, {
+  getContraindications(apbNumber: string, medicationReviewId: string): Observable<Contraindication[]> {
+    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_contraindications?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}`, {
       headers: this.getHeaders()
     })
       .pipe(
@@ -159,10 +159,10 @@ export class ApiService {
       );
   }
 
-  addContraindication(reviewId: string, contraindication: any): Observable<ContraindicationResponse> {
+  addContraindication(apbNumber: string, reviewId: string, contraindication: any): Observable<ContraindicationResponse> {
     const headers = this.getHeaders();
 
-    const request = { medicationReviewId: reviewId, ...contraindication };
+    const request = { apbNumber, medicationReviewId: reviewId, ...contraindication };
 
     return this.http.post<any>(`${this.API_BASE_URL}/manage_contraindications`, request, { headers })
       .pipe(
@@ -174,10 +174,11 @@ export class ApiService {
       );
   }
 
-  updateContraindication(reviewId: string, contraindicationId: string, contraindication: any): Observable<ContraindicationResponse> {
+  updateContraindication(apbNumber: string, reviewId: string, contraindicationId: string, contraindication: any): Observable<ContraindicationResponse> {
     const headers = this.getHeaders();
 
     const request = { 
+      apbNumber,
       medicationReviewId: reviewId, 
       contraindicationId, 
       ...contraindication 
@@ -193,8 +194,8 @@ export class ApiService {
       );
   }
 
-  deleteContraindication(medicationReviewId: string, contraindicationId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_BASE_URL}/manage_contraindications?medicationReviewId=${medicationReviewId}&contraindicationId=${contraindicationId}`);
+  deleteContraindication(apbNumber: string, medicationReviewId: string, contraindicationId: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_BASE_URL}/manage_contraindications?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&contraindicationId=${contraindicationId}`);
   }
 
   // Medication Search
@@ -217,9 +218,9 @@ export class ApiService {
   }
 
   // Medication CRUD
-  getMedications(medicationReviewId: string): Observable<Medication[]> {
+  getMedications(apbNumber: string, medicationReviewId: string): Observable<Medication[]> {
     
-    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_medications?medicationReviewId=${medicationReviewId}`, { 
+    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_medications?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}`, { 
       headers: this.getHeaders() 
     })
       .pipe(
@@ -266,10 +267,10 @@ export class ApiService {
       );
   }
 
-  addMedication(reviewId: string, medication: any): Observable<MedicationResponse> {
+  addMedication(apbNumber: string, reviewId: string, medication: any): Observable<MedicationResponse> {
     const headers = this.getHeaders();
 
-    const request = { medicationReviewId: reviewId, ...medication };
+    const request = { apbNumber, medicationReviewId: reviewId, ...medication };
 
     return this.http.post<any>(`${this.API_BASE_URL}/manage_medications`, request, { headers })
       .pipe(
@@ -301,10 +302,11 @@ export class ApiService {
       );
   }
 
-  updateMedication(reviewId: string, medicationId: string, medication: any): Observable<MedicationResponse> {
+  updateMedication(apbNumber: string, reviewId: string, medicationId: string, medication: any): Observable<MedicationResponse> {
     const headers = this.getHeaders();
 
     const request = { 
+      apbNumber,
       medicationReviewId: reviewId, 
       medicationId, 
       ...medication 
@@ -338,24 +340,24 @@ export class ApiService {
       );
   }
 
-  deleteMedication(medicationReviewId: string, medicationId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_BASE_URL}/manage_medications?medicationReviewId=${medicationReviewId}&medicationId=${medicationId}`);
+  deleteMedication(apbNumber: string, medicationReviewId: string, medicationId: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_BASE_URL}/manage_medications?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&medicationId=${medicationId}`);
   }
 
   // CSV Import
-  importMedicationsFromCsv(medicationReviewId: string, csvFile: File): Observable<ImportMedicationsResponse> {
+  importMedicationsFromCsv(apbNumber: string, medicationReviewId: string, csvFile: File): Observable<ImportMedicationsResponse> {
     const formData = new FormData();
     formData.append('file', csvFile);
 
     return this.http.post<ImportMedicationsResponse>(
-      `${this.API_BASE_URL}/import_medications_from_csv?medicationReviewId=${medicationReviewId}`,
+      `${this.API_BASE_URL}/import_medications_from_csv?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}`,
       formData
     );
   }
 
   // Lab Value CRUD
-  getLabValues(medicationReviewId: string): Observable<LabValue[]> {
-    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_lab_values?medicationReviewId=${medicationReviewId}`, {
+  getLabValues(apbNumber: string, medicationReviewId: string): Observable<LabValue[]> {
+    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_lab_values?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}`, {
       headers: this.getHeaders()
     })
       .pipe(
@@ -368,10 +370,10 @@ export class ApiService {
       );
   }
 
-  addLabValue(reviewId: string, labValue: any): Observable<LabValueResponse> {
+  addLabValue(apbNumber: string, reviewId: string, labValue: any): Observable<LabValueResponse> {
     const headers = this.getHeaders();
 
-    const request = { medicationReviewId: reviewId, ...labValue };
+    const request = { apbNumber, medicationReviewId: reviewId, ...labValue };
 
     return this.http.post<any>(`${this.API_BASE_URL}/manage_lab_values`, request, { headers })
       .pipe(
@@ -384,10 +386,11 @@ export class ApiService {
       );
   }
 
-  updateLabValue(reviewId: string, labValueId: string, labValue: any): Observable<LabValueResponse> {
+  updateLabValue(apbNumber: string, reviewId: string, labValueId: string, labValue: any): Observable<LabValueResponse> {
     const headers = this.getHeaders();
 
     const request = { 
+      apbNumber,
       medicationReviewId: reviewId, 
       labValueId, 
       ...labValue 
@@ -404,8 +407,8 @@ export class ApiService {
       );
   }
 
-  deleteLabValue(medicationReviewId: string, labValueId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_BASE_URL}/manage_lab_values?medicationReviewId=${medicationReviewId}&labValueId=${labValueId}`);
+  deleteLabValue(apbNumber: string, medicationReviewId: string, labValueId: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_BASE_URL}/manage_lab_values?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&labValueId=${labValueId}`);
   }
 
   // Dispensing History
@@ -569,23 +572,24 @@ export class ApiService {
   }
 
   // Review Notes CRUD
-  getReviewNotes(medicationReviewId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_review_notes?medicationReviewId=${medicationReviewId}`, {
+  getReviewNotes(apbNumber: string, medicationReviewId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_BASE_URL}/manage_review_notes?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}`, {
       headers: this.getHeaders()
     });
   }
 
-  addReviewNote(reviewId: string, note: any): Observable<any> {
+  addReviewNote(apbNumber: string, reviewId: string, note: any): Observable<any> {
     const headers = this.getHeaders();
-    const request = { medicationReviewId: reviewId, ...note };
+    const request = { apbNumber, medicationReviewId: reviewId, ...note };
 
     return this.http.post<any>(`${this.API_BASE_URL}/manage_review_notes`, request, { headers })
       ;
   }
 
-  updateReviewNote(reviewId: string, reviewNoteId: string, updates: any): Observable<any> {
+  updateReviewNote(apbNumber: string, reviewId: string, reviewNoteId: string, updates: any): Observable<any> {
     const headers = this.getHeaders();
     const request = { 
+      apbNumber,
       medicationReviewId: reviewId, 
       reviewNoteId, 
       ...updates 
@@ -595,51 +599,51 @@ export class ApiService {
       ;
   }
 
-  deleteReviewNote(medicationReviewId: string, reviewNoteId: string): Observable<any> {
+  deleteReviewNote(apbNumber: string, medicationReviewId: string, reviewNoteId: string): Observable<any> {
     return this.http.delete<any>(
-      `${this.API_BASE_URL}/manage_review_notes?medicationReviewId=${medicationReviewId}&reviewNoteId=${reviewNoteId}`,
+      `${this.API_BASE_URL}/manage_review_notes?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&reviewNoteId=${reviewNoteId}`,
       { headers: this.getHeaders() }
     );
   }
 
   // Question Answer CRUD
-  getQuestionAnswers(medicationReviewId: string): Observable<QuestionAnswer[]> {
+  getQuestionAnswers(apbNumber: string, medicationReviewId: string): Observable<QuestionAnswer[]> {
     return this.http.get<QuestionAnswer[]>(
-      `${this.API_BASE_URL}/manage_question_answers?medicationReviewId=${medicationReviewId}`,
+      `${this.API_BASE_URL}/manage_question_answers?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}`,
       { headers: this.getHeaders() }
     );
   }
 
-  getQuestionAnswer(medicationReviewId: string, questionName: string): Observable<QuestionAnswerResponse> {
+  getQuestionAnswer(apbNumber: string, medicationReviewId: string, questionName: string): Observable<QuestionAnswerResponse> {
     return this.http.get<QuestionAnswerResponse>(
-      `${this.API_BASE_URL}/manage_question_answers?medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
+      `${this.API_BASE_URL}/manage_question_answers?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
       { headers: this.getHeaders() }
     );
   }
 
-  addQuestionAnswer(request: AddQuestionAnswerRequest): Observable<QuestionAnswerResponse> {
+  addQuestionAnswer(apbNumber: string, request: AddQuestionAnswerRequest): Observable<QuestionAnswerResponse> {
     const headers = this.getHeaders();
 
     return this.http.post<QuestionAnswerResponse>(
       `${this.API_BASE_URL}/manage_question_answers`,
-      request,
+      { apbNumber, ...request },
       { headers }
     );
   }
 
-  updateQuestionAnswer(request: UpdateQuestionAnswerRequest): Observable<QuestionAnswerResponse> {
+  updateQuestionAnswer(apbNumber: string, request: UpdateQuestionAnswerRequest): Observable<QuestionAnswerResponse> {
     const headers = this.getHeaders();
 
     return this.http.put<QuestionAnswerResponse>(
       `${this.API_BASE_URL}/manage_question_answers`,
-      request,
+      { apbNumber, ...request },
       { headers }
     );
   }
 
-  deleteQuestionAnswer(medicationReviewId: string, questionName: string): Observable<any> {
+  deleteQuestionAnswer(apbNumber: string, medicationReviewId: string, questionName: string): Observable<any> {
     return this.http.delete<any>(
-      `${this.API_BASE_URL}/manage_question_answers?medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
+      `${this.API_BASE_URL}/manage_question_answers?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
       { headers: this.getHeaders() }
     );
   }

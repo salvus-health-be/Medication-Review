@@ -51,11 +51,12 @@ export class ManualDispensingModalComponent implements OnInit {
   }
 
   loadMedications() {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
     this.loading = true;
-    this.apiService.getMedications(reviewId).subscribe({
+    this.apiService.getMedications(apbNumber, reviewId).subscribe({
       next: (medications) => {
         // Only include medications with CNK codes
         this.medications = medications.filter(m => m.cnk);

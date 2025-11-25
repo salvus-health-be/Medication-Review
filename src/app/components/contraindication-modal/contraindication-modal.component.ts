@@ -147,6 +147,7 @@ export class ContraindicationModalComponent implements OnInit {
       return;
     }
 
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       this.errorMessage = 'No medication review selected';
@@ -159,6 +160,7 @@ export class ContraindicationModalComponent implements OnInit {
     // Create array of add requests
     const addRequests = selected.map(item => 
       this.apiService.addContraindication(
+        apbNumber,
         medicationReviewId,
         {
           name: item.name,

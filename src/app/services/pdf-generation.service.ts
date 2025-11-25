@@ -62,6 +62,7 @@ export class PdfGenerationService {
   }
 
   private loadReportData(): Observable<ReportData> {
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       return of({
@@ -78,11 +79,11 @@ export class PdfGenerationService {
     const sessionData = this.stateService.getSessionData();
 
     return forkJoin({
-      medications: this.apiService.getMedications(reviewId).pipe(catchError(() => of([]))),
-      questionAnswers: this.apiService.getQuestionAnswers(reviewId).pipe(catchError(() => of([]))),
-      contraindications: this.apiService.getContraindications(reviewId).pipe(catchError(() => of([]))),
-      labValues: this.apiService.getLabValues(reviewId).pipe(catchError(() => of([]))),
-      reviewNotes: this.apiService.getReviewNotes(reviewId).pipe(catchError(() => of([])))
+      medications: this.apiService.getMedications(apbNumber, reviewId).pipe(catchError(() => of([]))),
+      questionAnswers: this.apiService.getQuestionAnswers(apbNumber, reviewId).pipe(catchError(() => of([]))),
+      contraindications: this.apiService.getContraindications(apbNumber, reviewId).pipe(catchError(() => of([]))),
+      labValues: this.apiService.getLabValues(apbNumber, reviewId).pipe(catchError(() => of([]))),
+      reviewNotes: this.apiService.getReviewNotes(apbNumber, reviewId).pipe(catchError(() => of([])))
     }).pipe(
       map(data => ({
         patient: sessionData?.patient || null,

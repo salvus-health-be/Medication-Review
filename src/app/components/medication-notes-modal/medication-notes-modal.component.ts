@@ -95,6 +95,7 @@ export class MedicationNotesModalComponent implements OnInit {
       return;
     }
 
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       return;
@@ -111,7 +112,7 @@ export class MedicationNotesModalComponent implements OnInit {
       communicateToDoctor: this.addToGpReport
     };
 
-    this.reviewNotesService.addNote(reviewId, noteData).subscribe({
+    this.reviewNotesService.addNote(apbNumber, reviewId, noteData).subscribe({
       next: (note) => {
         this.close.emit();
         this.resetForm();

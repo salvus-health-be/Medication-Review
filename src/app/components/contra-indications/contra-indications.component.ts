@@ -28,6 +28,7 @@ export class ContraIndicationsComponent implements OnInit {
   }
 
   loadContraindications() {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       this.contraIndications = [];
@@ -35,7 +36,7 @@ export class ContraIndicationsComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.apiService.getContraindications(medicationReviewId).subscribe({
+    this.apiService.getContraindications(apbNumber, medicationReviewId).subscribe({
       next: (contraindications) => {
         this.contraIndications = contraindications;
         this.isLoading = false;
@@ -63,12 +64,13 @@ export class ContraIndicationsComponent implements OnInit {
   }
 
   deleteContraindication(contraindication: Contraindication) {
+    const apbNumber = this.stateService.apbNumber;
     const medicationReviewId = this.stateService.medicationReviewId;
     if (!medicationReviewId) {
       return;
     }
     
-    this.apiService.deleteContraindication(medicationReviewId, contraindication.contraindicationId).subscribe({
+    this.apiService.deleteContraindication(apbNumber, medicationReviewId, contraindication.contraindicationId).subscribe({
       next: () => {
         this.loadContraindications();
         // Notify other components

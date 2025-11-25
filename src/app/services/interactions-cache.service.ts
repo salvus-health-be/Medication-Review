@@ -142,7 +142,8 @@ export class InteractionsCacheService {
     this.updateCache({ loading: true, error: null });
 
     // First load medications
-    this.apiService.getMedications(reviewId).subscribe({
+    const apbNumber = this.stateService.apbNumber;
+    this.apiService.getMedications(apbNumber, reviewId).subscribe({
       next: (medications) => {
         
         // Check if we have any medications with CNKs

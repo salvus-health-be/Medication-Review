@@ -59,6 +59,8 @@
     "title": "Login",
     "username": "Username",
     "password": "Password",
+    "enter_password": "Enter password",
+    "invalid_password": "Invalid APB number or password. Please check your credentials.",
     "login_button": "Login",
     "forgot_password": "Forgot Password?",
     "remember_me": "Remember Me",

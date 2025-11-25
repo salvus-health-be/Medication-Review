@@ -59,10 +59,11 @@
     "title": "Connexion",
     "username": "Nom d'utilisateur",
     "password": "Mot de passe",
+    "enter_password": "Entrez le mot de passe",
+    "invalid_password": "Numéro APB ou mot de passe invalide. Veuillez vérifier vos identifiants.",
     "login_button": "Se connecter",
     "forgot_password": "Mot de passe oublié ?",
-    "remember_me": "Se souvenir de moi"
-    ,
+    "remember_me": "Se souvenir de moi",
     "apb_number": "Numéro APB",
     "enter_apb": "Entrez le numéro APB",
     "medication_review_id": "ID de revue des médicaments",

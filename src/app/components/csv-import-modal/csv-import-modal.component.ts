@@ -64,6 +64,7 @@ export class CsvImportModalComponent {
       return;
     }
 
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       this.errorMessage = 'No medication review selected';
@@ -74,7 +75,7 @@ export class CsvImportModalComponent {
     this.errorMessage = null;
     this.importResults = null;
 
-    this.apiService.importMedicationsFromCsv(reviewId, this.selectedFile).subscribe({
+    this.apiService.importMedicationsFromCsv(apbNumber, reviewId, this.selectedFile).subscribe({
       next: (response) => {
         this.importing = false;
         this.importResults = response;
@@ -196,6 +197,7 @@ export class CsvImportModalComponent {
   saveField(medication: ImportedMedication, field: string) {
     if (!medication.medicationId) return;
 
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
@@ -226,7 +228,7 @@ export class CsvImportModalComponent {
     }
 
     // Update medication
-    this.apiService.updateMedication(reviewId, medication.medicationId, updateData).subscribe({
+    this.apiService.updateMedication(apbNumber, reviewId, medication.medicationId, updateData).subscribe({
       next: (response) => {
         // Update the display
         if (field === 'cnk') {
@@ -280,10 +282,11 @@ export class CsvImportModalComponent {
     const confirmed = confirm(`Are you sure you want to delete ${medication.medicationName}?`);
     if (!confirmed) return;
 
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) return;
 
-    this.apiService.deleteMedication(reviewId, medication.medicationId).subscribe({
+    this.apiService.deleteMedication(apbNumber, reviewId, medication.medicationId).subscribe({
       next: () => {
         // Remove from the list
         if (this.importResults && this.importResults.medications) {
@@ -344,6 +347,7 @@ export class CsvImportModalComponent {
       return;
     }
 
+    const apbNumber = this.stateService.apbNumber;
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       this.close.emit(false);
@@ -362,7 +366,7 @@ export class CsvImportModalComponent {
 
     // Delete all unapproved medications
     const deleteObservables = unapprovedMeds.map(med => 
-      this.apiService.deleteMedication(reviewId, med.medicationId!)
+      this.apiService.deleteMedication(apbNumber, reviewId, med.medicationId!)
     );
 
     // Use forkJoin to wait for all deletions to complete

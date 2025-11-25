@@ -16,6 +16,17 @@
         </div>
 
         <div class="field-group">
+          <label for="password">{{ 'login.password' | transloco }} <span class="required">*</span></label>
+          <input 
+            type="password" 
+            id="password" 
+            [(ngModel)]="password" 
+            name="password"
+            [placeholder]="'login.enter_password' | transloco"
+            [disabled]="isLoading">
+        </div>
+
+        <div class="field-group">
           <label for="medicationReviewId">{{ 'login.medication_review_id' | transloco }} <span class="optional">({{ 'login.optional' | transloco }})</span></label>
           <input 
             type="text" 
