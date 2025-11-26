@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { 
   LoginRequest, 
@@ -33,7 +33,12 @@ import {
   AddQuestionAnswerRequest,
   UpdateQuestionAnswerRequest,
   QuestionAnswerResponse,
-  ImportMedicationsResponse
+  ImportMedicationsResponse,
+  ImportEvent,
+  ImportProgressEvent,
+  ImportCompleteEvent,
+  Feedback,
+  FeedbackResponse
 } from '../models/api.models';
 import { environment } from '../../environments/environment';
 
@@ -344,8 +349,283 @@ export class ApiService {
     return this.http.delete<void>(`${this.API_BASE_URL}/manage_medications?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&medicationId=${medicationId}`);
   }
 
-  // CSV Import
-  importMedicationsFromCsv(apbNumber: string, medicationReviewId: string, csvFile: File): Observable<ImportMedicationsResponse> {
+  // CSV Import with SSE streaming for real-time progress updates
+  importMedicationsFromCsv(apbNumber: string, medicationReviewId: string, csvFile: File): Observable<ImportEvent> {
+    const formData = new FormData();
+    formData.append('file', csvFile);
+
+    console.log('[Import] Starting import for file:', csvFile.name, 'size:', csvFile.size);
+
+    const subject = new Subject<ImportEvent>();
+
+    // Use fetch with SSE for streaming progress updates
+    fetch(
+      `${this.API_BASE_URL}/import_medications_from_csv?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}`,
+      {
+        method: 'POST',
+        body: formData
+      }
+    ).then(async (response) => {
+      console.log('[Import] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      if (!response.ok) {
+        console.error('[Import] Response not OK:', response.status, response.statusText);
+        try {
+          const error = await response.json();
+          console.error('[Import] Error response body:', error);
+          subject.error(error);
+        } catch {
+          subject.error({ error: `HTTP ${response.status}: ${response.statusText}` });
+        }
+        return;
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      console.log('[Import] Content-Type:', contentType);
+      
+      // Check if the response is SSE (text/event-stream) or regular JSON
+      if (contentType.includes('text/event-stream')) {
+        console.log('[Import] Handling as SSE stream');
+        // Handle SSE streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          console.error('[Import] No response body reader available');
+          subject.error(new Error('No response body'));
+          return;
+        }
+
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log('[Import] SSE stream done, remaining buffer:', buffer);
+            // Process any remaining data in buffer
+            if (buffer.trim()) {
+              const lines = buffer.split('\n');
+              let eventData = '';
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  eventData = line.substring(6);
+                } else if (line === '' && eventData) {
+                  try {
+                    const parsed = JSON.parse(eventData) as ImportEvent;
+                    console.log('[Import] Parsed final SSE event:', parsed);
+                    
+                    // Map PascalCase to camelCase for complete events
+                    if (parsed.type === 'complete') {
+                      const completeEvent = parsed as any;
+                      const medications = completeEvent.medications ?? completeEvent.Medications ?? [];
+                      
+                      const mappedMedications = medications.map((med: any) => ({
+                        medicationId: med.medicationId ?? med.MedicationId ?? med.rowKey ?? med.RowKey,
+                        medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
+                        success: med.success ?? med.Success ?? true,
+                        cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+                        foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
+                        activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
+                        indication: med.indication ?? med.Indication ?? null,
+                        intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+                        missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
+                        errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
+                        reviewStatus: 'under_review'
+                      }));
+                      
+                      const mappedCompleteEvent: ImportCompleteEvent = {
+                        type: 'complete',
+                        totalProcessed: completeEvent.totalProcessed ?? completeEvent.TotalProcessed ?? 0,
+                        successful: completeEvent.successful ?? completeEvent.Successful ?? 0,
+                        failed: completeEvent.failed ?? completeEvent.Failed ?? 0,
+                        withMissingInformation: completeEvent.withMissingInformation ?? completeEvent.WithMissingInformation ?? 0,
+                        processingTimeMs: completeEvent.processingTimeMs ?? completeEvent.ProcessingTimeMs ?? 0,
+                        medications: mappedMedications
+                      };
+                      
+                      subject.next(mappedCompleteEvent);
+                    } else {
+                      subject.next(parsed);
+                    }
+                  } catch (e) {
+                    console.error('[Import] Failed to parse SSE data:', eventData, e);
+                  }
+                  eventData = '';
+                }
+              }
+              // Handle case where eventData exists but no empty line followed
+              if (eventData) {
+                try {
+                  const parsed = JSON.parse(eventData) as ImportEvent;
+                  console.log('[Import] Parsed trailing SSE event:', parsed);
+                  
+                  // Map PascalCase to camelCase for complete events
+                  if (parsed.type === 'complete') {
+                    const completeEvent = parsed as any;
+                    const medications = completeEvent.medications ?? completeEvent.Medications ?? [];
+                    
+                    const mappedMedications = medications.map((med: any) => ({
+                      medicationId: med.medicationId ?? med.MedicationId ?? med.rowKey ?? med.RowKey,
+                      medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
+                      success: med.success ?? med.Success ?? true,
+                      cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+                      foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
+                      activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
+                      indication: med.indication ?? med.Indication ?? null,
+                      intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+                      missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
+                      errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
+                      reviewStatus: 'under_review'
+                    }));
+                    
+                    const mappedCompleteEvent: ImportCompleteEvent = {
+                      type: 'complete',
+                      totalProcessed: completeEvent.totalProcessed ?? completeEvent.TotalProcessed ?? 0,
+                      successful: completeEvent.successful ?? completeEvent.Successful ?? 0,
+                      failed: completeEvent.failed ?? completeEvent.Failed ?? 0,
+                      withMissingInformation: completeEvent.withMissingInformation ?? completeEvent.WithMissingInformation ?? 0,
+                      processingTimeMs: completeEvent.processingTimeMs ?? completeEvent.ProcessingTimeMs ?? 0,
+                      medications: mappedMedications
+                    };
+                    
+                    subject.next(mappedCompleteEvent);
+                  } else {
+                    subject.next(parsed);
+                  }
+                } catch (e) {
+                  console.error('[Import] Failed to parse final SSE data:', eventData, e);
+                }
+              }
+            }
+            subject.complete();
+            break;
+          }
+
+          buffer += decoder.decode(value, { stream: true });
+          console.log('[Import] SSE chunk received, buffer length:', buffer.length);
+          
+          // Parse SSE events from buffer
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+          let eventData = '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              eventData = line.substring(6);
+            } else if (line === '' && eventData) {
+              // Empty line = end of event
+              try {
+                const parsed = JSON.parse(eventData) as ImportEvent;
+                console.log('[Import] Parsed SSE event:', parsed.type, parsed);
+                
+                // If it's a complete event, map PascalCase to camelCase
+                if (parsed.type === 'complete') {
+                  const completeEvent = parsed as any;
+                  const medications = completeEvent.medications ?? completeEvent.Medications ?? [];
+                  
+                  const mappedMedications = medications.map((med: any) => ({
+                    medicationId: med.medicationId ?? med.MedicationId ?? med.rowKey ?? med.RowKey,
+                    medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
+                    success: med.success ?? med.Success ?? true,
+                    cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+                    foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
+                    activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
+                    indication: med.indication ?? med.Indication ?? null,
+                    intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+                    missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
+                    errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
+                    reviewStatus: 'under_review'
+                  }));
+                  
+                  const mappedCompleteEvent: ImportCompleteEvent = {
+                    type: 'complete',
+                    totalProcessed: completeEvent.totalProcessed ?? completeEvent.TotalProcessed ?? 0,
+                    successful: completeEvent.successful ?? completeEvent.Successful ?? 0,
+                    failed: completeEvent.failed ?? completeEvent.Failed ?? 0,
+                    withMissingInformation: completeEvent.withMissingInformation ?? completeEvent.WithMissingInformation ?? 0,
+                    processingTimeMs: completeEvent.processingTimeMs ?? completeEvent.ProcessingTimeMs ?? 0,
+                    medications: mappedMedications
+                  };
+                  
+                  console.log('[Import] Mapped complete event with', mappedMedications.length, 'medications');
+                  subject.next(mappedCompleteEvent);
+                } else {
+                  subject.next(parsed);
+                }
+              } catch (e) {
+                console.error('[Import] Failed to parse SSE data:', eventData, e);
+              }
+              eventData = '';
+            }
+          }
+        }
+      } else {
+        console.log('[Import] Handling as regular JSON response');
+        // Handle regular JSON response (fallback for non-SSE backends)
+        try {
+          const jsonResponse = await response.json();
+          console.log('=== RAW API RESPONSE ===');
+          console.log(JSON.stringify(jsonResponse, null, 2));
+          console.log('[Import] Raw JSON response:', JSON.stringify(jsonResponse, null, 2));
+          
+          // Convert legacy response to ImportCompleteEvent format
+          const medications = jsonResponse.medications ?? jsonResponse.Medications ?? [];
+          console.log('[Import] Medications array:', medications);
+          console.log('[Import] First medication raw:', medications[0]);
+          
+          const mappedMedications = medications.map((med: any, index: number) => {
+            console.log(`[Import] Mapping medication ${index}:`, JSON.stringify(med, null, 2));
+            const mapped = {
+              medicationId: med.medicationId ?? med.MedicationId ?? med.rowKey ?? med.RowKey,
+              medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
+              success: med.success ?? med.Success ?? true,
+              cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+              foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
+              activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
+              indication: med.indication ?? med.Indication ?? null,
+              intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+              missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
+              errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
+              reviewStatus: 'under_review'
+            };
+            console.log(`[Import] Mapped medication ${index}:`, mapped);
+            return mapped;
+          });
+
+          const completeEvent: ImportCompleteEvent = {
+            type: 'complete',
+            totalProcessed: jsonResponse.totalProcessed ?? jsonResponse.TotalProcessed ?? 0,
+            successful: jsonResponse.successful ?? jsonResponse.Successful ?? 0,
+            failed: jsonResponse.failed ?? jsonResponse.Failed ?? 0,
+            withMissingInformation: jsonResponse.withMissingInformation ?? jsonResponse.WithMissingInformation ?? 0,
+            processingTimeMs: jsonResponse.processingTimeMs ?? 0,
+            medications: mappedMedications
+          };
+          
+          console.log('[Import] Complete event:', completeEvent);
+          subject.next(completeEvent);
+          subject.complete();
+        } catch (e) {
+          console.error('[Import] Failed to parse JSON response:', e);
+          subject.error(new Error('Failed to parse response'));
+        }
+      }
+    }).catch((error) => {
+      console.error('[Import] Fetch error:', error);
+      subject.error(error);
+    });
+
+    return subject.asObservable();
+  }
+
+  // Legacy non-streaming import (fallback)
+  importMedicationsFromCsvLegacy(apbNumber: string, medicationReviewId: string, csvFile: File): Observable<ImportMedicationsResponse> {
     const formData = new FormData();
     formData.append('file', csvFile);
 
@@ -645,6 +925,17 @@ export class ApiService {
     return this.http.delete<any>(
       `${this.API_BASE_URL}/manage_question_answers?apbNumber=${apbNumber}&medicationReviewId=${medicationReviewId}&questionName=${questionName}`,
       { headers: this.getHeaders() }
+    );
+  }
+
+  // Feedback
+  submitFeedback(feedback: Feedback): Observable<FeedbackResponse> {
+    const headers = this.getHeaders();
+
+    return this.http.post<FeedbackResponse>(
+      `${this.API_BASE_URL}/manage_feedback`,
+      feedback,
+      { headers }
     );
   }
 }

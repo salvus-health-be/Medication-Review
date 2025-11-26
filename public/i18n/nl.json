@@ -47,7 +47,7 @@
   },
   "disclaimer": {
     "title": "Belangrijke Mededeling",
-    "main_message": "Deze tool voor medicatiereview bevindt zich momenteel in de testfase.",
+    "main_message": "Deze tool voor medicatienazicht bevindt zich momenteel in de testfase.",
     "point_1": "De tool kan fouten of onnauwkeurigheden bevatten in de analyse en aanbevelingen.",
     "point_2": "Alle informatie die door deze tool wordt verstrekt, moet handmatig worden geverifieerd door een gekwalificeerde zorgprofessional.",
     "point_3": "Vertrouw niet uitsluitend op de uitvoer van deze tool voor het nemen van klinische beslissingen.",
@@ -589,14 +589,16 @@
     "no_direction": "Geen richting"
   },
   "csv_import": {
-    "title": "Medicijnen importeren vanuit CSV",
-    "select_file": "Selecteer CSV-bestand",
-    "instructions": "Upload een CSV-bestand geëxporteerd vanuit uw apotheeksysteem.",
+    "title": "Medicijnen importeren vanuit CSV of Excel",
+    "select_file": "Selecteer bestand",
+    "instructions": "Upload een CSV- of Excel-bestand (.csv, .xlsx, .xls) geëxporteerd vanuit uw apotheeksysteem.",
     "instruction_1": "Eerste rij moet kolomkoppen bevatten",
     "instruction_2": "Medicatienaam is verplicht",
     "instruction_3": "Ondersteunt Nederlandse en Engelse koppen",
     "import_button": "Medicijnen importeren",
     "importing": "Importeren...",
+    "converting": "Excel-bestand converteren...",
+    "medications_imported": "medicijnen geïmporteerd",
     "review_title": "Geïmporteerde medicijnen beoordelen",
     "review_subtitle": "Controleer elk medicijn en keur goed voordat u de import voltooit",
     "results_title": "Importresultaten",
@@ -627,6 +629,30 @@
     "evening": "Avond",
     "night": "Nacht",
     "search_cnk_placeholder": "Zoek medicatie of voer CNK in",
-    "searching": "Zoeken..."
+    "searching": "Zoeken...",
+    "no_intake_specified": "Geen inname gespecificeerd",
+    "error_invalid_file_type": "Selecteer een CSV- of Excel-bestand (.csv, .xlsx, .xls)",
+    "error_conversion_failed": "Excel-bestand converteren mislukt. Controleer of het bestand geldig is.",
+    "error_select_file": "Selecteer eerst een bestand",
+    "error_no_review": "Geen medicatieoverzicht geselecteerd",
+    "error_import_failed": "Medicijnen importeren mislukt",
+    "error_invalid_cnk": "Voer een geldige 7-cijferige CNK-code in",
+    "error_update_failed": "Medicijn bijwerken mislukt",
+    "error_delete_failed": "Medicijn verwijderen mislukt",
+    "confirm_delete_medication": "Weet u zeker dat u {{name}} wilt verwijderen?",
+    "confirm_cancel_import": "U heeft niet-goedgekeurde medicijnen. Weet u zeker dat u de import wilt annuleren?",
+    "placeholder_active_ingredient": "Actief ingrediënt",
+    "placeholder_indication": "Indicatie"
+  },
+  "feedback": {
+    "title": "Feedback versturen",
+    "button": "Feedback",
+    "subtitle": "Help ons te verbeteren door uw gedachten, bugs of suggesties te delen.",
+    "your_feedback": "Uw feedback",
+    "placeholder": "Beschrijf eventuele problemen, suggesties of algemene feedback...",
+    "submit": "Feedback verzenden",
+    "submitting": "Verzenden...",
+    "success": "Bedankt voor uw feedback!",
+    "error_submitting": "Feedback verzenden is mislukt. Probeer het opnieuw."
   }
 }

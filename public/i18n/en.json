@@ -588,14 +588,16 @@
     "no_direction": "No direction"
   },
   "csv_import": {
-    "title": "Import Medications from CSV",
-    "select_file": "Select CSV File",
-    "instructions": "Upload a CSV file exported from your pharmacy system.",
+    "title": "Import Medications from CSV or Excel",
+    "select_file": "Select File",
+    "instructions": "Upload a CSV or Excel file (.csv, .xlsx, .xls) exported from your pharmacy system.",
     "instruction_1": "First row must contain column headers",
     "instruction_2": "Medication name is required",
     "instruction_3": "Supports Dutch and English headers",
     "import_button": "Import Medications",
     "importing": "Importing...",
+    "converting": "Converting Excel file...",
+    "medications_imported": "medications imported",
     "review_title": "Review Imported Medications",
     "review_subtitle": "Review each medication and approve before completing the import",
     "results_title": "Import Results",
@@ -626,6 +628,30 @@
     "evening": "Evening",
     "night": "Night",
     "search_cnk_placeholder": "Search medication or enter CNK",
-    "searching": "Searching..."
+    "searching": "Searching...",
+    "no_intake_specified": "No intake specified",
+    "error_invalid_file_type": "Please select a CSV or Excel file (.csv, .xlsx, .xls)",
+    "error_conversion_failed": "Failed to convert Excel file. Please ensure the file is valid.",
+    "error_select_file": "Please select a file first",
+    "error_no_review": "No medication review selected",
+    "error_import_failed": "Failed to import medications",
+    "error_invalid_cnk": "Please enter a valid 7-digit CNK code",
+    "error_update_failed": "Failed to update medication",
+    "error_delete_failed": "Failed to delete medication",
+    "confirm_delete_medication": "Are you sure you want to delete {{name}}?",
+    "confirm_cancel_import": "You have unapproved medications. Are you sure you want to cancel the import?",
+    "placeholder_active_ingredient": "Active ingredient",
+    "placeholder_indication": "Indication"
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "button": "Feedback",
+    "subtitle": "Help us improve by sharing your thoughts, reporting bugs, or suggesting features.",
+    "your_feedback": "Your Feedback",
+    "placeholder": "Describe any issues, suggestions, or general feedback...",
+    "submit": "Submit Feedback",
+    "submitting": "Submitting...",
+    "success": "Thank you for your feedback!",
+    "error_submitting": "Failed to submit feedback. Please try again."
   }
 }

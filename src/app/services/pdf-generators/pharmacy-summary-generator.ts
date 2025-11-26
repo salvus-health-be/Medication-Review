@@ -369,7 +369,7 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
         'en': 'Review notes'
       },
       'comprehensive_notes': {
-        'nl': 'Alle notities en acties uit het medicatiereview:',
+        'nl': 'Alle notities en acties uit het medicatienazicht:',
         'fr': 'Toutes les notes et actions de l\'examen de médication :',
         'en': 'All notes and actions from the medication review:'
       },

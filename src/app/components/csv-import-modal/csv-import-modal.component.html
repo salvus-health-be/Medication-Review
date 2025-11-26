@@ -12,7 +12,7 @@
           <input 
             type="file" 
             id="csvFileInput"
-            accept=".csv" 
+            accept=".csv,.xlsx,.xls" 
             (change)="onFileSelected($event)"
             style="display: none"
           />
@@ -23,7 +23,11 @@
             </svg>
             <span>{{ 'csv_import.select_file' | transloco }}</span>
           </button>
-          <span class="file-name" *ngIf="selectedFile">{{ selectedFile.name }}</span>
+          <span class="file-name" *ngIf="selectedFile">{{ originalFileName || selectedFile.name }}</span>
+          <span class="converting-indicator" *ngIf="converting">
+            <span class="spinner-small"></span>
+            {{ 'csv_import.converting' | transloco }}
+          </span>
         </div>
 
         <div class="upload-instructions">
@@ -38,7 +42,7 @@
         <button 
           class="import-button"
           (click)="importMedications()"
-          [disabled]="!selectedFile || importing"
+          [disabled]="!selectedFile || importing || converting"
         >
           <span *ngIf="!importing">{{ 'csv_import.import_button' | transloco }}</span>
           <span *ngIf="importing" class="importing-text">
@@ -46,6 +50,17 @@
             {{ 'csv_import.importing' | transloco }}
           </span>
         </button>
+
+        <!-- Progress Bar -->
+        <div class="progress-container" *ngIf="importing && importProgress.total > 0">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="importProgress.percentage"></div>
+          </div>
+          <div class="progress-text">
+            {{ importProgress.current }}/{{ importProgress.total }} {{ 'csv_import.medications_imported' | transloco }} ({{ importProgress.percentage }}%)
+          </div>
+          <div class="progress-message" *ngIf="importProgress.message">{{ importProgress.message }}</div>
+        </div>
 
         <div class="error-message" *ngIf="errorMessage">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -114,7 +129,7 @@
                       type="text" 
                       [(ngModel)]="editValues['cnk']" 
                       (ngModelChange)="searchCnk($event)"
-                      placeholder="Search medication or enter CNK"
+                      [placeholder]="'csv_import.search_cnk_placeholder' | transloco"
                       class="field-input"
                       (keyup.enter)="saveField(med, 'cnk')"
                       (keyup.escape)="cancelEditing()"
@@ -133,7 +148,7 @@
                     </div>
                   </div>
                   <div class="searching-indicator" *ngIf="searchingCnk">
-                    <span class="spinner-small"></span> Searching...
+                    <span class="spinner-small"></span> {{ 'csv_import.searching' | transloco }}
                   </div>
                 </div>
                 <button 
@@ -159,7 +174,7 @@
                   <input 
                     type="text" 
                     [(ngModel)]="editValues['activeIngredient']" 
-                    placeholder="Active ingredient"
+                    [placeholder]="'csv_import.placeholder_active_ingredient' | transloco"
                     class="field-input"
                     (keyup.enter)="saveField(med, 'activeIngredient')"
                     (keyup.escape)="cancelEditing()"
@@ -190,7 +205,7 @@
                   <input 
                     type="text" 
                     [(ngModel)]="editValues['indication']" 
-                    placeholder="Indication"
+                    [placeholder]="'csv_import.placeholder_indication' | transloco"
                     class="field-input"
                     (keyup.enter)="saveField(med, 'indication')"
                     (keyup.escape)="cancelEditing()"
@@ -213,7 +228,7 @@
               <!-- Intake Moments -->
               <div class="detail-row detail-row-intake" [class.missing]="isIntakeMomentsMissing(med)">
                 <span class="label">{{ 'csv_import.intake' | transloco }}:</span>
-                <span class="value" *ngIf="!isEditing(med, 'intakeMoments')">{{ getIntakeDisplay(med) }}</span>
+                <span class="value" [class.intake-not-specified]="isIntakeNotSpecified(med)" *ngIf="!isEditing(med, 'intakeMoments')">{{ getIntakeDisplay(med) }}</span>
                 <div class="edit-inline-intake" *ngIf="isEditing(med, 'intakeMoments')">
                   <div class="intake-editor">
                     <label class="as-needed-checkbox">

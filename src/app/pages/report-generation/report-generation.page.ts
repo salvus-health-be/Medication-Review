@@ -254,7 +254,7 @@ export class ReportGenerationPage implements OnInit {
     // Get default intro text
     let introText = '';
     if (lang === 'nl') {
-      introText = 'Hierbij deel ik de bevindingen van een recent uitgevoerd medicatiereview. De volgende observaties kunnen relevant zijn voor de patiëntenzorg.';
+      introText = 'Hierbij deel ik de bevindingen van een recent uitgevoerd medicatienazicht. De volgende observaties kunnen relevant zijn voor de patiëntenzorg.';
     } else if (lang === 'fr') {
       introText = 'Je partage avec vous les résultats d\'un examen de médication récemment effectué. Les observations suivantes peuvent être pertinentes pour les soins aux patients.';
     } else {

@@ -375,10 +375,46 @@ export interface ImportedMedication {
   reviewStatus?: 'under_review' | 'approved';  // Add review status
 }
 
+// SSE Progress Events for CSV Import
+export interface ImportProgressEvent {
+  type: 'progress';
+  current: number;
+  total: number;
+  percentage: number;
+  message: string;
+  medication: ImportedMedication | null;
+}
+
+export interface ImportCompleteEvent {
+  type: 'complete';
+  totalProcessed: number;
+  successful: number;
+  failed: number;
+  withMissingInformation: number;
+  processingTimeMs: number;
+  medications: ImportedMedication[];
+}
+
+export type ImportEvent = ImportProgressEvent | ImportCompleteEvent;
+
 export interface ImportMedicationsResponse {
   totalProcessed: number;
   successful: number;
   failed: number;
   withMissingInformation: number;
   medications: ImportedMedication[];
+}
+
+// Feedback
+export interface Feedback {
+  feedbackId?: string;
+  apbNumber: string;
+  feedbackText: string;
+  medicationReviewId?: string;
+  pageContext?: string;
+  submittedAt?: string;
+}
+
+export interface FeedbackResponse extends Feedback {
+  message?: string;
 }

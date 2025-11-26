@@ -166,7 +166,7 @@ export class DoctorSummaryGenerator extends BasePdfGenerator {
     let text = '';
     
     if (lang === 'nl') {
-      text = 'Ik heb recent een medicatiereview uitgevoerd met bovengenoemde patiënt. Ik zou graag enkele observaties met u willen delen die mogelijk relevant kunnen zijn voor de verdere behandeling. Ik presenteer deze punten louter ter overweging en sta natuurlijk open voor uw professioneel oordeel.';
+      text = 'Ik heb recent een medicatienazicht uitgevoerd met bovengenoemde patiënt. Ik zou graag enkele observaties met u willen delen die mogelijk relevant kunnen zijn voor de verdere behandeling. Ik presenteer deze punten louter ter overweging en sta natuurlijk open voor uw professioneel oordeel.';
     } else if (lang === 'fr') {
       text = 'J\'ai récemment effectué un examen de médication avec le patient susmentionné. Je souhaiterais partager avec vous quelques observations qui pourraient être pertinentes pour la poursuite du traitement. Je présente ces points uniquement à titre de considération et je reste bien entendu ouvert à votre jugement professionnel.';
     } else {
@@ -244,7 +244,7 @@ export class DoctorSummaryGenerator extends BasePdfGenerator {
     let text = '';
     
     if (lang === 'nl') {
-      text = 'Het medicatiereview heeft geen specifieke aandachtspunten opgeleverd die verdere opvolging vereisen.';
+      text = 'Het medicatienazicht heeft geen specifieke aandachtspunten opgeleverd die verdere opvolging vereisen.';
     } else if (lang === 'fr') {
       text = 'L\'examen de médication n\'a révélé aucun point d\'attention spécifique nécessitant un suivi supplémentaire.';
     } else {

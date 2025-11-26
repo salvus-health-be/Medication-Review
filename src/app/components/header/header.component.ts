@@ -8,6 +8,7 @@ import { StateService } from '../../services/state.service';
 import { ApiService } from '../../services/api.service';
 import { SessionData, Contraindication } from '../../models/api.models';
 import { ContraindicationModalComponent } from '../contraindication-modal/contraindication-modal.component';
+import { FeedbackModalComponent } from '../feedback-modal/feedback-modal.component';
 import { ReviewNotesService } from '../../services/review-notes.service';
 
 interface Step {
@@ -18,7 +19,7 @@ interface Step {
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, TranslocoModule, ContraindicationModalComponent],
+  imports: [CommonModule, TranslocoModule, ContraindicationModalComponent, FeedbackModalComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -34,6 +35,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   patientSex: string = '';
   contraIndications: Contraindication[] = [];
   showContraIndicationsModal: boolean = false;
+  showFeedbackModal: boolean = false;
   notesCount: number = 0;
   animateNotes = false;
   private previousNotesCount = 0;
@@ -260,6 +262,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.showContraIndicationsModal = false;
     this.loadContraindications();
     this.stateService.notifyContraindicationsChanged();
+  }
+
+  openFeedbackModal() {
+    this.showFeedbackModal = true;
+  }
+
+  closeFeedbackModal() {
+    this.showFeedbackModal = false;
   }
 
   private loadContraindications() {

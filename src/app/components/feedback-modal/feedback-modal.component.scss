@@ -1,0 +1,260 @@
+@import '../../../styles/colors';
+@import '../../../styles/fonts';
+@import '../../../styles/responsive';
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-container {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+
+  @include md {
+    width: 95%;
+    max-height: 85vh;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+
+  h2 {
+    font-family: $primary-font;
+    font-weight: $font-weight-semibold;
+    font-size: 1.25rem;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    color: $text-secondary;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: $text-primary;
+    }
+
+    svg {
+      display: block;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+
+  .subtitle {
+    font-family: $primary-font;
+    font-size: 0.95rem;
+    color: $text-secondary;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+  }
+
+  .form-group {
+    position: relative;
+
+    label {
+      display: block;
+      font-family: $primary-font;
+      font-weight: $font-weight-medium;
+      font-size: 0.9rem;
+      color: $text-primary;
+      margin-bottom: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 0.875rem;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      font-family: $primary-font;
+      font-size: 0.95rem;
+      color: $text-primary;
+      resize: vertical;
+      min-height: 120px;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+
+      &::placeholder {
+        color: $text-muted;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $button-primary-background;
+        box-shadow: 0 0 0 3px rgba($button-primary-background, 0.1);
+      }
+
+      &:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+      }
+    }
+
+    .char-count {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.75rem;
+      font-family: $primary-font;
+      font-size: 0.75rem;
+      color: $text-muted;
+    }
+  }
+
+  .error-message {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: rgba(220, 53, 69, 0.08);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    border-radius: 8px;
+    color: #dc3545;
+    font-family: $primary-font;
+    font-size: 0.9rem;
+  }
+
+  .success-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+
+    svg {
+      color: #28a745;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-family: $primary-font;
+      font-size: 1.1rem;
+      font-weight: $font-weight-medium;
+      color: #28a745;
+      margin: 0;
+    }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: #fafafa;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-family: $primary-font;
+    font-weight: $font-weight-medium;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .cancel-button {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      background-color: #f5f5f5;
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .submit-button {
+    background: $button-primary-background;
+    border: none;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: darken($button-primary-background, 8%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba($button-primary-background, 0.3);
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
+}

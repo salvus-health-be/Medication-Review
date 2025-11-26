@@ -556,14 +556,16 @@
     "no_direction": "Pas de direction"
   },
   "csv_import": {
-    "title": "Importer des médicaments depuis CSV",
-    "select_file": "Sélectionner un fichier CSV",
-    "instructions": "Téléchargez un fichier CSV exporté depuis votre système de pharmacie.",
+    "title": "Importer des médicaments depuis CSV ou Excel",
+    "select_file": "Sélectionner un fichier",
+    "instructions": "Téléchargez un fichier CSV ou Excel (.csv, .xlsx, .xls) exporté depuis votre système de pharmacie.",
     "instruction_1": "La première ligne doit contenir les en-têtes de colonnes",
     "instruction_2": "Le nom du médicament est obligatoire",
     "instruction_3": "Prend en charge les en-têtes néerlandais et anglais",
     "import_button": "Importer les médicaments",
     "importing": "Importation...",
+    "converting": "Conversion du fichier Excel...",
+    "medications_imported": "médicaments importés",
     "review_title": "Examiner les médicaments importés",
     "review_subtitle": "Examinez chaque médicament et approuvez avant de finaliser l'importation",
     "results_title": "Résultats de l'importation",
@@ -594,6 +596,30 @@
     "evening": "Soir",
     "night": "Nuit",
     "search_cnk_placeholder": "Rechercher un médicament ou saisir le CNK",
-    "searching": "Recherche..."
+    "searching": "Recherche...",
+    "no_intake_specified": "Aucune prise spécifiée",
+    "error_invalid_file_type": "Veuillez sélectionner un fichier CSV ou Excel (.csv, .xlsx, .xls)",
+    "error_conversion_failed": "Échec de la conversion du fichier Excel. Veuillez vérifier que le fichier est valide.",
+    "error_select_file": "Veuillez d'abord sélectionner un fichier",
+    "error_no_review": "Aucune revue de médicaments sélectionnée",
+    "error_import_failed": "Échec de l'importation des médicaments",
+    "error_invalid_cnk": "Veuillez saisir un code CNK valide à 7 chiffres",
+    "error_update_failed": "Échec de la mise à jour du médicament",
+    "error_delete_failed": "Échec de la suppression du médicament",
+    "confirm_delete_medication": "Êtes-vous sûr de vouloir supprimer {{name}} ?",
+    "confirm_cancel_import": "Vous avez des médicaments non approuvés. Êtes-vous sûr de vouloir annuler l'importation ?",
+    "placeholder_active_ingredient": "Ingrédient actif",
+    "placeholder_indication": "Indication"
+  },
+  "feedback": {
+    "title": "Envoyer des commentaires",
+    "button": "Feedback",
+    "subtitle": "Aidez-nous à améliorer en partageant vos pensées, en signalant des bugs ou en suggérant des fonctionnalités.",
+    "your_feedback": "Vos commentaires",
+    "placeholder": "Décrivez tout problème, suggestion ou commentaire général...",
+    "submit": "Envoyer",
+    "submitting": "Envoi en cours...",
+    "success": "Merci pour vos commentaires !",
+    "error_submitting": "Échec de l'envoi des commentaires. Veuillez réessayer."
   }
 }
