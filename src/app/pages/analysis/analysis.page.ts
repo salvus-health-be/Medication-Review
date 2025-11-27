@@ -209,6 +209,10 @@ export class AnalysisPage implements OnInit, OnDestroy {
       updateData
     ).subscribe({
       next: (response) => {
+        // Refresh therapy adherence if it's the active tool (intake changes affect daily usage)
+        if (this.activeTool === 'therapy-adherence' && this.therapyAdherenceComponent) {
+          this.therapyAdherenceComponent.refreshData();
+        }
       },
       error: (error) => {
       }

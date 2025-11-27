@@ -98,8 +98,73 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
   // Public method to refresh all data and charts
   refreshData() {
-    this.loadMedications();
-    this.checkExistingFile();
+    // Clear existing charts before refreshing
+    this.charts.forEach(chart => chart.destroy());
+    this.charts.clear();
+    
+    // Reset medications with data to force re-render
+    this.medicationsWithData = [];
+    
+    // Load both medications and dispensing history, then match
+    this.loadAllData();
+  }
+
+  private loadAllData() {
+    const apbNumber = this.stateService.apbNumber;
+    const reviewId = this.stateService.medicationReviewId;
+    
+    if (!apbNumber || !reviewId) return;
+
+    this.loading = true;
+    this.uploadError = null;
+    this.queryError = null;
+
+    // Load medications and dispensing history in parallel
+    const medications$ = this.apiService.getMedications(apbNumber, reviewId).pipe(
+      catchError(err => {
+        console.error('[Therapy Adherence] Failed to load medications:', err);
+        return of([]);
+      })
+    );
+
+    const dispensingHistory$ = this.apiService.queryDispensingHistory(apbNumber, reviewId).pipe(
+      catchError(err => {
+        if (err.status === 404) {
+          // No dispensing history yet - this is normal
+          return of(null);
+        }
+        console.error('[Therapy Adherence] Failed to load dispensing history:', err);
+        this.queryError = err.error?.error || 'Failed to load dispensing history';
+        return of(null);
+      })
+    );
+
+    forkJoin([medications$, dispensingHistory$]).subscribe({
+      next: ([medications, dispensingHistory]) => {
+        this.medications = medications;
+        this.loading = false;
+
+        if (dispensingHistory) {
+          this.dispensingHistory = dispensingHistory;
+          this.uploadSuccess = true;
+
+          if (dispensingHistory.dispensingData && Array.isArray(dispensingHistory.dispensingData)) {
+            this.matchDispensingData();
+          } else {
+            this.queryError = 'Backend API needs to be updated to return dispensing data in the new format';
+          }
+        } else {
+          this.uploadSuccess = false;
+          this.dispensingHistory = null;
+          this.medicationsWithData = [];
+        }
+      },
+      error: (err) => {
+        console.error('[Therapy Adherence] Failed to load data:', err);
+        this.loading = false;
+        this.queryError = 'Failed to load data';
+      }
+    });
   }
 
   loadMedications() {
@@ -1204,9 +1269,9 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
           fileInput.value = '';
         }
         
-        // Wait a moment for backend to update the MedicationReview record, then query
+        // Wait a moment for backend to update the MedicationReview record, then refresh
         setTimeout(() => {
-          this.checkExistingFileAfterUpload();
+          this.refreshData();
         }, 1000);
       },
       error: (err) => {
@@ -1294,8 +1359,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
   onManualMomentsAdded() {
     this.showManualDispensingModal = false;
-    // Refresh the dispensing history to show the new manual entries
-    this.checkExistingFile();
+    // Refresh everything to show the new manual entries
+    this.refreshData();
   }
 
   openManageMomentsModal() {
@@ -1307,7 +1372,7 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   onMomentsDeleted() {
-    // Refresh the dispensing history to reflect deletions
-    this.checkExistingFile();
+    // Refresh everything to reflect deletions
+    this.refreshData();
   }
 }
