@@ -219,6 +219,9 @@
     "general_notes": "Algemene notities",
     "select_category": "Selecteer een categorie om vragen te bekijken",
     "questions_progress": "{{answered}} van {{total}} vragen beantwoord",
+    "clear_all_answers": "Alles wissen",
+    "clear_all_answers_confirm_title": "Alle antwoorden wissen?",
+    "clear_all_answers_confirm_message": "Dit zal alle antwoorden van alle delen van de anamnese voor deze medicatiereview verwijderen. Deze actie kan niet ongedaan worden gemaakt.",
     "categories": {
       "concerns": "Zorgen/Ervaringen",
       "medication_help": "Hulp bij medicatie-inname",

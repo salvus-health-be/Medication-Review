@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged, groupBy, mergeMap } from 'rxjs/operators';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ReviewNotesService, ReviewNote } from '../../services/review-notes.service';
@@ -1126,6 +1126,70 @@ export class AnamnesisPage implements OnInit, OnDestroy {
     }
 
     return { adherenceNotes, effectivenessNotes };
+  }
+
+  clearAllAnswers() {
+    const confirmTitle = this.transloco.translate('anamnesis.clear_all_answers_confirm_title');
+    const confirmMessage = this.transloco.translate('anamnesis.clear_all_answers_confirm_message');
+    
+    if (!confirm(`${confirmTitle}\n\n${confirmMessage}`)) {
+      return;
+    }
+
+    const apbNumber = this.stateService.apbNumber;
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) return;
+
+    // Get all question names from all parts
+    const allQuestionNames: string[] = [];
+    
+    ['part1', 'part2', 'part3'].forEach((part) => {
+      this.allQuestionBoxes[part as 'part1' | 'part2' | 'part3'].forEach(box => {
+        box.questions.forEach(q => {
+          allQuestionNames.push(q.name);
+        });
+      });
+    });
+
+    // Delete all question answers
+    const deleteObservables = allQuestionNames.map(questionName => 
+      this.apiService.deleteQuestionAnswer(apbNumber, reviewId, questionName)
+    );
+
+    forkJoin(deleteObservables).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        // Clear local state
+        this.questionAnswers.clear();
+        
+        // Reset all question values
+        ['part1', 'part2', 'part3'].forEach((part) => {
+          this.allQuestionBoxes[part as 'part1' | 'part2' | 'part3'].forEach(box => {
+            box.questions.forEach(q => {
+              if (q.type === 'checkbox' || q.type === 'radio') {
+                q.value = null;
+              } else if (q.type === 'number') {
+                q.value = 0;
+              } else {
+                q.value = '';
+              }
+              q.shareWithPatient = false;
+              q.shareWithDoctor = false;
+              
+              // Reset visibility of action fields
+              if (q.hidden && q.originallyHidden) {
+                q.hidden = true;
+              }
+            });
+          });
+        });
+        
+        console.log('All anamnesis answers cleared successfully');
+      },
+      error: (err: any) => {
+        console.error('Error clearing anamnesis answers:', err);
+        alert('Failed to clear all answers. Please try again.');
+      }
+    });
   }
 }
 

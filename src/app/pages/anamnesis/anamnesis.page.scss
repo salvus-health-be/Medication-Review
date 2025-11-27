@@ -1379,3 +1379,50 @@
     opacity: 1;
   }
 }
+
+.clear-all-button {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #6b7280;
+  font-family: $primary-font;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+
+  svg {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    background-color: #fee;
+    border-color: #ef4444;
+    color: #dc2626;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  @include sm {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}

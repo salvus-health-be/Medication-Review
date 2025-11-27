@@ -208,6 +208,9 @@
     "general_notes": "Notes générales",
     "select_category": "Sélectionnez une catégorie pour voir les questions",
     "questions_progress": "{{answered}} sur {{total}} questions répondues",
+    "clear_all_answers": "Tout effacer",
+    "clear_all_answers_confirm_title": "Effacer toutes les réponses ?",
+    "clear_all_answers_confirm_message": "Cela supprimera toutes les réponses de toutes les parties de l'anamnèse pour cet examen de médication. Cette action ne peut pas être annulée.",
     "categories": {
       "concerns": "Préoccupations/Expériences",
       "medication_help": "Aide à la prise de médicaments",
