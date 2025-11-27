@@ -557,17 +557,6 @@ export class ReportGenerationPage implements OnInit {
     });
     content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Patient info - anonymous for MVP
-    let patientRef = 'Voor: Patiënt';
-    if (lang === 'fr') patientRef = 'Pour : Patient(e)';
-    else if (lang === 'en') patientRef = 'For: Patient';
-
-    content.push({
-      text: patientRef,
-      style: 'patientReference'
-    });
-    content.push({ text: '', margin: [0, 15, 0, 0] });
-
     // Salutation
     content.push({
       text: this.patientContent.salutation,
@@ -906,17 +895,6 @@ export class ReportGenerationPage implements OnInit {
       style: 'dateText'
     });
     content.push({ text: '', margin: [0, 20, 0, 0] });
-
-    // Patient info - anonymous for MVP
-    let patientRef = 'Voor: Patiënt';
-    if (lang === 'fr') patientRef = 'Pour : Patient(e)';
-    else if (lang === 'en') patientRef = 'For: Patient';
-
-    content.push({
-      text: patientRef,
-      style: 'patientReference'
-    });
-    content.push({ text: '', margin: [0, 15, 0, 0] });
 
     // Internal notice
     content.push({

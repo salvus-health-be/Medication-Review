@@ -218,6 +218,7 @@
     "question_categories": "Vragencategorieën",
     "general_notes": "Algemene notities",
     "select_category": "Selecteer een categorie om vragen te bekijken",
+    "questions_progress": "{{answered}} van {{total}} vragen beantwoord",
     "categories": {
       "concerns": "Zorgen/Ervaringen",
       "medication_help": "Hulp bij medicatie-inname",

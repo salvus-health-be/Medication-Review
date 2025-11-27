@@ -41,8 +41,8 @@
         @for (box of questionBoxes; track box.id) {
         <div class="question-box" [class.selected]="selectedBox?.id === box.id" (click)="selectBox(box)">
           <div class="box-title">{{ box.title }}</div>
-          <div class="box-count">{{ getAnsweredQuestionCount(box) }} out of {{ getVisibleQuestionCount(box) }} questions
-            answered [{{ getQuestionProgress(box) }}%]</div>
+          <div class="box-count">{{ 'anamnesis.questions_progress' | transloco:{ answered: getAnsweredQuestionCount(box), total: getVisibleQuestionCount(box) } }}
+            [{{ getQuestionProgress(box) }}%]</div>
           <div class="box-share-counters">
             <span class="share-counter patient-counter">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"

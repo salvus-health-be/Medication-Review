@@ -207,6 +207,7 @@
     "question_categories": "Catégories de questions",
     "general_notes": "Notes générales",
     "select_category": "Sélectionnez une catégorie pour voir les questions",
+    "questions_progress": "{{answered}} sur {{total}} questions répondues",
     "categories": {
       "concerns": "Préoccupations/Expériences",
       "medication_help": "Aide à la prise de médicaments",

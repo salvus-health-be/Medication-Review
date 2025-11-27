@@ -137,15 +137,10 @@ export class PatientSummaryGenerator extends BasePdfGenerator {
   }
 
   private createCompactPatientInfo(patient: Patient | null, review: MedicationReview | null): Content {
-    const lang = this.transloco.getActiveLang();
-    // Anonymous patient reference for MVP
-    let patientRef = 'Voor: Patiënt';
-    if (lang === 'fr') patientRef = 'Pour : Patient(e)';
-    else if (lang === 'en') patientRef = 'For: Patient';
-
+    // Return empty content - patient reference removed
     return {
-      text: patientRef,
-      style: 'patientReference'
+      text: '',
+      margin: [0, 0, 0, 0]
     };
   }
 

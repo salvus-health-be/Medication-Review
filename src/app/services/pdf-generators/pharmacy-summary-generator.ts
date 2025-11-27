@@ -63,6 +63,14 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
       content.push(this.createSpacer(12));
     }
 
+    // Lab Values
+    if (labValues.length > 0) {
+      content.push(this.createSimpleHeading(this.transloco.translate('tools.lab_values') || 'Lab Values'));
+      content.push(this.createSpacer(6));
+      content.push(this.createLabValuesTable(labValues));
+      content.push(this.createSpacer(12));
+    }
+
     // Review notes and actions
     const allNotes = notes.filter(note => note.text);
     const part1Actions = this.getPharmacyPart1Actions(questionAnswers);
@@ -176,14 +184,10 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
   }
 
   private createCompactPatientInfo(patient: Patient | null, review: MedicationReview | null): Content {
-    const lang = this.transloco.getActiveLang();
-    let patientRef = 'Voor: Patiënt';
-    if (lang === 'fr') patientRef = 'Pour : Patient(e)';
-    else if (lang === 'en') patientRef = 'For: Patient';
-
+    // Return empty content - patient reference removed
     return {
-      text: patientRef,
-      style: 'patientReference'
+      text: '',
+      margin: [0, 0, 0, 0]
     };
   }
 
@@ -454,6 +458,22 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
         fontSize: 10,
         color: '#333333',
         bold: false
+      },
+      actionLabel: {
+        fontSize: 9,
+        color: '#2563eb',
+        italics: true
+      },
+      actionValue: {
+        fontSize: 9,
+        color: '#1e40af',
+        italics: false
+      },
+      tableHeader: {
+        fontSize: 9,
+        bold: true,
+        color: '#333333',
+        fillColor: '#f3f4f6'
       }
     };
   }
@@ -467,12 +487,12 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     if (concernsAnswers.length > 0) {
       content.push({ text: this.transloco.translate('pdf.patient_concerns') || 'Patient Concerns', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
-      this.addQuestionAnswerPairs(content, concernsAnswers, [
-        { key: 'tooMany', label: this.transloco.translate('pdf.patient_concern_tooMany') },
-        { key: 'financialBurden', label: this.transloco.translate('pdf.patient_concern_financialBurden') },
-        { key: 'anxiety', label: this.transloco.translate('pdf.patient_concern_anxiety') },
-        { key: 'untreatedComplaints', label: this.transloco.translate('pdf.patient_concern_untreatedComplaints') },
-        { key: 'other', label: this.transloco.translate('pdf.patient_concern_other') }
+      this.addQuestionAnswerPairsWithActions(content, concernsAnswers, [
+        { key: 'tooMany', label: this.transloco.translate('pdf.patient_concern_tooMany'), actionKey: 'tooManyAction' },
+        { key: 'financialBurden', label: this.transloco.translate('pdf.patient_concern_financialBurden'), actionKey: 'financialBurdenAction' },
+        { key: 'anxiety', label: this.transloco.translate('pdf.patient_concern_anxiety'), actionKey: 'anxietyAction' },
+        { key: 'untreatedComplaints', label: this.transloco.translate('pdf.patient_concern_untreatedComplaints'), actionKey: 'untreatedComplaintsAction' },
+        { key: 'other', label: this.transloco.translate('pdf.patient_concern_other'), actionKey: 'otherAction' }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -482,9 +502,9 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     if (helpAnswers.length > 0) {
       content.push({ text: this.transloco.translate('pdf.medication_assistance') || 'Medication Assistance', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
-      this.addQuestionAnswerPairs(content, helpAnswers, [
+      this.addQuestionAnswerPairsWithActions(content, helpAnswers, [
         { key: 'hasAssistance', label: this.transloco.translate('pdf.medication_help_hasAssistance') },
-        { key: 'additionalNeededQuestion', label: this.transloco.translate('pdf.medication_help_additionalNeeded') }
+        { key: 'additionalNeededQuestion', label: this.transloco.translate('pdf.medication_help_additionalNeeded'), actionKey: 'additionalNeededAction' }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -494,14 +514,14 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     if (practicalAnswers.length > 0) {
       content.push({ text: this.transloco.translate('pdf.practical_problems') || 'Practical Problems', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
-      this.addQuestionAnswerPairs(content, practicalAnswers, [
-        { key: 'swallowing', label: this.transloco.translate('pdf.practical_problem_swallowing') },
-        { key: 'movement', label: this.transloco.translate('pdf.practical_problem_movement') },
-        { key: 'vision', label: this.transloco.translate('pdf.practical_problem_vision') },
-        { key: 'hearing', label: this.transloco.translate('pdf.practical_problem_hearing') },
-        { key: 'cognitive', label: this.transloco.translate('pdf.practical_problem_cognitive') },
-        { key: 'dexterity', label: this.transloco.translate('pdf.practical_problem_dexterity') },
-        { key: 'other', label: this.transloco.translate('pdf.practical_problem_other') }
+      this.addQuestionAnswerPairsWithActions(content, practicalAnswers, [
+        { key: 'swallowing', label: this.transloco.translate('pdf.practical_problem_swallowing'), actionKey: 'swallowingAction' },
+        { key: 'movement', label: this.transloco.translate('pdf.practical_problem_movement'), actionKey: 'movementAction' },
+        { key: 'vision', label: this.transloco.translate('pdf.practical_problem_vision'), actionKey: 'visionAction' },
+        { key: 'hearing', label: this.transloco.translate('pdf.practical_problem_hearing'), actionKey: 'hearingAction' },
+        { key: 'cognitive', label: this.transloco.translate('pdf.practical_problem_cognitive'), actionKey: 'cognitiveAction' },
+        { key: 'dexterity', label: this.transloco.translate('pdf.practical_problem_dexterity'), actionKey: 'dexterityAction' },
+        { key: 'other', label: this.transloco.translate('pdf.practical_problem_other'), actionKey: 'otherAction' }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -511,10 +531,10 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     if (incidentAnswers.length > 0) {
       content.push({ text: this.transloco.translate('pdf.incidents') || 'Incidents', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
-      this.addQuestionAnswerPairs(content, incidentAnswers, [
+      this.addQuestionAnswerPairsWithActions(content, incidentAnswers, [
         { key: 'falls', label: this.transloco.translate('pdf.incidents_falls') },
         { key: 'hospitalizations', label: this.transloco.translate('pdf.incidents_hospitalizations') },
-        { key: 'actionNeeded', label: this.transloco.translate('pdf.incidents_actionNeeded') }
+        { key: 'actionNeeded', label: this.transloco.translate('pdf.incidents_actionNeeded'), actionKey: 'action' }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -524,10 +544,10 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
     if (followupAnswers.length > 0) {
       content.push({ text: this.transloco.translate('pdf.follow_up_monitoring') || 'Follow-up and Monitoring', style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
-      this.addQuestionAnswerPairs(content, followupAnswers, [
+      this.addQuestionAnswerPairsWithActions(content, followupAnswers, [
         { key: 'careProviders', label: this.transloco.translate('pdf.followup_careProviders') },
         { key: 'parameterMonitoring', label: this.transloco.translate('pdf.followup_parameterMonitoring') },
-        { key: 'actionNeeded', label: this.transloco.translate('pdf.followup_actionNeeded') }
+        { key: 'actionNeeded', label: this.transloco.translate('pdf.followup_actionNeeded'), actionKey: 'action' }
       ]);
       content.push(this.createSpacer(10));
     }
@@ -547,11 +567,8 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
       content.push({ text: group.medicationName, style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
       
-      this.addQuestionAnswerPairs(content, group.answers, [
-        { key: 'adherence', label: this.transloco.translate('pdf.adherence_takes_as_prescribed') },
-        { key: 'frequency', label: this.transloco.translate('pdf.adherence_frequency_forgotten') },
-        { key: 'barriers', label: this.transloco.translate('pdf.adherence_problems') },
-        { key: 'notes', label: this.transloco.translate('pdf.pharmacist_notes') }
+      this.addQuestionAnswerPairsWithActions(content, group.answers, [
+        { key: 'adherence', label: this.transloco.translate('pdf.adherence_takes_as_prescribed'), actionKey: 'notes' }
       ]);
       
       content.push(this.createSpacer(10));
@@ -572,11 +589,9 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
       content.push({ text: group.medicationName, style: 'subsectionTitle' });
       content.push(this.createSpacer(5));
       
-      this.addQuestionAnswerPairs(content, group.answers, [
-        { key: 'effective', label: this.transloco.translate('pdf.effectiveness_is_effective') },
-        { key: 'effectiveAction', label: this.transloco.translate('pdf.pharmacist_notes') },
-        { key: 'hasSideEffects', label: this.transloco.translate('pdf.effectiveness_has_side_effects') },
-        { key: 'sideEffectsAction', label: this.transloco.translate('pdf.pharmacist_notes') }
+      this.addQuestionAnswerPairsWithActions(content, group.answers, [
+        { key: 'effective', label: this.transloco.translate('pdf.effectiveness_is_effective'), actionKey: 'effectiveAction' },
+        { key: 'hasSideEffects', label: this.transloco.translate('pdf.effectiveness_has_side_effects'), actionKey: 'sideEffectsAction' }
       ]);
       
       content.push(this.createSpacer(10));
@@ -594,12 +609,53 @@ export class PharmacySummaryGenerator extends BasePdfGenerator {
         content.push({
           columns: [
             { text: q.label, style: 'questionLabel', width: '*' },
-            { text: answer.value, style: 'answerValue', width: '60%' }
+            { text: this.formatAnswerValue(answer.value), style: 'answerValue', width: '60%' }
           ],
           margin: [0, 2, 0, 2]
         });
       }
     });
+  }
+
+  private addQuestionAnswerPairsWithActions(content: Content[], answers: QuestionAnswer[], questionMap: { key: string; label: string; actionKey?: string }[]) {
+    const actionLabel = this.transloco.translate('pdf.pharmacist_notes') || 'Pharmacist Action';
+    
+    questionMap.forEach(q => {
+      const answer = answers.find(a => a.questionName.includes(`_${q.key}`) && !a.questionName.includes('Action'));
+      if (answer && answer.value !== null && answer.value !== undefined && answer.value !== '') {
+        content.push({
+          columns: [
+            { text: q.label, style: 'questionLabel', width: '*' },
+            { text: this.formatAnswerValue(answer.value), style: 'answerValue', width: '60%' }
+          ],
+          margin: [0, 2, 0, 2]
+        });
+        
+        // Check for associated action field
+        if (q.actionKey) {
+          const actionAnswer = answers.find(a => a.questionName.includes(`_${q.actionKey}`));
+          if (actionAnswer && actionAnswer.value && actionAnswer.value.trim()) {
+            content.push({
+              columns: [
+                { text: `  → ${actionLabel}`, style: 'actionLabel', width: '*' },
+                { text: actionAnswer.value, style: 'actionValue', width: '60%' }
+              ],
+              margin: [10, 2, 0, 4]
+            });
+          }
+        }
+      }
+    });
+  }
+
+  private formatAnswerValue(value: any): string {
+    if (value === true || value === 'true') {
+      return this.transloco.translate('common.yes') || 'Yes';
+    }
+    if (value === false || value === 'false') {
+      return this.transloco.translate('common.no') || 'No';
+    }
+    return String(value);
   }
 
   private groupAnswersByMedication(answers: QuestionAnswer[], medications: Medication[]): { medicationName: string; answers: QuestionAnswer[] }[] {

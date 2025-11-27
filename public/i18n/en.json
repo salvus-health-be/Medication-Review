@@ -218,6 +218,7 @@
     "question_categories": "Question Categories",
     "general_notes": "General Notes",
     "select_category": "Select a category to view questions",
+    "questions_progress": "{{answered}} out of {{total}} questions answered",
     "categories": {
       "concerns": "Concerns/Experiences",
       "medication_help": "Medication Intake Assistance",
