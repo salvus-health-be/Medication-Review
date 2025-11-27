@@ -277,6 +277,8 @@ export class CsvImportModalComponent {
     // Initialize edit values
     if (field === 'cnk') {
       this.editValues['cnk'] = medication.cnk?.toString() || '';
+    } else if (field === 'vmp') {
+      this.editValues['vmp'] = medication.vmp?.toString() || '';
     } else if (field === 'activeIngredient') {
       this.editValues['activeIngredient'] = medication.activeIngredient || '';
     } else if (field === 'indication') {
@@ -324,10 +326,41 @@ export class CsvImportModalComponent {
   }
 
   selectCnkFromSearch(medication: ImportedMedication, result: any) {
-    this.editValues['cnk'] = result.cnk.toString();
+    if (!medication.medicationId) return;
+
+    const apbNumber = this.stateService.apbNumber;
+    const reviewId = this.stateService.medicationReviewId;
+    if (!reviewId) return;
+
+    // Close search results and editing mode
     this.cnkSearchResults = [];
-    // Auto-save the CNK
-    this.saveField(medication, 'cnk');
+    
+    // Prepare update with CNK, VMP, and package size from search result
+    const updateData: any = {
+      cnk: parseInt(result.cnk) || undefined,
+      vmp: result.vmp ? parseInt(result.vmp) : undefined,
+      packageSize: result.verpakking || undefined
+    };
+
+    // Update medication via API
+    this.apiService.updateMedication(apbNumber, reviewId, medication.medicationId, updateData).subscribe({
+      next: (response) => {
+        // Update the display
+        medication.cnk = response.cnk ?? null;
+        medication.vmp = response.vmp ?? null;
+        medication.activeIngredient = response.activeIngredient ?? null;
+        medication.missingInformation = (medication.missingInformation || []).filter(m => m !== 'CNK');
+        if (response.activeIngredient) {
+          medication.missingInformation = (medication.missingInformation || []).filter(m => m !== 'ActiveIngredient');
+        }
+        
+        this.cancelEditing();
+      },
+      error: (err) => {
+        alert(this.transloco.translate('csv_import.error_update_failed') + ': ' + (err.error?.error || 'Unknown error'));
+        console.error('Update error:', err);
+      }
+    });
   }
 
   isEditing(medication: ImportedMedication, field: string): boolean {
@@ -350,6 +383,13 @@ export class CsvImportModalComponent {
         return;
       }
       updateData.cnk = cnkNumber;
+    } else if (field === 'vmp') {
+      const vmpNumber = parseInt(this.editValues['vmp']);
+      if (this.editValues['vmp'] && (isNaN(vmpNumber) || vmpNumber <= 0)) {
+        alert('Invalid VMP code. Please enter a valid number.');
+        return;
+      }
+      updateData.vmp = vmpNumber || null;
     } else if (field === 'activeIngredient') {
       updateData.activeIngredient = this.editValues['activeIngredient'];
     } else if (field === 'indication') {
@@ -378,6 +418,8 @@ export class CsvImportModalComponent {
           if (response.activeIngredient) {
             medication.missingInformation = (medication.missingInformation || []).filter(m => m !== 'ActiveIngredient');
           }
+        } else if (field === 'vmp') {
+          medication.vmp = response.vmp ?? null;
         } else if (field === 'activeIngredient') {
           medication.activeIngredient = response.activeIngredient ?? null;
           medication.missingInformation = (medication.missingInformation || []).filter(m => m !== 'ActiveIngredient');

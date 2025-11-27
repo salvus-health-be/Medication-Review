@@ -30,9 +30,13 @@
         <div 
           *ngFor="let medication of searchResults" 
           class="result-item"
+          [class.no-vmp]="!hasVmp(medication)"
           (click)="selectMedication(medication)"
         >
-          <div class="medication-name">{{ medication.benaming }}</div>
+          <div class="medication-name">
+            {{ medication.benaming }}
+            <span *ngIf="!medication.vmp" class="no-vmp-warning" title="This medication does not have a VMP code. Therapy adherence matching may be limited.">⚠️ No VMP</span>
+          </div>
           <div class="medication-details">
             <span class="cnk-code">CNK: {{ medication.cnk }}</span>
             <span class="vmp-code" *ngIf="medication.vmp">VMP: {{ medication.vmp }}</span>

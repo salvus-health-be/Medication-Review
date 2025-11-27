@@ -163,6 +163,37 @@
                 </button>
               </div>
 
+              <!-- VMP -->
+              <div class="detail-row">
+                <span class="label">VMP:</span>
+                <span class="value" *ngIf="!isEditing(med, 'vmp')">
+                  <span *ngIf="med.vmp">{{ med.vmp }}</span>
+                  <span *ngIf="!med.vmp" class="missing-text" style="color: #ff9800; font-weight: 600;">⚠️ No VMP</span>
+                </span>
+                <div class="edit-inline" *ngIf="isEditing(med, 'vmp')">
+                  <input 
+                    type="number" 
+                    [(ngModel)]="editValues['vmp']" 
+                    placeholder="Enter VMP code"
+                    class="field-input"
+                    (keyup.enter)="saveField(med, 'vmp')"
+                    (keyup.escape)="cancelEditing()"
+                  />
+                  <button class="save-button-small" (click)="saveField(med, 'vmp')">✓</button>
+                  <button class="cancel-button-small" (click)="cancelEditing()">✕</button>
+                </div>
+                <button 
+                  *ngIf="!isEditing(med, 'vmp') && med.reviewStatus !== 'approved'" 
+                  class="edit-icon-button"
+                  (click)="startEditing(med, 'vmp')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </div>
+
               <!-- Active Ingredient -->
               <div class="detail-row" [class.missing]="isActiveIngredientMissing(med)">
                 <span class="label">{{ 'csv_import.active_ingredient' | transloco }}:</span>

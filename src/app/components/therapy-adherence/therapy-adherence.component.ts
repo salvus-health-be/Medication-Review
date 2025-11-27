@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
+import { forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
 import { DispensingHistoryResponse, CnkDispensingData, Medication as ApiMedication } from '../../models/api.models';
@@ -17,6 +19,7 @@ interface MedicationWithDispensingData {
   medication: ApiMedication;
   dispensingData: CnkDispensingData | null;
   chartId: string;
+  unitsPerPackage: number; // User-defined units per package
 }
 
 interface StockDataPoint {
@@ -32,6 +35,7 @@ interface DispensingMomentWithUnits {
   totalUnits: number;      // amount × unitsPerPackage
   dateString: string;
   source?: 'csv' | 'manual'; // Source of dispensing moment
+  vmp?: number | null;     // VMP code from dispensing data
 }
 
 @Component({
@@ -61,6 +65,9 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
   dateRange: { earliest: Date | null, latest: Date | null } = { earliest: null, latest: null };
   fullDateRange: { earliest: Date | null, latest: Date | null } = { earliest: null, latest: null }; // Store the full unfiltered range
   maxStockValue: number = 0; // Maximum stock value across all medications for y-axis scaling
+  
+  // VMP cache for CNK to VMP conversions
+  private vmpCache: Map<string, number | null> = new Map();
   
   // Filtering and zoom controls
   filterStartDate: string = ''; // ISO date string for input
@@ -159,7 +166,6 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
 
   matchDispensingData() {
     if (!this.dispensingHistory || this.medications.length === 0) {
-      
       return;
     }
 
@@ -167,6 +173,147 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       return;
     }
 
+    // Step 1: Cache any existing VMPs from medications and dispensing data
+    this.medications.forEach(med => {
+      if (med.cnk && med.vmp && !this.vmpCache.has(med.cnk.toString())) {
+        this.vmpCache.set(med.cnk.toString(), med.vmp);
+        console.log(`[Therapy Adherence] Cached existing medication VMP for CNK ${med.cnk}: ${med.vmp}`);
+      }
+    });
+    
+    this.dispensingHistory.dispensingData.forEach(data => {
+      if (data.cnk && data.vmp && !this.vmpCache.has(data.cnk)) {
+        this.vmpCache.set(data.cnk, data.vmp);
+        console.log(`[Therapy Adherence] Cached existing dispensing VMP for CNK ${data.cnk}: ${data.vmp}`);
+      }
+    });
+    
+    // Step 2: Collect all CNKs that need VMP resolution
+    const cnksToResolve: string[] = [];
+    
+    // Collect medication CNKs that don't have VMP
+    this.medications.forEach(med => {
+      if (med.cnk && !this.vmpCache.has(med.cnk.toString())) {
+        cnksToResolve.push(med.cnk.toString());
+      }
+    });
+    
+    // Collect dispensing data CNKs that don't have VMP
+    this.dispensingHistory.dispensingData.forEach(data => {
+      if (data.cnk && !this.vmpCache.has(data.cnk)) {
+        cnksToResolve.push(data.cnk);
+      }
+    });
+
+    // If no CNKs to resolve, proceed with matching
+    if (cnksToResolve.length === 0) {
+      console.log('[Therapy Adherence] All VMPs cached, proceeding to matching...');
+      this.performVmpMatching();
+      return;
+    }
+
+    // Step 3: Resolve all CNKs to VMPs in bulk
+    console.log(`[Therapy Adherence] Resolving ${cnksToResolve.length} CNKs to VMPs...`);
+    
+    const lookupObservables = cnksToResolve.map(cnk => 
+      this.apiService.getVmpFromCnk(cnk).pipe(
+        catchError(err => {
+          console.error(`[Therapy Adherence] Failed to resolve CNK ${cnk}:`, err);
+          return of({ cnk: parseInt(cnk), vmp: null, found: false });
+        })
+      )
+    );
+
+    forkJoin(lookupObservables).subscribe({
+      next: (results) => {
+        // Step 4: Cache all VMP results
+        results.forEach(result => {
+          this.vmpCache.set(result.cnk.toString(), result.vmp);
+          console.log(`[Therapy Adherence] Resolved and cached VMP for CNK ${result.cnk}: ${result.vmp}`);
+        });
+
+        // Step 5: Perform VMP-based matching
+        this.performVmpMatching();
+      },
+      error: (err) => {
+        console.error('[Therapy Adherence] Failed to resolve VMPs:', err);
+        // Fall back to CNK matching if VMP resolution fails
+        this.performCnkMatching();
+      }
+    });
+  }
+
+  private performVmpMatching() {
+    console.log('[Therapy Adherence] Performing VMP-based matching...');
+    console.log('[Therapy Adherence] VMP Cache:', Array.from(this.vmpCache.entries()));
+    
+    this.medicationsWithData = this.medications.map(medication => {
+      console.log(`[Therapy Adherence] Matching medication: "${medication.name}", CNK: ${medication.cnk}, VMP: ${medication.vmp}`);
+      
+      // Get VMP for medication (prefer medication.vmp, then cache)
+      const medicationVmp = medication.vmp ?? this.vmpCache.get(medication.cnk?.toString() || '');
+      console.log(`[Therapy Adherence]   -> Resolved medication VMP: ${medicationVmp}`);
+      
+      let matchingData: CnkDispensingData | null = null;
+      
+      if (medicationVmp) {
+        // Try to find dispensing data with matching VMP
+        console.log(`[Therapy Adherence]   -> Searching for VMP match in ${this.dispensingHistory!.dispensingData.length} dispensing records...`);
+        matchingData = this.dispensingHistory!.dispensingData.find(d => {
+          const dataVmpRaw = d.vmp ?? this.vmpCache.get(d.cnk);
+          // Convert both VMPs to numbers for comparison (handle string/number type mismatch)
+          const dataVmp = dataVmpRaw ? Number(dataVmpRaw) : null;
+          const medVmp = Number(medicationVmp);
+          
+          console.log(`[Therapy Adherence]     -> Checking dispensing CNK ${d.cnk}: VMP=${dataVmp}`);
+          
+          const matches = dataVmp !== null && !isNaN(dataVmp) && !isNaN(medVmp) && dataVmp === medVmp;
+          
+          if (matches) {
+            console.log(`[Therapy Adherence]   ✓ MATCHED by VMP! Medication "${medication.name}" (VMP: ${medVmp}) with dispensing CNK ${d.cnk} (VMP: ${dataVmp})`);
+          }
+          return matches;
+        }) || null;
+      }
+      
+      // Fallback: if no VMP match, try direct CNK match
+      if (!matchingData && medication.cnk) {
+        const medCnkString = medication.cnk.toString();
+        console.log(`[Therapy Adherence]   -> Trying CNK fallback match for CNK ${medCnkString}...`);
+        matchingData = this.dispensingHistory!.dispensingData.find(d => {
+          const dispensingCnkString = d.cnk.toString();
+          const matches = dispensingCnkString === medCnkString;
+          if (matches) {
+            console.log(`[Therapy Adherence]   ✓ MATCHED by CNK! Medication "${medication.name}" CNK ${medCnkString} with dispensing CNK ${dispensingCnkString}`);
+          }
+          return matches;
+        }) || null;
+      }
+      
+      if (!matchingData) {
+        console.log(`[Therapy Adherence]   ✗ NO MATCH for medication "${medication.name}"`);
+      }
+      
+      const chartId = `chart-${medication.medicationId}`;
+
+      return {
+        medication,
+        dispensingData: matchingData,
+        chartId,
+        unitsPerPackage: medication.packageSize ?? 0 // Initialize from packageSize
+      };
+    });
+
+    // Calculate date range from all dispensing moments
+    this.calculateDateRange();
+
+    // Create charts after a short delay to ensure DOM is ready
+    setTimeout(() => this.createCharts(), 100);
+  }
+
+  private performCnkMatching() {
+    console.log('[Therapy Adherence] Falling back to CNK-based matching...');
+    
     this.medicationsWithData = this.medications.map(medication => {
       // Match by CNK code
       const cnkString = medication.cnk?.toString();
@@ -179,7 +326,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       return {
         medication,
         dispensingData: matchingData || null,
-        chartId
+        chartId,
+        unitsPerPackage: medication.packageSize ?? 0 // Initialize from packageSize
       };
     });
 
@@ -403,10 +551,59 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     this.calculateMaxStockValue();
 
     this.medicationsWithData.forEach(item => {
-      if (item.dispensingData) {
+      if (item.dispensingData && item.unitsPerPackage > 0) {
         this.createChart(item);
       }
     });
+  }
+
+  onUnitsPerPackageChange(item: MedicationWithDispensingData) {
+    // Save to backend via packageSize field
+    const apbNumber = this.stateService.apbNumber;
+    const reviewId = this.stateService.medicationReviewId;
+    const medicationId = item.medication.medicationId;
+    
+    if (apbNumber && reviewId && medicationId) {
+      this.apiService.updateMedication(apbNumber, reviewId, medicationId, {
+        packageSize: item.unitsPerPackage
+      }).subscribe({
+        next: (updatedMed) => {
+          // Update local medication object
+          item.medication.packageSize = updatedMed.packageSize ?? null;
+        },
+        error: (err) => {
+          console.error('Failed to save units per package:', err);
+        }
+      });
+    }
+
+    // Destroy existing chart if it exists
+    const existingChart = this.charts.get(item.chartId);
+    if (existingChart) {
+      existingChart.destroy();
+      this.charts.delete(item.chartId);
+    }
+
+    // Recalculate max stock value across all medications
+    this.calculateMaxStockValue();
+
+    // Recreate all charts to maintain consistent scaling
+    this.medicationsWithData.forEach(med => {
+      const chart = this.charts.get(med.chartId);
+      if (chart) {
+        chart.destroy();
+        this.charts.delete(med.chartId);
+      }
+    });
+
+    // Recreate charts after a short delay
+    setTimeout(() => {
+      this.medicationsWithData.forEach(med => {
+        if (med.dispensingData && med.unitsPerPackage > 0) {
+          this.createChart(med);
+        }
+      });
+    }, 50);
   }
 
   calculateMaxStockValue() {
@@ -418,7 +615,7 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       const dailyUsage = this.calculateDailyUsage(item.medication);
       if (dailyUsage <= 0) return;
 
-      const unitsPerPackage = item.medication.packageSize ?? 0;
+      const unitsPerPackage = item.unitsPerPackage;
       if (unitsPerPackage <= 0) return;
 
       const moments = item.dispensingData.dispensingMoments.map(moment => ({
@@ -454,12 +651,11 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
     // Calculate daily usage
     const dailyUsage = this.calculateDailyUsage(item.medication);
     
-    // Get units per package from packageSize (now an integer)
-    const unitsPerPackage = item.medication.packageSize ?? 0;
+    // Get units per package from user input (not from packageSize)
+    const unitsPerPackage = item.unitsPerPackage;
 
     if (dailyUsage === 0 || unitsPerPackage === 0) {
-      // Fall back to simple scatter plot
-      this.createSimpleScatterChart(item);
+      // Don't create chart if unitsPerPackage is 0 - will show "Amount per package not set" message
       return;
     }
 
@@ -470,7 +666,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       unitsPerPackage: unitsPerPackage,
       totalUnits: moment.amount * unitsPerPackage,
       dateString: moment.date,
-      source: moment.source || 'csv' // Default to csv if not specified
+      source: moment.source || 'csv', // Default to csv if not specified
+      vmp: item.dispensingData!.vmp // Include VMP from parent dispensing data
     })).sort((a, b) => a.date.getTime() - b.date.getTime());
 
     // Generate stock timeline with status
@@ -499,7 +696,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
         amount: moment.amount,
         unitsPerPackage: moment.unitsPerPackage,
         totalUnits: moment.totalUnits,
-        source: moment.source || 'csv'
+        source: moment.source || 'csv',
+        vmp: moment.vmp // Include VMP for tooltip
       });
     });
 
@@ -633,10 +831,11 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
                 
                 if (datasetLabel === 'Dispensing') {
                   const sourceLabel = raw.source === 'manual' ? ' (Manual)' : ' (CSV)';
+                  const vmpLabel = raw.vmp ? ` [VMP: ${raw.vmp}]` : '';
                   return [
                     `Dispensed: ${raw.amount} package(s)${sourceLabel}`,
                     `Package size: ${raw.unitsPerPackage} units`,
-                    `Total: ${raw.totalUnits} units`
+                    `Total: ${raw.totalUnits} units${vmpLabel}`
                   ];
                 }
                 
@@ -811,7 +1010,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       amount: moment.amount,
       dateString: moment.date,
       packageSize: packageSize,
-      source: moment.source || 'csv'
+      source: moment.source || 'csv',
+      vmp: item.dispensingData!.vmp // Include VMP from parent dispensing data
     })).sort((a, b) => a.date.getTime() - b.date.getTime());
 
     // Create simple data points at fixed y-value (0.5 = middle of chart)
@@ -821,7 +1021,8 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
       dateString: moment.dateString,
       amount: moment.amount,
       packageSize: moment.packageSize,
-      source: moment.source
+      source: moment.source,
+      vmp: moment.vmp // Include VMP for tooltip
     }));
 
     const config: ChartConfiguration<'line'> = {
@@ -912,13 +1113,14 @@ export class TherapyAdherenceComponent implements OnInit, AfterViewInit, OnDestr
               label: (context: any) => {
                 const point = context.raw as any;
                 const sourceLabel = point.source === 'manual' ? ' (Manual)' : ' (CSV)';
+                const vmpLabel = point.vmp ? ` [VMP: ${point.vmp}]` : '';
                 if (point.packageSize > 0) {
                   return [
                     `Dispensed: ${point.amount} package(s)${sourceLabel}`,
-                    `Package size: ${point.packageSize} units`
+                    `Package size: ${point.packageSize} units${vmpLabel}`
                   ];
                 }
-                return `Dispensed: ${point.amount} package(s)${sourceLabel}`;
+                return `Dispensed: ${point.amount} package(s)${sourceLabel}${vmpLabel}`;
               }
             }
           },

@@ -74,8 +74,24 @@ export class MedicationSearchModalComponent implements AfterViewInit {
   }
 
   selectMedication(medication: MedicationSearchResult) {
+    // Warn user if medication has no VMP
+    if (!medication.vmp) {
+      const confirmed = confirm(
+        `WARNING: This medication does not have a VMP (Virtual Medicinal Product) code.\n\n` +
+        `The Therapy Adherence tool will only work if the CNK code (${medication.cnk}) matches the dispensing history EXACTLY.\n\n` +
+        `Different package sizes or brands of the same medication will NOT be linked unless they have matching VMP codes.\n\n` +
+        `Do you want to continue adding this medication?`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
     this.medicationSelected.emit(medication);
     this.onCancel();
+  }
+
+  hasVmp(medication: MedicationSearchResult): boolean {
+    return !!medication.vmp;
   }
 
   onCancel() {

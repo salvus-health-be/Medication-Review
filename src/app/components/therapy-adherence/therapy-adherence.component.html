@@ -131,6 +131,17 @@
           @for (item of medicationsWithData; track item.medication.medicationId) {
             @if (item.medication.asNeeded) {
               <div class="graph-row-wrapper">
+                <input 
+                  [id]="'units-' + item.medication.medicationId"
+                  type="number" 
+                  [(ngModel)]="item.unitsPerPackage"
+                  (ngModelChange)="onUnitsPerPackageChange(item)"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  class="units-per-package-inline"
+                  [title]="'therapy_adherence.units_per_package_tooltip' | transloco"
+                />
                 <div class="graph-wrapper">
                   <div class="no-data-compact">
                     <span>Zo nodig medicatie</span>
@@ -140,8 +151,41 @@
                   +
                 </button>
               </div>
+            } @else if (item.unitsPerPackage === 0) {
+              <div class="graph-row-wrapper">
+                <input 
+                  [id]="'units-' + item.medication.medicationId"
+                  type="number" 
+                  [(ngModel)]="item.unitsPerPackage"
+                  (ngModelChange)="onUnitsPerPackageChange(item)"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  class="units-per-package-inline"
+                  [title]="'therapy_adherence.units_per_package_tooltip' | transloco"
+                />
+                <div class="graph-wrapper">
+                  <div class="no-data-compact">
+                    <span>{{ 'therapy_adherence.amount_per_package_not_set' | transloco }}</span>
+                  </div>
+                </div>
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                  +
+                </button>
+              </div>
             } @else if (item.dispensingData) {
               <div class="graph-row-wrapper">
+                <input 
+                  [id]="'units-' + item.medication.medicationId"
+                  type="number" 
+                  [(ngModel)]="item.unitsPerPackage"
+                  (ngModelChange)="onUnitsPerPackageChange(item)"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  class="units-per-package-inline"
+                  [title]="'therapy_adherence.units_per_package_tooltip' | transloco"
+                />
                 <div class="graph-wrapper">
                   <div class="graph-container">
                     <canvas [id]="item.chartId"></canvas>
@@ -153,6 +197,17 @@
               </div>
             } @else {
               <div class="graph-row-wrapper">
+                <input 
+                  [id]="'units-' + item.medication.medicationId"
+                  type="number" 
+                  [(ngModel)]="item.unitsPerPackage"
+                  (ngModelChange)="onUnitsPerPackageChange(item)"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  class="units-per-package-inline"
+                  [title]="'therapy_adherence.units_per_package_tooltip' | transloco"
+                />
                 <div class="graph-wrapper">
                   <div class="no-data-compact">
                     <span>No dispensing data</span>
@@ -163,9 +218,7 @@
                 </button>
               </div>
             }
-          }
-          
-          @if (medicationsWithData.length === 0) {
+          }          @if (medicationsWithData.length === 0) {
             <div class="no-medications">
               <p>No medications in the medication review</p>
             </div>

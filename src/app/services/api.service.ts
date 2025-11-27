@@ -38,7 +38,11 @@ import {
   ImportProgressEvent,
   ImportCompleteEvent,
   Feedback,
-  FeedbackResponse
+  FeedbackResponse,
+  VmpLookupRequest,
+  VmpLookupResponse,
+  BulkVmpLookupRequest,
+  BulkVmpLookupResponse
 } from '../models/api.models';
 import { environment } from '../../environments/environment';
 
@@ -356,6 +360,21 @@ export class ApiService {
 
     console.log('[Import] Starting import for file:', csvFile.name, 'size:', csvFile.size);
 
+    // Helper function to map IntakeMoments from PascalCase to camelCase
+    const mapIntakeMoments = (intake: any): any => {
+      if (!intake) return null;
+      return {
+        unitsBeforeBreakfast: intake.unitsBeforeBreakfast ?? intake.UnitsBeforeBreakfast ?? 0,
+        unitsDuringBreakfast: intake.unitsDuringBreakfast ?? intake.UnitsDuringBreakfast ?? 0,
+        unitsBeforeLunch: intake.unitsBeforeLunch ?? intake.UnitsBeforeLunch ?? 0,
+        unitsDuringLunch: intake.unitsDuringLunch ?? intake.UnitsDuringLunch ?? 0,
+        unitsBeforeDinner: intake.unitsBeforeDinner ?? intake.UnitsBeforeDinner ?? 0,
+        unitsDuringDinner: intake.unitsDuringDinner ?? intake.UnitsDuringDinner ?? 0,
+        unitsAtBedtime: intake.unitsAtBedtime ?? intake.UnitsAtBedtime ?? 0,
+        asNeeded: intake.asNeeded ?? intake.AsNeeded ?? false
+      };
+    };
+
     const subject = new Subject<ImportEvent>();
 
     // Use fetch with SSE for streaming progress updates
@@ -429,10 +448,11 @@ export class ApiService {
                         medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
                         success: med.success ?? med.Success ?? true,
                         cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+                        vmp: med.vmp ?? med.VMP ?? med.Vmp ?? null,
                         foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
                         activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
                         indication: med.indication ?? med.Indication ?? null,
-                        intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+                        intakeMoments: mapIntakeMoments(med.intakeMoments ?? med.IntakeMoments),
                         missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
                         errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
                         reviewStatus: 'under_review'
@@ -474,10 +494,11 @@ export class ApiService {
                       medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
                       success: med.success ?? med.Success ?? true,
                       cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+                      vmp: med.vmp ?? med.VMP ?? med.Vmp ?? null,
                       foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
                       activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
                       indication: med.indication ?? med.Indication ?? null,
-                      intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+                      intakeMoments: mapIntakeMoments(med.intakeMoments ?? med.IntakeMoments),
                       missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
                       errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
                       reviewStatus: 'under_review'
@@ -534,10 +555,11 @@ export class ApiService {
                     medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
                     success: med.success ?? med.Success ?? true,
                     cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+                    vmp: med.vmp ?? med.VMP ?? med.Vmp ?? null,
                     foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
                     activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
                     indication: med.indication ?? med.Indication ?? null,
-                    intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+                    intakeMoments: mapIntakeMoments(med.intakeMoments ?? med.IntakeMoments),
                     missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
                     errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
                     reviewStatus: 'under_review'
@@ -586,10 +608,11 @@ export class ApiService {
               medicationName: med.medicationName ?? med.MedicationName ?? med.name ?? med.Name,
               success: med.success ?? med.Success ?? true,
               cnk: med.cnk ?? med.CNK ?? med.Cnk ?? null,
+              vmp: med.vmp ?? med.VMP ?? med.Vmp ?? null,
               foundMedicationName: med.foundMedicationName ?? med.FoundMedicationName ?? null,
               activeIngredient: med.activeIngredient ?? med.ActiveIngredient ?? null,
               indication: med.indication ?? med.Indication ?? null,
-              intakeMoments: med.intakeMoments ?? med.IntakeMoments ?? null,
+              intakeMoments: mapIntakeMoments(med.intakeMoments ?? med.IntakeMoments),
               missingInformation: med.missingInformation ?? med.MissingInformation ?? [],
               errorMessage: med.errorMessage ?? med.ErrorMessage ?? null,
               reviewStatus: 'under_review'
@@ -719,6 +742,7 @@ export class ApiService {
         manualMoments: response.manualMoments ?? response.ManualMoments,
         dispensingData: (response.dispensingData ?? response.DispensingData ?? []).map((cnkGroup: any) => ({
           cnk: cnkGroup.cnk ?? cnkGroup.Cnk ?? cnkGroup.CNK,
+          vmp: cnkGroup.vmp ?? cnkGroup.Vmp ?? cnkGroup.VMP ?? null,
           description: cnkGroup.description ?? cnkGroup.Description,
           dispensingMoments: (cnkGroup.dispensingMoments ?? cnkGroup.DispensingMoments ?? []).map((moment: any) => {
             const extractedId = moment.id ?? moment.Id ?? moment.rowKey ?? moment.RowKey;
@@ -933,9 +957,49 @@ export class ApiService {
     const headers = this.getHeaders();
 
     return this.http.post<FeedbackResponse>(
-      `${this.API_BASE_URL}/manage_feedback`,
+      `${this.API_BASE_URL}/submit_feedback`,
       feedback,
       { headers }
+    );
+  }
+
+  // VMP Lookup
+  getVmpFromCnk(cnk: number | string): Observable<VmpLookupResponse> {
+    const headers = this.getHeaders();
+    const request: VmpLookupRequest = { cnk };
+
+    return this.http.post<any>(
+      `${this.API_BASE_URL}/get_vmp_from_cnk`,
+      request,
+      { headers }
+    ).pipe(
+      map(response => ({
+        cnk: response.cnk ?? response.Cnk ?? response.CNK ?? parseInt(String(cnk)),
+        vmp: response.vmp ?? response.Vmp ?? response.VMP ?? null,
+        found: response.found ?? response.Found ?? false,
+        medicationName: response.medicationName ?? response.MedicationName ?? null
+      }))
+    );
+  }
+
+  getBulkVmpFromCnk(cnkCodes: (number | string)[]): Observable<BulkVmpLookupResponse> {
+    const headers = this.getHeaders();
+    const request: BulkVmpLookupRequest = { cnkCodes };
+
+    return this.http.post<any>(
+      `${this.API_BASE_URL}/get_vmp_from_cnk`,
+      request,
+      { headers }
+    ).pipe(
+      map(response => {
+        const results = (response.results ?? response.Results ?? []).map((item: any) => ({
+          cnk: item.cnk ?? item.Cnk ?? item.CNK ?? 0,
+          vmp: item.vmp ?? item.Vmp ?? item.VMP ?? null,
+          found: item.found ?? item.Found ?? false,
+          medicationName: item.medicationName ?? item.MedicationName ?? null
+        }));
+        return { results };
+      })
     );
   }
 }

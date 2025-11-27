@@ -500,7 +500,10 @@
     "upload_dispensing_history": "Please upload dispensing history",
     "upload_new_file": "Upload New File",
     "add_manual_moments": "Add Manual Moments",
-    "view_all_moments": "View All Moments"
+    "view_all_moments": "View All Moments",
+    "units_per_package": "Units per package",
+    "amount_per_package_not_set": "Amount per package not set",
+    "units_per_package_tooltip": "Number of units (tablets, capsules, etc.) in each package"
   },
   "manage_moments": {
     "title": "Manage Dispensing Moments",

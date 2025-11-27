@@ -2,6 +2,8 @@ import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
 import { AddManualDispensingMomentRequest, AddManualDispensingMomentResponse, Medication } from '../../models/api.models';
@@ -38,6 +40,8 @@ export class ManualDispensingModalComponent implements OnInit {
   error: string | null = null;
   successCount = 0;
   failureCount = 0;
+  
+  private vmpCache: Map<string, number | null> = new Map();
 
   constructor(
     private apiService: ApiService,
@@ -158,7 +162,7 @@ export class ManualDispensingModalComponent implements OnInit {
     return `${day}/${month}/${year}`;
   }
 
-  async submitAll() {
+  submitAll() {
     if (this.moments.length === 0) {
       this.error = 'Please add at least one dispensing moment';
       return;
@@ -177,6 +181,46 @@ export class ManualDispensingModalComponent implements OnInit {
     this.failureCount = 0;
     this.error = null;
 
+    // Step 1: Resolve VMPs for all CNKs that need resolution
+    const cnksToResolve = this.moments
+      .map(m => m.cnk.toString())
+      .filter(cnk => !this.vmpCache.has(cnk));
+
+    console.log(`[Manual Dispensing] Resolving ${cnksToResolve.length} CNKs to VMPs...`);
+
+    const lookupObservables = cnksToResolve.length > 0
+      ? cnksToResolve.map(cnk => 
+          this.apiService.getVmpFromCnk(cnk).pipe(
+            catchError(err => {
+              console.error(`[Manual Dispensing] Failed to resolve CNK ${cnk}:`, err);
+              return of({ cnk: parseInt(cnk), vmp: null, found: false });
+            })
+          )
+        )
+      : [of(null)];
+
+    forkJoin(lookupObservables).subscribe({
+      next: (results: any[]) => {
+        // Cache VMP results
+        results.forEach((result: any) => {
+          if (result && result.cnk) {
+            this.vmpCache.set(result.cnk.toString(), result.vmp);
+            console.log(`[Manual Dispensing] Cached VMP for CNK ${result.cnk}: ${result.vmp}`);
+          }
+        });
+
+        // Step 2: Submit all moments
+        this.submitMoments(apbNumber, reviewId);
+      },
+      error: (err) => {
+        console.error('[Manual Dispensing] Failed to resolve VMPs:', err);
+        // Continue with submission even if VMP resolution fails
+        this.submitMoments(apbNumber, reviewId);
+      }
+    });
+  }
+
+  private async submitMoments(apbNumber: string, reviewId: string) {
     for (const moment of this.moments) {
       const request: AddManualDispensingMomentRequest = {
         cnk: moment.cnk.toString(), // Ensure CNK is string
@@ -188,6 +232,10 @@ export class ManualDispensingModalComponent implements OnInit {
       try {
         await this.apiService.addManualDispensingMoment(apbNumber, reviewId, request).toPromise();
         this.successCount++;
+        
+        // Log VMP association for debugging
+        const vmp = this.vmpCache.get(moment.cnk.toString());
+        console.log(`[Manual Dispensing] Added moment for CNK ${moment.cnk} (VMP: ${vmp})`);
       } catch (err: any) {
         this.failureCount++;
       }

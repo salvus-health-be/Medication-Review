@@ -500,7 +500,10 @@
     "upload_dispensing_history": "Upload afleveringhistoriek",
     "upload_new_file": "Nieuw Bestand Uploaden",
     "add_manual_moments": "Handmatige Momenten Toevoegen",
-    "view_all_moments": "Alle Momenten Bekijken"
+    "view_all_moments": "Alle Momenten Bekijken",
+    "units_per_package": "Eenheden per verpakking",
+    "amount_per_package_not_set": "Hoeveelheid per verpakking niet ingesteld",
+    "units_per_package_tooltip": "Aantal eenheden (tabletten, capsules, enz.) per verpakking"
   },
   "manage_moments": {
     "title": "Aflevermomenten Beheren",

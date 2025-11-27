@@ -281,6 +281,7 @@ export interface DispensingMoment {
 
 export interface CnkDispensingData {
   cnk: string;           // CNK medication code
+  vmp?: number | null;   // VMP code (resolved from CNK)
   description: string;   // Medication description
   dispensingMoments: DispensingMoment[];
 }
@@ -417,4 +418,24 @@ export interface Feedback {
 
 export interface FeedbackResponse extends Feedback {
   message?: string;
+}
+
+// VMP Lookup
+export interface VmpLookupRequest {
+  cnk: number | string;
+}
+
+export interface VmpLookupResponse {
+  cnk: number;
+  vmp: number | null;
+  found: boolean;
+  medicationName?: string | null;
+}
+
+export interface BulkVmpLookupRequest {
+  cnkCodes: (number | string)[];
+}
+
+export interface BulkVmpLookupResponse {
+  results: VmpLookupResponse[];
 }
