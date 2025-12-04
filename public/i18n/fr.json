@@ -189,7 +189,7 @@
     "gheops_description": "Ghent Older People's Prescriptions - Community Pharmacy Screening Tool",
     "gheops_help": "Cet outil analyse les médicaments pour détecter les prescriptions potentiellement inappropriées chez les patients âgés. Les avertissements sont regroupés par type. Ajoutez des notes pour documenter vos observations.",
     "gheops_load_error": "Échec du chargement des données GheOPS. Veuillez réessayer.",
-    "gheops_no_warnings": "Aucun avertissement GheOPS trouvé pour les médicaments actuels. Tous les médicaments semblent appropriés pour les patients âgés.",
+    "gheops_no_warnings": "Aucun avertissement GheOPS trouvé pour les médicaments actuels.",
     "gheops_warnings_found": "avertissements trouvés",
     "gheops_categories": "catégories",
     "gheops_with_notes": "avec notes",

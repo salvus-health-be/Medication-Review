@@ -179,7 +179,7 @@
     "gheops_description": "Ghent Older People's Prescriptions - Community Pharmacy Screening Tool",
     "gheops_help": "Deze tool screent medicatie op mogelijke ongeschiktheid bij ouderen. Waarschuwingen zijn gegroepeerd per type. Voeg notities toe om uw observaties te documenteren.",
     "gheops_load_error": "Kan GheOPS-gegevens niet laden. Probeer het opnieuw.",
-    "gheops_no_warnings": "Geen GheOPS-waarschuwingen gevonden voor de huidige medicatie. Alle medicatie lijkt geschikt voor oudere patiënten.",
+    "gheops_no_warnings": "Geen GheOPS-waarschuwingen gevonden voor de huidige medicatie.",
     "gheops_warnings_found": "waarschuwingen gevonden",
     "gheops_categories": "categorieën",
     "gheops_with_notes": "met notities",
