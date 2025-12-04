@@ -30,6 +30,7 @@ export class AnalysisToolbarComponent {
   @Input() activeTool: ToolType | null = null;
   @Input() interactionCount: number = 0;
   @Input() contraindicationCount: number = 0;
+  @Input() gheopsWarningCount: number = 0;
   @Output() toolSelected = new EventEmitter<ToolType>();
 
   tools: ToolItem[] = [

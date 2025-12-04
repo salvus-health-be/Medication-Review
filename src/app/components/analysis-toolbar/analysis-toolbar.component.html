@@ -11,6 +11,9 @@
       @if (tool.id === 'contra-indications') {
         <span class="badge" [class.badge-zero]="contraindicationCount === 0">{{ contraindicationCount }}</span>
       }
+      @if (tool.id === 'gheops') {
+        <span class="badge" [class.badge-zero]="gheopsWarningCount === 0">{{ gheopsWarningCount }}</span>
+      }
       @switch (tool.icon) {
         @case ('grid') {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

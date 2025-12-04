@@ -47,12 +47,14 @@ export class AnalysisPage implements OnInit, OnDestroy {
   showNoteOverviewModal = false;
   interactionCount = 0;
   contraindicationCount = 0;
+  gheopsWarningCount = 0;
 
   @ViewChild(TherapyAdherenceComponent) therapyAdherenceComponent?: TherapyAdherenceComponent;
   @ViewChild(InteractionsComponent) interactionsComponent?: InteractionsComponent;
   @ViewChild(ContraindicationsComponent) contraindicationsComponent?: ContraindicationsComponent;
   @ViewChild(PosologyComponent) posologyComponent?: PosologyComponent;
   @ViewChild(RenadaptorComponent) renadaptorComponent?: RenadaptorComponent;
+  @ViewChild(GheopsComponent) gheopsComponent?: GheopsComponent;
 
   private schemaChangeSubject = new Subject<Medication>();
   private destroy$ = new Subject<void>();
@@ -144,6 +146,9 @@ export class AnalysisPage implements OnInit, OnDestroy {
     if (!currentContraCache.lastUpdated && !currentContraCache.loading) {
       this.contraindicationsCache.refreshCache();
     }
+
+    // Load GheOPS warning count on page init
+    this.loadGheopsWarningCount();
   }
 
   ngOnDestroy() {
@@ -537,6 +542,78 @@ export class AnalysisPage implements OnInit, OnDestroy {
 
   closeNoteOverview() {
     this.showNoteOverviewModal = false;
+  }
+
+  private loadGheopsWarningCount() {
+    const apbNumber = this.stateService.apbNumber;
+    const reviewId = this.stateService.medicationReviewId;
+
+    if (!apbNumber || !reviewId) {
+      this.gheopsWarningCount = 0;
+      return;
+    }
+
+    // Get medications and then call GheOPS API to get warning count
+    this.apiService.getMedications(apbNumber, reviewId).subscribe({
+      next: (medications) => {
+        const cnkCodes = medications
+          .filter(m => m.cnk != null)
+          .map(m => String(m.cnk).padStart(7, '0'));
+
+        if (cnkCodes.length === 0) {
+          this.gheopsWarningCount = 0;
+          return;
+        }
+
+        this.apiService.readGheops(cnkCodes).subscribe({
+          next: (results) => {
+            // Count unique warnings across all categories (deduplicate by text)
+            const seenTexts = {
+              unfitMedication: new Set<string>(),
+              unfitMedicationComorbidity: new Set<string>(),
+              potentiallyMissingMedication: new Set<string>(),
+              potentialInteractions: new Set<string>(),
+              potentiallyIneffectiveUnsafe: new Set<string>(),
+              specialCareMedication: new Set<string>(),
+              anticholinergicDrug: new Set<string>(),
+              fallRiskDrug: new Set<string>()
+            };
+            
+            results.forEach(result => {
+              if (result.unfitMedication?.trim()) seenTexts.unfitMedication.add(result.unfitMedication.trim());
+              if (result.unfitMedicationComorbidity?.trim()) seenTexts.unfitMedicationComorbidity.add(result.unfitMedicationComorbidity.trim());
+              if (result.potentiallyMissingMedication?.trim()) seenTexts.potentiallyMissingMedication.add(result.potentiallyMissingMedication.trim());
+              if (result.potentialInteractions?.trim()) seenTexts.potentialInteractions.add(result.potentialInteractions.trim());
+              if (result.potentiallyIneffectiveUnsafe?.trim()) seenTexts.potentiallyIneffectiveUnsafe.add(result.potentiallyIneffectiveUnsafe.trim());
+              if (result.specialCareMedication?.trim()) seenTexts.specialCareMedication.add(result.specialCareMedication.trim());
+              if (result.anticholinergicDrug?.trim()) seenTexts.anticholinergicDrug.add(result.anticholinergicDrug.trim());
+              if (result.fallRiskDrug?.trim()) seenTexts.fallRiskDrug.add(result.fallRiskDrug.trim());
+            });
+            
+            // Sum unique warnings across all categories
+            this.gheopsWarningCount = 
+              seenTexts.unfitMedication.size +
+              seenTexts.unfitMedicationComorbidity.size +
+              seenTexts.potentiallyMissingMedication.size +
+              seenTexts.potentialInteractions.size +
+              seenTexts.potentiallyIneffectiveUnsafe.size +
+              seenTexts.specialCareMedication.size +
+              seenTexts.anticholinergicDrug.size +
+              seenTexts.fallRiskDrug.size;
+          },
+          error: () => {
+            this.gheopsWarningCount = 0;
+          }
+        });
+      },
+      error: () => {
+        this.gheopsWarningCount = 0;
+      }
+    });
+  }
+
+  onGheopsWarningsLoaded(count: number) {
+    this.gheopsWarningCount = count;
   }
 
   onCreatePatientConversation() {

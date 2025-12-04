@@ -3,6 +3,7 @@
     [activeTool]="activeTool"
     [interactionCount]="interactionCount"
     [contraindicationCount]="contraindicationCount"
+    [gheopsWarningCount]="gheopsWarningCount"
     (toolSelected)="onToolSelected($event)">
   </app-analysis-toolbar>
   
@@ -177,7 +178,7 @@
     } @else if (activeTool === 'renadapter') {
       <app-renadaptor (openNotes)="openNotesModal($event)"></app-renadaptor>
     } @else if (activeTool === 'gheops') {
-      <app-gheops (openNotes)="openReferenceNotesModal('gheops')"></app-gheops>
+      <app-gheops (openNotes)="openReferenceNotesModal('gheops')" (warningsLoaded)="onGheopsWarningsLoaded($event)"></app-gheops>
     } @else if (activeTool === 'start-stop-nl') {
       <app-start-stop (openNotes)="openReferenceNotesModal('start-stop-nl')"></app-start-stop>
     } @else if (activeTool === 'questionnaire') {

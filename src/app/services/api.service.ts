@@ -1002,5 +1002,43 @@ export class ApiService {
       })
     );
   }
+
+  // GheOPS - Read GheOPS medication screening
+  readGheops(cnkCodes: string[]): Observable<GheopsResult[]> {
+    const headers = this.getHeaders();
+
+    return this.http.post<any[]>(
+      `${this.API_BASE_URL}/read_gheops`,
+      { cnkCodes },
+      { headers }
+    ).pipe(
+      map(response => response.map((item: any) => ({
+        cnk: item.cnk ?? item.Cnk ?? item.CNK ?? '',
+        atcCode: item.atcCode ?? item.AtcCode ?? item.ATC ?? null,
+        unfitMedication: item.unfitMedication ?? item.UnfitMedication ?? '',
+        unfitMedicationComorbidity: item.unfitMedicationComorbidity ?? item.UnfitMedicationComorbidity ?? '',
+        potentiallyMissingMedication: item.potentiallyMissingMedication ?? item.PotentiallyMissingMedication ?? '',
+        potentialInteractions: item.potentialInteractions ?? item.PotentialInteractions ?? '',
+        potentiallyIneffectiveUnsafe: item.potentiallyIneffectiveUnsafe ?? item.PotentiallyIneffectiveUnsafe ?? '',
+        specialCareMedication: item.specialCareMedication ?? item.SpecialCareMedication ?? '',
+        anticholinergicDrug: item.anticholinergicDrug ?? item.AnticholinergicDrug ?? '',
+        fallRiskDrug: item.fallRiskDrug ?? item.FallRiskDrug ?? ''
+      })))
+    );
+  }
+}
+
+// Response types for GheOPS
+export interface GheopsResult {
+  cnk: string;
+  atcCode: string | null;
+  unfitMedication: string;
+  unfitMedicationComorbidity: string;
+  potentiallyMissingMedication: string;
+  potentialInteractions: string;
+  potentiallyIneffectiveUnsafe: string;
+  specialCareMedication: string;
+  anticholinergicDrug: string;
+  fallRiskDrug: string;
 }
 
