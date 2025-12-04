@@ -41,6 +41,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
   showNotesModal = false;
   selectedMedicationForNotes: Medication | null = null;
   noteCategory: string = 'General'; // Track category based on tool/source
+  noteInitialText: string = ''; // Pre-filled note text
   showInteractionNotesModal = false;
   selectedInteraction: any = null;
   selectedInteractionType: 'drug-drug' | 'drug-food' = 'drug-drug';
@@ -228,6 +229,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
     // Handle general notes (no medication)
     if (!medication) {
       this.noteCategory = 'TherapyAdherence';
+      this.noteInitialText = '';
       this.selectedMedicationForNotes = null as any;
       this.showNotesModal = true;
       return;
@@ -255,6 +257,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
     
     // Set category based on active tool
     this.noteCategory = this.getCategoryForTool(this.activeTool);
+    this.noteInitialText = '';
     this.selectedMedicationForNotes = displayMedication;
     this.showNotesModal = true;
   }
@@ -262,10 +265,12 @@ export class AnalysisPage implements OnInit, OnDestroy {
   onNotesModalClose() {
     this.showNotesModal = false;
     this.selectedMedicationForNotes = null;
+    this.noteInitialText = '';
   }
 
   openGeneralNotesModal(toolType: string) {
     this.noteCategory = this.getCategoryForTool(toolType as ToolType);
+    this.noteInitialText = '';
     this.selectedMedicationForNotes = null as any; // General note, no specific medication
     this.showNotesModal = true;
   }
@@ -298,6 +303,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
     
     // Set category based on reference tool type
     this.noteCategory = toolType === 'gheops' ? 'GheOPS' : 'START-STOP-NL';
+    this.noteInitialText = ''; // No pre-filled text for general notes
     
     this.selectedMedicationForNotes = {
       medicationId: `ref-${toolType}`,
@@ -311,9 +317,67 @@ export class AnalysisPage implements OnInit, OnDestroy {
     this.showNotesModal = true;
   }
 
+  openGheopsNotesModal(event: { warning: any } | void) {
+    this.noteCategory = 'GheOPS';
+    
+    if (!event || !event.warning) {
+      // General GheOPS note (no specific warning)
+      this.noteInitialText = '';
+      this.selectedMedicationForNotes = {
+        medicationId: 'ref-gheops',
+        name: 'GheOPS Tool',
+        dosage: '',
+        route: '',
+        cnk: null,
+        vmp: null,
+        indication: 'Reference Document'
+      };
+    } else {
+      // Specific warning note - link to the medication
+      const warning = event.warning;
+      const cnk = warning.cnk ? parseInt(warning.cnk, 10) : null;
+      
+      // Find the actual medication from our list to get the medicationId
+      const medication = this.medications.find(m => 
+        m.cnk && String(m.cnk).padStart(7, '0') === warning.cnk
+      );
+      
+      // Build the pre-filled note text
+      const categoryLabel = this.getGheopsCategoryLabel(warning.category);
+      this.noteInitialText = `[GheOPS - ${categoryLabel}]\n${warning.warningText}`;
+      
+      this.selectedMedicationForNotes = {
+        medicationId: medication?.medicationId || `gheops-${warning.cnk}`,
+        name: warning.medicationName || 'Unknown Medication',
+        dosage: '',
+        route: '',
+        cnk: cnk,
+        vmp: medication?.vmp || null,
+        indication: categoryLabel
+      };
+    }
+    
+    this.showNotesModal = true;
+  }
+
+  private getGheopsCategoryLabel(categoryKey: string): string {
+    const categoryLabels: Record<string, string> = {
+      'unfit_medication': this.transloco.translate('tools.gheops_unfit_medication'),
+      'unfit_medication_comorbidity': this.transloco.translate('tools.gheops_unfit_medication_comorbidity'),
+      'potentially_missing_medication': this.transloco.translate('tools.gheops_potentially_missing'),
+      'potential_interactions': this.transloco.translate('tools.gheops_potential_interactions'),
+      'potentially_ineffective_unsafe': this.transloco.translate('tools.gheops_ineffective_unsafe'),
+      'special_care_medication': this.transloco.translate('tools.gheops_special_care'),
+      'anticholinergic_drug': this.transloco.translate('tools.gheops_anticholinergic'),
+      'fall_risk_drug': this.transloco.translate('tools.gheops_fall_risk')
+    };
+    return categoryLabels[categoryKey] || categoryKey;
+  }
+
   openQuestionnaireNotesModal() {
     // Set category to map to Part 1 general questions in the actions page
     this.noteCategory = 'General';
+    this.noteInitialText = '';
     this.selectedMedicationForNotes = null as any; // General note, no specific medication
     this.showNotesModal = true;
   }
@@ -322,6 +386,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
     // Handle general notes separately
     if (data.type === 'general' || !data.contraindication) {
       this.noteCategory = 'Contraindications';
+      this.noteInitialText = '';
       this.selectedMedicationForNotes = null as any; // General note, no specific medication
       this.showNotesModal = true;
       return;
@@ -332,6 +397,7 @@ export class AnalysisPage implements OnInit, OnDestroy {
     const medName = data.contraindication.medication || data.contraindication.medicationName || 'Unknown Medication';
     
     this.noteCategory = 'Contraindications';
+    this.noteInitialText = '';
     this.selectedMedicationForNotes = {
       medicationId: `contraindication-${cnk}`,
       name: `${medName} - ${data.contraindication.condition}`,
@@ -579,15 +645,23 @@ export class AnalysisPage implements OnInit, OnDestroy {
               fallRiskDrug: new Set<string>()
             };
             
+            // Helper to add all texts from an array to a set
+            const addTexts = (texts: string[], set: Set<string>) => {
+              if (!texts || !Array.isArray(texts)) return;
+              texts.forEach(text => {
+                if (text?.trim()) set.add(text.trim());
+              });
+            };
+            
             results.forEach(result => {
-              if (result.unfitMedication?.trim()) seenTexts.unfitMedication.add(result.unfitMedication.trim());
-              if (result.unfitMedicationComorbidity?.trim()) seenTexts.unfitMedicationComorbidity.add(result.unfitMedicationComorbidity.trim());
-              if (result.potentiallyMissingMedication?.trim()) seenTexts.potentiallyMissingMedication.add(result.potentiallyMissingMedication.trim());
-              if (result.potentialInteractions?.trim()) seenTexts.potentialInteractions.add(result.potentialInteractions.trim());
-              if (result.potentiallyIneffectiveUnsafe?.trim()) seenTexts.potentiallyIneffectiveUnsafe.add(result.potentiallyIneffectiveUnsafe.trim());
-              if (result.specialCareMedication?.trim()) seenTexts.specialCareMedication.add(result.specialCareMedication.trim());
-              if (result.anticholinergicDrug?.trim()) seenTexts.anticholinergicDrug.add(result.anticholinergicDrug.trim());
-              if (result.fallRiskDrug?.trim()) seenTexts.fallRiskDrug.add(result.fallRiskDrug.trim());
+              addTexts(result.unfitMedication, seenTexts.unfitMedication);
+              addTexts(result.unfitMedicationComorbidity, seenTexts.unfitMedicationComorbidity);
+              addTexts(result.potentiallyMissingMedication, seenTexts.potentiallyMissingMedication);
+              addTexts(result.potentialInteractions, seenTexts.potentialInteractions);
+              addTexts(result.potentiallyIneffectiveUnsafe, seenTexts.potentiallyIneffectiveUnsafe);
+              addTexts(result.specialCareMedication, seenTexts.specialCareMedication);
+              addTexts(result.anticholinergicDrug, seenTexts.anticholinergicDrug);
+              addTexts(result.fallRiskDrug, seenTexts.fallRiskDrug);
             });
             
             // Sum unique warnings across all categories

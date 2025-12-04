@@ -161,36 +161,40 @@ export class GheopsComponent implements OnInit, OnDestroy {
       const med = this.medications.find(m => String(m.cnk).padStart(7, '0') === result.cnk);
       const medicationName = med?.name || null;
 
-      // Helper to add warning to a category (only if text not already seen)
-      const addWarning = (text: string, category: GheopsCategoryKey) => {
-        if (text && text.trim() !== '') {
-          const normalizedText = text.trim();
-          // Skip if we've already seen this exact text in this category
-          if (seenTexts[category].has(normalizedText)) {
-            return;
+      // Helper to add warnings from an array to a category (only if text not already seen)
+      const addWarnings = (texts: string[], category: GheopsCategoryKey) => {
+        if (!texts || !Array.isArray(texts)) return;
+        
+        texts.forEach(text => {
+          if (text && text.trim() !== '') {
+            const normalizedText = text.trim();
+            // Skip if we've already seen this exact text in this category
+            if (seenTexts[category].has(normalizedText)) {
+              return;
+            }
+            seenTexts[category].add(normalizedText);
+            
+            categoryWarnings[category].push({
+              id: `gheops-warning-${warningIndex++}`,
+              cnk: result.cnk,
+              atcCode: result.atcCode,
+              medicationName,
+              warningText: normalizedText,
+              category
+            });
           }
-          seenTexts[category].add(normalizedText);
-          
-          categoryWarnings[category].push({
-            id: `gheops-warning-${warningIndex++}`,
-            cnk: result.cnk,
-            atcCode: result.atcCode,
-            medicationName,
-            warningText: normalizedText,
-            category
-          });
-        }
+        });
       };
 
-      // Add warnings to each category
-      addWarning(result.unfitMedication, 'unfit_medication');
-      addWarning(result.unfitMedicationComorbidity, 'unfit_medication_comorbidity');
-      addWarning(result.potentiallyMissingMedication, 'potentially_missing_medication');
-      addWarning(result.potentialInteractions, 'potential_interactions');
-      addWarning(result.potentiallyIneffectiveUnsafe, 'potentially_ineffective_unsafe');
-      addWarning(result.specialCareMedication, 'special_care_medication');
-      addWarning(result.anticholinergicDrug, 'anticholinergic_drug');
-      addWarning(result.fallRiskDrug, 'fall_risk_drug');
+      // Add warnings to each category (each field is now an array)
+      addWarnings(result.unfitMedication, 'unfit_medication');
+      addWarnings(result.unfitMedicationComorbidity, 'unfit_medication_comorbidity');
+      addWarnings(result.potentiallyMissingMedication, 'potentially_missing_medication');
+      addWarnings(result.potentialInteractions, 'potential_interactions');
+      addWarnings(result.potentiallyIneffectiveUnsafe, 'potentially_ineffective_unsafe');
+      addWarnings(result.specialCareMedication, 'special_care_medication');
+      addWarnings(result.anticholinergicDrug, 'anticholinergic_drug');
+      addWarnings(result.fallRiskDrug, 'fall_risk_drug');
     });
 
     // Category metadata with translation keys

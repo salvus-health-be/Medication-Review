@@ -16,6 +16,7 @@ import { StateService } from '../../services/state.service';
 export class MedicationNotesModalComponent implements OnInit {
   @Input() medication: Medication | null = null;
   @Input() category: string = 'General'; // Category based on tool/source
+  @Input() initialText: string = ''; // Pre-filled note text
   @Output() close = new EventEmitter<void>();
 
   noteText = '';
@@ -32,6 +33,10 @@ export class MedicationNotesModalComponent implements OnInit {
 
   ngOnInit() {
     this.updatePresetButtons();
+    // Pre-fill note text if initial text is provided
+    if (this.initialText) {
+      this.noteText = this.initialText;
+    }
   }
 
   updatePresetButtons() {

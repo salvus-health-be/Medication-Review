@@ -1007,6 +1007,13 @@ export class ApiService {
   readGheops(cnkCodes: string[]): Observable<GheopsResult[]> {
     const headers = this.getHeaders();
 
+    // Helper to ensure we always get an array
+    const toArray = (val: any): string[] => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string' && val.trim() !== '') return [val];
+      return [];
+    };
+
     return this.http.post<any[]>(
       `${this.API_BASE_URL}/read_gheops`,
       { cnkCodes },
@@ -1015,14 +1022,14 @@ export class ApiService {
       map(response => response.map((item: any) => ({
         cnk: item.cnk ?? item.Cnk ?? item.CNK ?? '',
         atcCode: item.atcCode ?? item.AtcCode ?? item.ATC ?? null,
-        unfitMedication: item.unfitMedication ?? item.UnfitMedication ?? '',
-        unfitMedicationComorbidity: item.unfitMedicationComorbidity ?? item.UnfitMedicationComorbidity ?? '',
-        potentiallyMissingMedication: item.potentiallyMissingMedication ?? item.PotentiallyMissingMedication ?? '',
-        potentialInteractions: item.potentialInteractions ?? item.PotentialInteractions ?? '',
-        potentiallyIneffectiveUnsafe: item.potentiallyIneffectiveUnsafe ?? item.PotentiallyIneffectiveUnsafe ?? '',
-        specialCareMedication: item.specialCareMedication ?? item.SpecialCareMedication ?? '',
-        anticholinergicDrug: item.anticholinergicDrug ?? item.AnticholinergicDrug ?? '',
-        fallRiskDrug: item.fallRiskDrug ?? item.FallRiskDrug ?? ''
+        unfitMedication: toArray(item.unfitMedication ?? item.UnfitMedication),
+        unfitMedicationComorbidity: toArray(item.unfitMedicationComorbidity ?? item.UnfitMedicationComorbidity),
+        potentiallyMissingMedication: toArray(item.potentiallyMissingMedication ?? item.PotentiallyMissingMedication),
+        potentialInteractions: toArray(item.potentialInteractions ?? item.PotentialInteractions),
+        potentiallyIneffectiveUnsafe: toArray(item.potentiallyIneffectiveUnsafe ?? item.PotentiallyIneffectiveUnsafe),
+        specialCareMedication: toArray(item.specialCareMedication ?? item.SpecialCareMedication),
+        anticholinergicDrug: toArray(item.anticholinergicDrug ?? item.AnticholinergicDrug),
+        fallRiskDrug: toArray(item.fallRiskDrug ?? item.FallRiskDrug)
       })))
     );
   }
@@ -1032,13 +1039,13 @@ export class ApiService {
 export interface GheopsResult {
   cnk: string;
   atcCode: string | null;
-  unfitMedication: string;
-  unfitMedicationComorbidity: string;
-  potentiallyMissingMedication: string;
-  potentialInteractions: string;
-  potentiallyIneffectiveUnsafe: string;
-  specialCareMedication: string;
-  anticholinergicDrug: string;
-  fallRiskDrug: string;
+  unfitMedication: string[];
+  unfitMedicationComorbidity: string[];
+  potentiallyMissingMedication: string[];
+  potentialInteractions: string[];
+  potentiallyIneffectiveUnsafe: string[];
+  specialCareMedication: string[];
+  anticholinergicDrug: string[];
+  fallRiskDrug: string[];
 }
 
