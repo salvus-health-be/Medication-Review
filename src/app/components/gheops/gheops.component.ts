@@ -1,29 +1,26 @@
 import { Component, Output, EventEmitter, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { ApiService, GheopsResult } from '../../services/api.service';
+import { ApiService, GheopsToolResult, AnticholinergicResult, MedicationToAvoidResult, FallRiskResult } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
 import { Medication } from '../../models/api.models';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import { takeUntil, catchError } from 'rxjs/operators';
 
-type GheopsCategoryKey = 
-  | 'unfit_medication' 
-  | 'unfit_medication_comorbidity'
-  | 'potentially_missing_medication'
-  | 'potential_interactions'
-  | 'potentially_ineffective_unsafe'
-  | 'special_care_medication'
-  | 'anticholinergic_drug'
-  | 'fall_risk_drug';
+// Category keys based on the type field from the API (lijst_1, lijst_2, etc.) plus special categories
+type GheopsCategoryKey = 'lijst_1' | 'lijst_2' | 'lijst_3' | 'lijst_4' | 'lijst_5' | 'anticholinergic' | 'medication_to_avoid' | 'fall_risk';
 
 interface GheopsWarning {
   id: string;
   cnk: string;
   atcCode: string | null;
   medicationName: string | null;
-  warningText: string;
+  criteria: string;
+  rationale: string;
+  alternative: string;
   category: GheopsCategoryKey;
+  isExpanded: boolean;
+  strength?: 'H' | 'L' | 'A' | null; // For anticholinergic medications
 }
 
 interface GheopsCategory {
@@ -107,15 +104,43 @@ export class GheopsComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Call the GheOPS API
-        this.apiService.readGheops(cnkCodes).subscribe({
+        // Call all APIs in parallel
+        forkJoin({
+          gheops: this.apiService.queryGheops(cnkCodes).pipe(
+            catchError(err => {
+              console.error('GheOPS API error:', err);
+              return of([] as GheopsToolResult[]);
+            })
+          ),
+          anticholinergics: this.apiService.queryAnticholinergics(cnkCodes).pipe(
+            catchError(err => {
+              console.error('Anticholinergics API error:', err);
+              return of([] as AnticholinergicResult[]);
+            })
+          ),
+          medicationToAvoid: this.apiService.getMedicationToAvoid(cnkCodes).pipe(
+            catchError(err => {
+              console.error('Medication to avoid API error:', err);
+              return of([] as MedicationToAvoidResult[]);
+            })
+          ),
+          fallRisk: this.apiService.getFallRiskMedications(cnkCodes).pipe(
+            catchError(err => {
+              console.error('Fall risk API error:', err);
+              return of([] as FallRiskResult[]);
+            })
+          )
+        }).subscribe({
           next: (results) => {
-            console.log('GheOPS: Received results:', results);
-            this.processGheopsResults(results);
+            console.log('GheOPS: Received results:', results.gheops);
+            console.log('Anticholinergics: Received results:', results.anticholinergics);
+            console.log('Medication to avoid: Received results:', results.medicationToAvoid);
+            console.log('Fall risk: Received results:', results.fallRisk);
+            this.processGheopsResults(results.gheops, results.anticholinergics, results.medicationToAvoid, results.fallRisk);
           },
           error: (err) => {
-            console.error('Failed to load GheOPS data:', err);
-            this.error = this.transloco.translate('tools.gheops_load_error') || 'Failed to load GheOPS data';
+            console.error('Failed to load data:', err);
+            this.error = this.transloco.translate('tools.gheops_load_error') || 'Failed to load data';
             this.isLoading = false;
             this.warningsLoaded.emit(0);
           }
@@ -130,30 +155,31 @@ export class GheopsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private processGheopsResults(results: GheopsResult[]) {
+  private processGheopsResults(results: GheopsToolResult[], anticholinergics: AnticholinergicResult[], medicationToAvoid: MedicationToAvoidResult[], fallRisk: FallRiskResult[]) {
     // Initialize arrays for each category
     const categoryWarnings: Record<GheopsCategoryKey, GheopsWarning[]> = {
-      unfit_medication: [],
-      unfit_medication_comorbidity: [],
-      potentially_missing_medication: [],
-      potential_interactions: [],
-      potentially_ineffective_unsafe: [],
-      special_care_medication: [],
-      anticholinergic_drug: [],
-      fall_risk_drug: []
+      lijst_1: [],
+      lijst_2: [],
+      lijst_3: [],
+      lijst_4: [],
+      lijst_5: [],
+      anticholinergic: [],
+      medication_to_avoid: [],
+      fall_risk: []
     };
     
-    // Track seen warning texts per category to avoid duplicates
-    const seenTexts: Record<GheopsCategoryKey, Set<string>> = {
-      unfit_medication: new Set(),
-      unfit_medication_comorbidity: new Set(),
-      potentially_missing_medication: new Set(),
-      potential_interactions: new Set(),
-      potentially_ineffective_unsafe: new Set(),
-      special_care_medication: new Set(),
-      anticholinergic_drug: new Set(),
-      fall_risk_drug: new Set()
+    // Track seen entries per category to avoid duplicates (by criteria + rationale combo)
+    const seenEntries: Record<GheopsCategoryKey, Set<string>> = {
+      lijst_1: new Set(),
+      lijst_2: new Set(),
+      lijst_3: new Set(),
+      lijst_4: new Set(),
+      lijst_5: new Set(),
+      anticholinergic: new Set(),
+      medication_to_avoid: new Set(),
+      fall_risk: new Set()
     };
+    
     let warningIndex = 0;
 
     results.forEach(result => {
@@ -161,60 +187,130 @@ export class GheopsComponent implements OnInit, OnDestroy {
       const med = this.medications.find(m => String(m.cnk).padStart(7, '0') === result.cnk);
       const medicationName = med?.name || null;
 
-      // Helper to add warnings from an array to a category (only if text not already seen)
-      const addWarnings = (texts: string[], category: GheopsCategoryKey) => {
-        if (!texts || !Array.isArray(texts)) return;
-        
-        texts.forEach(text => {
-          if (text && text.trim() !== '') {
-            const normalizedText = text.trim();
-            // Skip if we've already seen this exact text in this category
-            if (seenTexts[category].has(normalizedText)) {
-              return;
-            }
-            seenTexts[category].add(normalizedText);
-            
-            categoryWarnings[category].push({
-              id: `gheops-warning-${warningIndex++}`,
-              cnk: result.cnk,
-              atcCode: result.atcCode,
-              medicationName,
-              warningText: normalizedText,
-              category
-            });
-          }
-        });
-      };
+      // Process each entry for this CNK
+      result.entries.forEach(entry => {
+        // Normalize the type to our category key format
+        const categoryKey = this.normalizeType(entry.type);
+        if (!categoryKey) return;
 
-      // Add warnings to each category (each field is now an array)
-      addWarnings(result.unfitMedication, 'unfit_medication');
-      addWarnings(result.unfitMedicationComorbidity, 'unfit_medication_comorbidity');
-      addWarnings(result.potentiallyMissingMedication, 'potentially_missing_medication');
-      addWarnings(result.potentialInteractions, 'potential_interactions');
-      addWarnings(result.potentiallyIneffectiveUnsafe, 'potentially_ineffective_unsafe');
-      addWarnings(result.specialCareMedication, 'special_care_medication');
-      addWarnings(result.anticholinergicDrug, 'anticholinergic_drug');
-      addWarnings(result.fallRiskDrug, 'fall_risk_drug');
+        // Create a unique key for deduplication
+        const uniqueKey = `${entry.criteria}|${entry.rationale}`;
+        if (seenEntries[categoryKey].has(uniqueKey)) {
+          return;
+        }
+        seenEntries[categoryKey].add(uniqueKey);
+
+        categoryWarnings[categoryKey].push({
+          id: `gheops-warning-${warningIndex++}`,
+          cnk: result.cnk,
+          atcCode: result.atcCode,
+          medicationName,
+          criteria: entry.criteria || '',
+          rationale: entry.rationale || '',
+          alternative: entry.alternative || '',
+          category: categoryKey,
+          isExpanded: false
+        });
+      });
     });
 
     // Category metadata with translation keys
-    const categoryMeta: { key: GheopsCategoryKey; translationKey: string; fallback: string }[] = [
-      { key: 'unfit_medication', translationKey: 'tools.gheops_unfit_medication', fallback: 'Potentially Inappropriate Medications' },
-      { key: 'unfit_medication_comorbidity', translationKey: 'tools.gheops_unfit_medication_comorbidity', fallback: 'Inappropriate Medications (Comorbidity)' },
-      { key: 'potentially_missing_medication', translationKey: 'tools.gheops_potentially_missing', fallback: 'Potentially Missing Medications' },
-      { key: 'potential_interactions', translationKey: 'tools.gheops_potential_interactions', fallback: 'Potential Interactions' },
-      { key: 'potentially_ineffective_unsafe', translationKey: 'tools.gheops_ineffective_unsafe', fallback: 'Potentially Ineffective/Unsafe' },
-      { key: 'special_care_medication', translationKey: 'tools.gheops_special_care', fallback: 'Special Care Required' },
-      { key: 'anticholinergic_drug', translationKey: 'tools.gheops_anticholinergic', fallback: 'Anticholinergic Medications' },
-      { key: 'fall_risk_drug', translationKey: 'tools.gheops_fall_risk', fallback: 'Fall Risk Medications' }
+    const categoryMeta: { key: GheopsCategoryKey; translationKey: string }[] = [
+      { key: 'lijst_1', translationKey: 'tools.gheops_lijst_1' },
+      { key: 'lijst_2', translationKey: 'tools.gheops_lijst_2' },
+      { key: 'lijst_3', translationKey: 'tools.gheops_lijst_3' },
+      { key: 'lijst_4', translationKey: 'tools.gheops_lijst_4' },
+      { key: 'lijst_5', translationKey: 'tools.gheops_lijst_5' },
+      { key: 'anticholinergic', translationKey: 'tools.gheops_anticholinergic' },
+      { key: 'medication_to_avoid', translationKey: 'tools.gheops_medication_to_avoid' },
+      { key: 'fall_risk', translationKey: 'tools.gheops_fall_risk' }
     ];
+
+    // Process fall risk results
+    fallRisk.forEach(result => {
+      if (!result.increasesRiskOfFalling) return;
+
+      // Find medication name for this CNK
+      const med = this.medications.find(m => String(m.cnk).padStart(7, '0') === result.cnk);
+      const medicationName = med?.name || null;
+
+      // Deduplicate by CNK (only one entry per medication)
+      if (seenEntries.fall_risk.has(result.cnk)) return;
+      seenEntries.fall_risk.add(result.cnk);
+
+      categoryWarnings.fall_risk.push({
+        id: `gheops-warning-${warningIndex++}`,
+        cnk: result.cnk,
+        atcCode: result.atcCode,
+        medicationName,
+        criteria: this.transloco.translate('tools.gheops_fall_risk_label'),
+        rationale: this.transloco.translate('tools.gheops_fall_risk_rationale'),
+        alternative: '',
+        category: 'fall_risk',
+        isExpanded: false
+      });
+    });
+
+    // Process medication to avoid results
+    medicationToAvoid.forEach(result => {
+      if (!result.shouldAvoid) return;
+
+      // Find medication name for this CNK
+      const med = this.medications.find(m => String(m.cnk).padStart(7, '0') === result.cnk);
+      const medicationName = med?.name || null;
+
+      // Deduplicate by CNK (only one entry per medication)
+      if (seenEntries.medication_to_avoid.has(result.cnk)) return;
+      seenEntries.medication_to_avoid.add(result.cnk);
+
+      categoryWarnings.medication_to_avoid.push({
+        id: `gheops-warning-${warningIndex++}`,
+        cnk: result.cnk,
+        atcCode: result.atcCode,
+        medicationName,
+        criteria: this.transloco.translate('tools.gheops_medication_to_avoid_label'),
+        rationale: '',
+        alternative: '',
+        category: 'medication_to_avoid',
+        isExpanded: false
+      });
+    });
+
+    // Process anticholinergic results
+    anticholinergics.forEach(result => {
+      if (!result.isAnticholinergic) return;
+
+      // Find medication name for this CNK
+      const med = this.medications.find(m => String(m.cnk).padStart(7, '0') === result.cnk);
+      const medicationName = med?.name || null;
+
+      // Deduplicate by CNK (only one entry per medication for anticholinergics)
+      if (seenEntries.anticholinergic.has(result.cnk)) return;
+      seenEntries.anticholinergic.add(result.cnk);
+
+      const strengthLabel = this.getStrengthLabel(result.strength);
+      const strengthRationale = this.getStrengthRationale(result.strength);
+
+      categoryWarnings.anticholinergic.push({
+        id: `gheops-warning-${warningIndex++}`,
+        cnk: result.cnk,
+        atcCode: result.atcCode,
+        medicationName,
+        criteria: strengthLabel,
+        rationale: strengthRationale,
+        alternative: '',
+        category: 'anticholinergic',
+        isExpanded: false,
+        strength: result.strength
+      });
+    });
 
     // Build categories array (only include non-empty categories)
     this.categories = categoryMeta
       .filter(meta => categoryWarnings[meta.key].length > 0)
       .map(meta => ({
         key: meta.key,
-        name: this.transloco.translate(meta.translationKey) || meta.fallback,
+        name: this.transloco.translate(meta.translationKey),
         isExpanded: true,
         warnings: categoryWarnings[meta.key]
       }));
@@ -225,11 +321,32 @@ export class GheopsComponent implements OnInit, OnDestroy {
     this.warningsLoaded.emit(this.totalWarnings);
   }
 
+  private normalizeType(type: string): GheopsCategoryKey | null {
+    if (!type) return null;
+    
+    // Handle various formats: "lijst_1", "Lijst_1", "LIJST_1", "lijst 1", etc.
+    const normalized = type.toLowerCase().replace(/\s+/g, '_').trim();
+    
+    if (normalized === 'lijst_1' || normalized === 'lijst1') return 'lijst_1';
+    if (normalized === 'lijst_2' || normalized === 'lijst2') return 'lijst_2';
+    if (normalized === 'lijst_3' || normalized === 'lijst3') return 'lijst_3';
+    if (normalized === 'lijst_4' || normalized === 'lijst4') return 'lijst_4';
+    if (normalized === 'lijst_5' || normalized === 'lijst5') return 'lijst_5';
+    
+    return null;
+  }
+
   toggleCategory(category: GheopsCategory) {
     category.isExpanded = !category.isExpanded;
   }
 
-  onAddNote(warning: GheopsWarning) {
+  toggleWarning(warning: GheopsWarning, event: Event) {
+    event.stopPropagation();
+    warning.isExpanded = !warning.isExpanded;
+  }
+
+  onAddNote(warning: GheopsWarning, event: Event) {
+    event.stopPropagation();
     this.openNotes.emit({ warning });
   }
 
@@ -252,5 +369,31 @@ export class GheopsComponent implements OnInit, OnDestroy {
 
   get totalWarnings(): number {
     return this.categories.reduce((sum, c) => sum + c.warnings.length, 0);
+  }
+
+  private getStrengthLabel(strength: 'H' | 'L' | 'A' | null): string {
+    switch (strength) {
+      case 'H':
+        return this.transloco.translate('tools.gheops_anticholinergic_high');
+      case 'L':
+        return this.transloco.translate('tools.gheops_anticholinergic_low');
+      case 'A':
+        return this.transloco.translate('tools.gheops_anticholinergic_additional');
+      default:
+        return '';
+    }
+  }
+
+  private getStrengthRationale(strength: 'H' | 'L' | 'A' | null): string {
+    switch (strength) {
+      case 'H':
+        return this.transloco.translate('tools.gheops_anticholinergic_high_rationale');
+      case 'L':
+        return this.transloco.translate('tools.gheops_anticholinergic_low_rationale');
+      case 'A':
+        return this.transloco.translate('tools.gheops_anticholinergic_additional_rationale');
+      default:
+        return '';
+    }
   }
 }

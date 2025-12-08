@@ -80,26 +80,59 @@
               @if (category.isExpanded) {
                 <div class="category-warnings">
                   @for (warning of category.warnings; track warning.id) {
-                    <div class="gheops-warning">
-                      <div class="warning-content">
-                        <div class="warning-medication">
-                          @if (warning.medicationName) {
-                            <span class="medication-name">{{ warning.medicationName }}</span>
-                          }
-                          <span class="medication-codes">
-                            <span class="cnk-tag">CNK: {{ warning.cnk }}</span>
-                            @if (warning.atcCode) {
-                              <span class="atc-tag">ATC: {{ warning.atcCode }}</span>
+                    <div class="gheops-warning" [class.expanded]="warning.isExpanded" [class.non-expandable]="warning.category === 'anticholinergic' || warning.category === 'medication_to_avoid' || warning.category === 'fall_risk'">
+                      <div class="warning-main" [class.clickable]="warning.category !== 'anticholinergic' && warning.category !== 'medication_to_avoid' && warning.category !== 'fall_risk'" (click)="warning.category !== 'anticholinergic' && warning.category !== 'medication_to_avoid' && warning.category !== 'fall_risk' ? toggleWarning(warning, $event) : null">
+                        <div class="warning-content">
+                          <div class="warning-header">
+                            <div class="warning-medication">
+                              @if (warning.medicationName) {
+                                <span class="medication-name">{{ warning.medicationName }}</span>
+                              }
+                              <span class="medication-codes">
+                                <span class="cnk-tag">CNK: {{ warning.cnk }}</span>
+                                @if (warning.atcCode) {
+                                  <span class="atc-tag">ATC: {{ warning.atcCode }}</span>
+                                }
+                                @if (warning.strength) {
+                                  <span class="strength-tag" [class.strength-high]="warning.strength === 'H'" [class.strength-low]="warning.strength === 'L'" [class.strength-additional]="warning.strength === 'A'">
+                                    {{ warning.criteria }}
+                                  </span>
+                                }
+                              </span>
+                            </div>
+                            @if (warning.category !== 'anticholinergic' && warning.category !== 'medication_to_avoid' && warning.category !== 'fall_risk') {
+                              <span class="warning-expand-icon" [class.rotated]="warning.isExpanded">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                              </span>
                             }
-                          </span>
+                          </div>
+                          <div class="warning-rationale">{{ warning.rationale }}</div>
                         </div>
-                        <div class="warning-text">{{ warning.warningText }}</div>
+                        <div class="warning-actions" (click)="$event.stopPropagation()">
+                          <button class="add-note-button" (click)="onAddNote(warning, $event)" [title]="'tools.add_note' | transloco">
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div class="warning-actions" (click)="$event.stopPropagation()">
-                        <button class="add-note-button" (click)="onAddNote(warning)" [title]="'tools.add_note' | transloco">
-                          +
-                        </button>
-                      </div>
+                      
+                      @if (warning.isExpanded) {
+                        <div class="warning-details">
+                          @if (warning.criteria) {
+                            <div class="detail-row">
+                              <span class="detail-label">{{ 'tools.gheops_criteria' | transloco }}:</span>
+                              <span class="detail-value">{{ warning.criteria }}</span>
+                            </div>
+                          }
+                          @if (warning.alternative) {
+                            <div class="detail-row">
+                              <span class="detail-label">{{ 'tools.gheops_alternative' | transloco }}:</span>
+                              <span class="detail-value">{{ warning.alternative }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
                     </div>
                   }
                 </div>

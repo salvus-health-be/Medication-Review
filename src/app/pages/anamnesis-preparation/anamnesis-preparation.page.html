@@ -6,8 +6,8 @@
       </svg>
       Back to Analysis
     </button>
-    <h1>Note Overview</h1>
-    <div class="notes-count">{{ notes.length }} note{{ notes.length !== 1 ? 's' : '' }}</div>
+    <h1>{{ 'note_modal.title' | transloco }}</h1>
+    <div class="notes-count">{{ notes.length }} {{ 'note_modal.notes' | transloco }}</div>
     <div class="generate-actions">
       <button class="btn-primary" (click)="generatePatientConversation()">Create patient conversation</button>
     </div>

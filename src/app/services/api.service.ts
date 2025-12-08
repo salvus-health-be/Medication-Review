@@ -1003,49 +1003,116 @@ export class ApiService {
     );
   }
 
-  // GheOPS - Read GheOPS medication screening
-  readGheops(cnkCodes: string[]): Observable<GheopsResult[]> {
+  // GheOPS - Query GheOPS tool for medication screening
+  queryGheops(cnkCodes: string[]): Observable<GheopsToolResult[]> {
     const headers = this.getHeaders();
 
-    // Helper to ensure we always get an array
-    const toArray = (val: any): string[] => {
-      if (Array.isArray(val)) return val;
-      if (typeof val === 'string' && val.trim() !== '') return [val];
-      return [];
-    };
-
     return this.http.post<any[]>(
-      `${this.API_BASE_URL}/read_gheops`,
+      `${this.API_BASE_URL}/query_gheops_tool`,
       { cnkCodes },
       { headers }
     ).pipe(
       map(response => response.map((item: any) => ({
         cnk: item.cnk ?? item.Cnk ?? item.CNK ?? '',
         atcCode: item.atcCode ?? item.AtcCode ?? item.ATC ?? null,
-        unfitMedication: toArray(item.unfitMedication ?? item.UnfitMedication),
-        unfitMedicationComorbidity: toArray(item.unfitMedicationComorbidity ?? item.UnfitMedicationComorbidity),
-        potentiallyMissingMedication: toArray(item.potentiallyMissingMedication ?? item.PotentiallyMissingMedication),
-        potentialInteractions: toArray(item.potentialInteractions ?? item.PotentialInteractions),
-        potentiallyIneffectiveUnsafe: toArray(item.potentiallyIneffectiveUnsafe ?? item.PotentiallyIneffectiveUnsafe),
-        specialCareMedication: toArray(item.specialCareMedication ?? item.SpecialCareMedication),
-        anticholinergicDrug: toArray(item.anticholinergicDrug ?? item.AnticholinergicDrug),
-        fallRiskDrug: toArray(item.fallRiskDrug ?? item.FallRiskDrug)
+        entries: (item.entries ?? item.Entries ?? []).map((entry: any) => ({
+          type: entry.type ?? entry.Type ?? '',
+          criteria: entry.criteria ?? entry.Criteria ?? '',
+          rationale: entry.rationale ?? entry.Rationale ?? '',
+          alternative: entry.alternative ?? entry.Alternative ?? ''
+        })),
+        matchCount: item.matchCount ?? item.MatchCount ?? 0
+      })))
+    );
+  }
+
+  // Query anticholinergic strength of medications
+  queryAnticholinergics(cnkCodes: string[]): Observable<AnticholinergicResult[]> {
+    const headers = this.getHeaders();
+
+    return this.http.post<any[]>(
+      `${this.API_BASE_URL}/query_anticholinergics`,
+      { cnkCodes },
+      { headers }
+    ).pipe(
+      map(response => response.map((item: any) => ({
+        cnk: item.cnk ?? item.Cnk ?? item.CNK ?? '',
+        atcCode: item.atcCode ?? item.AtcCode ?? item.ATC ?? null,
+        strength: item.strength ?? item.Strength ?? null,
+        isAnticholinergic: item.isAnticholinergic ?? item.IsAnticholinergic ?? false
+      })))
+    );
+  }
+
+  // Get medications that should be avoided
+  getMedicationToAvoid(cnkCodes: string[]): Observable<MedicationToAvoidResult[]> {
+    const headers = this.getHeaders();
+
+    return this.http.post<any[]>(
+      `${this.API_BASE_URL}/get_medication_to_avoid`,
+      { cnkCodes },
+      { headers }
+    ).pipe(
+      map(response => response.map((item: any) => ({
+        cnk: item.cnk ?? item.Cnk ?? item.CNK ?? '',
+        atcCode: item.atcCode ?? item.AtcCode ?? item.ATC ?? null,
+        shouldAvoid: item.shouldAvoid ?? item.ShouldAvoid ?? false
+      })))
+    );
+  }
+
+  // Get fall risk medications
+  getFallRiskMedications(cnkCodes: string[]): Observable<FallRiskResult[]> {
+    const headers = this.getHeaders();
+
+    return this.http.post<any[]>(
+      `${this.API_BASE_URL}/get_fall_risk_medications`,
+      { cnkCodes },
+      { headers }
+    ).pipe(
+      map(response => response.map((item: any) => ({
+        cnk: item.cnk ?? item.Cnk ?? item.CNK ?? '',
+        atcCode: item.atcCode ?? item.AtcCode ?? item.ATC ?? null,
+        increasesRiskOfFalling: item.increasesRiskOfFalling ?? item.IncreasesRiskOfFalling ?? false
       })))
     );
   }
 }
 
-// Response types for GheOPS
-export interface GheopsResult {
+// Response types for GheOPS Tool
+export interface GheopsEntry {
+  type: string;
+  criteria: string;
+  rationale: string;
+  alternative: string;
+}
+
+export interface GheopsToolResult {
   cnk: string;
   atcCode: string | null;
-  unfitMedication: string[];
-  unfitMedicationComorbidity: string[];
-  potentiallyMissingMedication: string[];
-  potentialInteractions: string[];
-  potentiallyIneffectiveUnsafe: string[];
-  specialCareMedication: string[];
-  anticholinergicDrug: string[];
-  fallRiskDrug: string[];
+  entries: GheopsEntry[];
+  matchCount: number;
+}
+
+// Response types for Anticholinergics
+export interface AnticholinergicResult {
+  cnk: string;
+  atcCode: string | null;
+  strength: 'H' | 'L' | 'A' | null;
+  isAnticholinergic: boolean;
+}
+
+// Response types for Medication to Avoid
+export interface MedicationToAvoidResult {
+  cnk: string;
+  atcCode: string | null;
+  shouldAvoid: boolean;
+}
+
+// Response types for Fall Risk Medications
+export interface FallRiskResult {
+  cnk: string;
+  atcCode: string | null;
+  increasesRiskOfFalling: boolean;
 }
 
