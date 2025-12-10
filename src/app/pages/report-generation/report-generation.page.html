@@ -218,11 +218,34 @@
                             </svg>
                           </button>
                         </div>
-                        <textarea 
-                          [(ngModel)]="rec.text"
-                          class="form-textarea"
-                          rows="2"
-                          [placeholder]="'reports.recommendation_text_placeholder' | transloco"></textarea>
+                        @if (rec.isActionOnly) {
+                          <!-- Questionnaire items: single action field only -->
+                          <textarea 
+                            [(ngModel)]="rec.action"
+                            class="form-textarea"
+                            rows="2"
+                            [placeholder]="'reports.action_text_placeholder' | transloco"></textarea>
+                        } @else {
+                          <!-- Note items: both note and action fields -->
+                          <div class="dual-field-group">
+                            <div class="field-wrapper">
+                              <label class="field-label">{{ 'reports.note_text' | transloco }}</label>
+                              <textarea 
+                                [(ngModel)]="rec.text"
+                                class="form-textarea"
+                                rows="2"
+                                [placeholder]="'reports.note_text_placeholder' | transloco"></textarea>
+                            </div>
+                            <div class="field-wrapper">
+                              <label class="field-label">{{ 'reports.action_text' | transloco }}</label>
+                              <textarea 
+                                [(ngModel)]="rec.action"
+                                class="form-textarea"
+                                rows="2"
+                                [placeholder]="'reports.action_text_placeholder' | transloco"></textarea>
+                            </div>
+                          </div>
+                        }
                       </div>
                     }
 
@@ -394,11 +417,34 @@
                             </svg>
                           </button>
                         </div>
-                        <textarea 
-                          [(ngModel)]="obs.text"
-                          class="form-textarea"
-                          rows="2"
-                          [placeholder]="'reports.observation_text_placeholder' | transloco"></textarea>
+                        @if (obs.isActionOnly) {
+                          <!-- Questionnaire items: single action field only -->
+                          <textarea 
+                            [(ngModel)]="obs.action"
+                            class="form-textarea"
+                            rows="2"
+                            [placeholder]="'reports.suggestion_text_placeholder' | transloco"></textarea>
+                        } @else {
+                          <!-- Note items: both note and action fields -->
+                          <div class="dual-field-group">
+                            <div class="field-wrapper">
+                              <label class="field-label">{{ 'reports.note_text' | transloco }}</label>
+                              <textarea 
+                                [(ngModel)]="obs.text"
+                                class="form-textarea"
+                                rows="2"
+                                [placeholder]="'reports.note_text_placeholder' | transloco"></textarea>
+                            </div>
+                            <div class="field-wrapper">
+                              <label class="field-label">{{ 'reports.suggestion_text' | transloco }}</label>
+                              <textarea 
+                                [(ngModel)]="obs.action"
+                                class="form-textarea"
+                                rows="2"
+                                [placeholder]="'reports.suggestion_text_placeholder' | transloco"></textarea>
+                            </div>
+                          </div>
+                        }
                       </div>
                     }
 
@@ -542,11 +588,34 @@
                             </svg>
                           </button>
                         </div>
-                        <textarea 
-                          [(ngModel)]="note.text"
-                          class="form-textarea"
-                          rows="2"
-                          [placeholder]="'reports.note_text_placeholder' | transloco"></textarea>
+                        @if (note.isActionOnly) {
+                          <!-- Questionnaire items: single action field only -->
+                          <textarea 
+                            [(ngModel)]="note.action"
+                            class="form-textarea"
+                            rows="2"
+                            [placeholder]="'reports.action_text_placeholder' | transloco"></textarea>
+                        } @else {
+                          <!-- Note items: both note and action fields -->
+                          <div class="dual-field-group">
+                            <div class="field-wrapper">
+                              <label class="field-label">{{ 'reports.note_text' | transloco }}</label>
+                              <textarea 
+                                [(ngModel)]="note.text"
+                                class="form-textarea"
+                                rows="2"
+                                [placeholder]="'reports.note_text_placeholder' | transloco"></textarea>
+                            </div>
+                            <div class="field-wrapper">
+                              <label class="field-label">{{ 'reports.action_text' | transloco }}</label>
+                              <textarea 
+                                [(ngModel)]="note.action"
+                                class="form-textarea"
+                                rows="2"
+                                [placeholder]="'reports.action_text_placeholder' | transloco"></textarea>
+                            </div>
+                          </div>
+                        }
                       </div>
                     }
 

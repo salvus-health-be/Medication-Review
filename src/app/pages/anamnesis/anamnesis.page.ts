@@ -172,15 +172,15 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         title: this.transloco.translate('anamnesis.categories.concerns') || 'Bezorgdheden/Ervaringen',
         description: this.transloco.translate('anamnesis.general_questions') || 'Patient concerns and experiences with medication',
         questions: [
-          { name: 'p1_concerns_tooMany', text: this.transloco.translate('pdf.patient_concern_tooMany') || 'Ervaart de patient de geneesmiddelen als te veel?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_concerns_tooMany', text: this.transloco.translate('pdf.patient_concern_tooMany') || 'Ervaart de patient de geneesmiddelen als te veel?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_concerns_tooManyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_concerns_financialBurden', text: this.transloco.translate('pdf.patient_concern_financialBurden') || 'Ervaart de patient financiële last?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_concerns_financialBurden', text: this.transloco.translate('pdf.patient_concern_financialBurden') || 'Ervaart de patient financiële last?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_concerns_financialBurdenAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_concerns_anxiety', text: this.transloco.translate('anamnesis.questions.anxiety') || 'Ervaart de patient angst?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_concerns_anxiety', text: this.transloco.translate('anamnesis.questions.anxiety') || 'Ervaart de patient angst?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_concerns_anxietyAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_concerns_untreatedComplaints', text: this.transloco.translate('pdf.patient_concern_untreatedComplaints') || 'Ervaart de patient onvoldoende of niet behandelde klachten?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_concerns_untreatedComplaints', text: this.transloco.translate('pdf.patient_concern_untreatedComplaints') || 'Ervaart de patient onvoldoende of niet behandelde klachten?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_concerns_untreatedComplaintsAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_concerns_other', text: this.transloco.translate('pdf.patient_concern_other') || 'Zijn er andere bezorgdheden?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_concerns_other', text: this.transloco.translate('pdf.patient_concern_other') || 'Zijn er andere bezorgdheden?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_concerns_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
@@ -189,8 +189,8 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         title: this.transloco.translate('anamnesis_dynamic.medication_help_title'),
         description: 'Assistance with medication intake',
         questions: [
-          { name: 'p1_help_hasAssistance', text: this.transloco.translate('anamnesis_dynamic.what_problems') || 'Heeft de patient hulp bij inname, bijvoorbeeld een pillendoos of partner/familielid?', type: 'radio', options: [true, false], value: null },
-          { name: 'p1_help_additionalNeededQuestion', text: this.transloco.translate('pdf.medication_help_additionalNeeded') || 'Is extra hulp wenselijk voor de patient?', type: 'radio', options: [true, false], value: null, hidden: true, originallyHidden: true },
+          { name: 'p1_help_hasAssistance', text: this.transloco.translate('anamnesis_dynamic.what_problems') || 'Heeft de patient hulp bij inname, bijvoorbeeld een pillendoos of partner/familielid?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
+          { name: 'p1_help_additionalNeededQuestion', text: this.transloco.translate('pdf.medication_help_additionalNeeded') || 'Is extra hulp wenselijk voor de patient?', type: 'radio', options: [true, false, 'not_discussed'], value: null, hidden: true, originallyHidden: true },
           { name: 'p1_help_additionalNeededAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
@@ -199,19 +199,19 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         title: this.transloco.translate('anamnesis.categories.practical_problems') || 'Praktische problemen',
         description: this.transloco.translate('pdf.practical_problems') || 'Practical issues affecting medication use',
         questions: [
-          { name: 'p1_practical_swallowing', text: this.transloco.translate('pdf.practical_problem_swallowing') || 'Heeft de patient slikproblemen?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_practical_swallowing', text: this.transloco.translate('pdf.practical_problem_swallowing') || 'Heeft de patient slikproblemen?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_practical_swallowingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_practical_movement', text: this.transloco.translate('pdf.practical_problem_movement') || 'Heeft de patient beweegstoornissen?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_practical_movement', text: this.transloco.translate('pdf.practical_problem_movement') || 'Heeft de patient beweegstoornissen?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_practical_movementAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_practical_vision', text: this.transloco.translate('pdf.practical_problem_vision') || 'Heeft de patient visusstoornissen?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_practical_vision', text: this.transloco.translate('pdf.practical_problem_vision') || 'Heeft de patient visusstoornissen?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_practical_visionAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_practical_hearing', text: this.transloco.translate('pdf.practical_problem_hearing') || 'Heeft de patient gehoorstoornissen?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_practical_hearing', text: this.transloco.translate('pdf.practical_problem_hearing') || 'Heeft de patient gehoorstoornissen?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_practical_hearingAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_practical_cognitive', text: this.transloco.translate('pdf.practical_problem_cognitive') || 'Heeft de patient cognitieve problemen?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_practical_cognitive', text: this.transloco.translate('pdf.practical_problem_cognitive') || 'Heeft de patient cognitieve problemen?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_practical_cognitiveAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_practical_dexterity', text: this.transloco.translate('pdf.practical_problem_dexterity') || 'Heeft de patient problemen met handvaardigheid?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_practical_dexterity', text: this.transloco.translate('pdf.practical_problem_dexterity') || 'Heeft de patient problemen met handvaardigheid?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_practical_dexterityAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true },
-          { name: 'p1_practical_other', text: this.transloco.translate('pdf.practical_problem_other') || 'Zijn er andere praktische problemen?', type: 'radio', options: [true, false], value: null },
+          { name: 'p1_practical_other', text: this.transloco.translate('pdf.practical_problem_other') || 'Zijn er andere praktische problemen?', type: 'radio', options: [true, false, 'not_discussed'], value: null },
           { name: 'p1_practical_otherAction', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
@@ -222,7 +222,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         questions: [
           { name: 'p1_incidents_falls', text: this.transloco.translate('anamnesis.questions.falls') || 'Hoe vaak is de patient in de afgelopen 6 maanden gevallen?', type: 'number', value: 0 },
           { name: 'p1_incidents_hospitalizations', text: this.transloco.translate('anamnesis.questions.hospitalizations') || 'Hoe vaak is de patient gehospitaliseerd in het afgelopen jaar?', type: 'number', value: 0 },
-          { name: 'p1_incidents_actionNeeded', text: this.transloco.translate('pdf.incidents_actionNeeded') || 'Is action needed?', type: 'radio', value: null, options: [true, false] },
+          { name: 'p1_incidents_actionNeeded', text: this.transloco.translate('pdf.incidents_actionNeeded') || 'Is action needed?', type: 'radio', value: null, options: [true, false, 'not_discussed'] },
           { name: 'p1_incidents_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       },
@@ -233,7 +233,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         questions: [
           { name: 'p1_followup_careProviders', text: this.transloco.translate('anamnesis.questions.care_providers') || 'Door welke hulpverleners wordt de patient opgevolgd?', type: 'textarea', value: '' },
           { name: 'p1_followup_parameterMonitoring', text: this.transloco.translate('anamnesis.questions.parameter_monitoring') || 'Door welke hulpverleners worden de parameters opgevolgd?', type: 'textarea', value: '' },
-          { name: 'p1_followup_actionNeeded', text: this.transloco.translate('pdf.followup_actionNeeded') || 'Is action needed?', type: 'radio', value: null, options: [true, false] },
+          { name: 'p1_followup_actionNeeded', text: this.transloco.translate('pdf.followup_actionNeeded') || 'Is action needed?', type: 'radio', value: null, options: [true, false, 'not_discussed'] },
           { name: 'p1_followup_action', text: this.transloco.translate('anamnesis_dynamic.pharmacist_action'), type: 'textarea', value: '', hidden: true, originallyHidden: true }
         ]
       }
@@ -278,7 +278,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         title: med.name || this.transloco.translate('pdf.no_medication') || 'Unnamed medication',
         description: `${this.transloco.translate('medication.cnk') || 'CNK'}: ${med.cnk || '—'} | ${medicationNotes.length} ${this.transloco.translate('notes.existing_notes') || 'note(s)'}`,
         questions: [
-          { name: `p2_med_${cnk}_adherence`, text: this.transloco.translate('anamnesis_dynamic.takes_as_prescribed') || 'Takes as prescribed?', type: 'radio', value: null, options: [true, false] },
+          { name: `p2_med_${cnk}_adherence`, text: this.transloco.translate('anamnesis_dynamic.takes_as_prescribed') || 'Takes as prescribed?', type: 'radio', value: null, options: [true, false, 'not_discussed'] },
           { name: `p2_med_${cnk}_notes`, text: this.transloco.translate('anamnesis_dynamic.pharmacist_notes') || 'Pharmacist notes', type: 'textarea', value: '', hidden: true }
         ]
       });
@@ -318,9 +318,9 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         title: med.name || this.transloco.translate('pdf.no_medication') || 'Unnamed medication',
         description: `${this.transloco.translate('medication.cnk') || 'CNK'}: ${med.cnk || '—'} | ${medicationNotes.length} ${this.transloco.translate('notes.existing_notes') || 'note(s)'}`,
         questions: [
-          { name: `p3_med_${cnk}_effective`, text: this.transloco.translate('anamnesis_dynamic.medication_effective_question') || 'Is this medication effective for the patient?', type: 'radio', value: null, options: [true, false] },
+          { name: `p3_med_${cnk}_effective`, text: this.transloco.translate('anamnesis_dynamic.medication_effective_question') || 'Is this medication effective for the patient?', type: 'radio', value: null, options: [true, false, 'not_discussed'] },
           { name: `p3_med_${cnk}_effectiveAction`, text: this.transloco.translate('anamnesis_dynamic.action_if_not_effective') || 'Action if not effective', type: 'textarea', value: '', hidden: true },
-          { name: `p3_med_${cnk}_hasSideEffects`, text: this.transloco.translate('anamnesis_dynamic.side_effects_question') || 'Is the patient experiencing side effects?', type: 'radio', value: null, options: [true, false] },
+          { name: `p3_med_${cnk}_hasSideEffects`, text: this.transloco.translate('anamnesis_dynamic.side_effects_question') || 'Is the patient experiencing side effects?', type: 'radio', value: null, options: [true, false, 'not_discussed'] },
           { name: `p3_med_${cnk}_sideEffectsAction`, text: this.transloco.translate('anamnesis_dynamic.action_for_side_effects') || 'Action for side effects', type: 'textarea', value: '', hidden: true }
         ]
       });
@@ -367,9 +367,17 @@ export class AnamnesisPage implements OnInit, OnDestroy {
               q.value = Number(savedAnswer.value) || 0;
               loadedCount++;
             } else if (q.type === 'radio') {
-              // For boolean radio buttons, convert string to boolean
+              // For boolean radio buttons, convert string to boolean unless it's 'not_discussed'
               if (q.options && q.options.length > 0 && typeof q.options[0] === 'boolean') {
-                q.value = savedAnswer.value === 'true';
+                if (savedAnswer.value === 'not_discussed') {
+                  q.value = 'not_discussed';
+                } else if (savedAnswer.value === 'true') {
+                  q.value = true;
+                } else if (savedAnswer.value === 'false') {
+                  q.value = false;
+                } else {
+                  q.value = savedAnswer.value;
+                }
               } else {
                 q.value = savedAnswer.value;
               }
@@ -817,7 +825,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
       }
       if (q.type === 'radio') {
         if (q.options && q.options.length > 0 && typeof q.options[0] === 'boolean') {
-          return q.value === true || q.value === false;
+          return q.value === true || q.value === false || q.value === 'not_discussed';
         }
         return q.value !== null && q.value !== undefined && q.value !== '';
       }
@@ -899,7 +907,7 @@ export class AnamnesisPage implements OnInit, OnDestroy {
         }
         if (q.type === 'radio') {
           if (q.options && q.options.length > 0 && typeof q.options[0] === 'boolean') {
-            return q.value === true || q.value === false;
+            return q.value === true || q.value === false || q.value === 'not_discussed';
           }
           return q.value !== null && q.value !== undefined && q.value !== '';
         }

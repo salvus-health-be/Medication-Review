@@ -558,6 +558,27 @@
                     }
                   }
 
+                  .dual-field-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.75rem;
+
+                    .field-wrapper {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0.375rem;
+
+                      .field-label {
+                        font-family: $primary-font;
+                        font-size: 0.75rem;
+                        font-weight: $font-weight-medium;
+                        color: $text-secondary;
+                        text-transform: uppercase;
+                        letter-spacing: 0.03em;
+                      }
+                    }
+                  }
+
                   .form-textarea {
                     width: 100%;
                     padding: 0.75rem 1rem;

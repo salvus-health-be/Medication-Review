@@ -163,8 +163,9 @@
               <input type="radio" [name]="question.name" [value]="option" [(ngModel)]="question.value"
                 (ngModelChange)="onQuestionChange(question.name, $event)">
               <span>{{ option === true ? ('common.yes' | transloco) : (option === false ? ('common.no' | transloco) :
+                (option === 'not_discussed' ? ('common.not_discussed' | transloco) :
                 (option === 'Yes' ? ('anamnesis_dynamic.yes' | transloco) : (option === 'No' ? ('anamnesis_dynamic.no' |
-                transloco) : option))) }}</span>
+                transloco) : option)))) }}</span>
             </label>
             }
           </div>

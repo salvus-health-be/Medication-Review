@@ -12,16 +12,15 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import pdfMake from 'pdfmake/build/pdfmake';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
-import { PatientSummaryGenerator } from '../../services/pdf-generators/patient-summary-generator';
-import { DoctorSummaryGenerator } from '../../services/pdf-generators/doctor-summary-generator';
-import { PharmacySummaryGenerator } from '../../services/pdf-generators/pharmacy-summary-generator';
 
 type ReportTool = 'patient-summary' | 'doctor-summary' | 'pharmacy-summary' | null;
 
 interface EditableRecommendation {
   text: string;
+  action?: string;
   context?: string;
   originalIndex: number;
+  isActionOnly?: boolean; // For questionnaire items that only have an action, no note
 }
 
 interface PatientSummaryContent {
@@ -181,23 +180,31 @@ export class ReportGenerationPage implements OnInit {
     const recommendations: EditableRecommendation[] = [];
     let index = 0;
 
-    // Add Part 1 actions
+    // Add Part 1 actions (questionnaire items - action only, no note)
     part1Actions.forEach(action => {
       recommendations.push({
-        text: action.value,
+        text: '',
+        action: action.value,
         context: action.label,
-        originalIndex: index++
+        originalIndex: index++,
+        isActionOnly: true
       });
     });
 
-    // Add review notes
+    // Add review notes - show both note text and pharmacist action as separate fields
     const groupedNotes = this.groupNotesByMedication(patientNotes);
     groupedNotes.general.forEach(note => {
       const commentKey = `note_comment_${note.rowKey}`;
       const commentAnswer = this.questionAnswers.find(qa => qa.questionName === commentKey);
-      const text = commentAnswer?.value || note.text || '';
-      if (text) {
-        recommendations.push({ text, originalIndex: index++ });
+      const noteText = note.text || '';
+      const pharmacistAction = commentAnswer?.value || '';
+      
+      if (noteText || pharmacistAction) {
+        recommendations.push({ 
+          text: noteText, 
+          action: pharmacistAction,
+          originalIndex: index++ 
+        });
       }
     });
 
@@ -205,10 +212,13 @@ export class ReportGenerationPage implements OnInit {
       group.notes.forEach(note => {
         const commentKey = `note_comment_${note.rowKey}`;
         const commentAnswer = this.questionAnswers.find(qa => qa.questionName === commentKey);
-        const text = commentAnswer?.value || note.text || '';
-        if (text) {
+        const noteText = note.text || '';
+        const pharmacistAction = commentAnswer?.value || '';
+        
+        if (noteText || pharmacistAction) {
           recommendations.push({
-            text,
+            text: noteText,
+            action: pharmacistAction,
             context: group.medicationName,
             originalIndex: index++
           });
@@ -268,23 +278,31 @@ export class ReportGenerationPage implements OnInit {
     const observations: EditableRecommendation[] = [];
     let index = 0;
 
-    // Add Part 1 actions
+    // Add Part 1 actions (questionnaire items - action only, no note)
     part1Actions.forEach(action => {
       observations.push({
-        text: action.value,
+        text: '',
+        action: action.value,
         context: action.label,
-        originalIndex: index++
+        originalIndex: index++,
+        isActionOnly: true
       });
     });
 
-    // Add review notes
+    // Add review notes with separate text and action fields
     const groupedNotes = this.groupNotesByMedication(doctorNotes);
     groupedNotes.general.forEach(note => {
       const commentKey = `note_comment_${note.rowKey}`;
       const commentAnswer = this.questionAnswers.find(qa => qa.questionName === commentKey);
-      const text = commentAnswer?.value || note.text || '';
-      if (text) {
-        observations.push({ text, originalIndex: index++ });
+      const noteText = note.text || '';
+      const pharmacistAction = commentAnswer?.value || '';
+      
+      if (noteText || pharmacistAction) {
+        observations.push({ 
+          text: noteText, 
+          action: pharmacistAction,
+          originalIndex: index++ 
+        });
       }
     });
 
@@ -292,10 +310,13 @@ export class ReportGenerationPage implements OnInit {
       group.notes.forEach(note => {
         const commentKey = `note_comment_${note.rowKey}`;
         const commentAnswer = this.questionAnswers.find(qa => qa.questionName === commentKey);
-        const text = commentAnswer?.value || note.text || '';
-        if (text) {
+        const noteText = note.text || '';
+        const pharmacistAction = commentAnswer?.value || '';
+        
+        if (noteText || pharmacistAction) {
           observations.push({
-            text,
+            text: noteText,
+            action: pharmacistAction,
             context: group.medicationName,
             originalIndex: index++
           });
@@ -350,30 +371,37 @@ export class ReportGenerationPage implements OnInit {
     const notes: EditableRecommendation[] = [];
     let index = 0;
 
-    // Add Part 1 actions
+    // Add Part 1 actions (questionnaire items - action only, no note)
     part1Actions.forEach(action => {
       notes.push({
-        text: action.value,
+        text: '',
+        action: action.value,
         context: action.label,
-        originalIndex: index++
+        originalIndex: index++,
+        isActionOnly: true
       });
     });
 
-    // Add review notes with flags
+    // Add review notes with flags and separate text/action fields
     const groupedNotes = this.groupNotesByMedication(allNotes);
     groupedNotes.general.forEach(note => {
       const commentKey = `note_comment_${note.rowKey}`;
       const commentAnswer = this.questionAnswers.find(qa => qa.questionName === commentKey);
-      const text = commentAnswer?.value || note.text || '';
-      if (text) {
-        let displayText = text;
-        if (note.discussWithPatient || note.communicateToDoctor) {
-          const flags = [];
-          if (note.discussWithPatient) flags.push('[Patient]');
-          if (note.communicateToDoctor) flags.push('[Doctor]');
-          displayText = `${flags.join(' ')} ${text}`;
-        }
-        notes.push({ text: displayText, originalIndex: index++ });
+      const noteText = note.text || '';
+      const pharmacistAction = commentAnswer?.value || '';
+      
+      // Build flags prefix
+      const flags = [];
+      if (note.discussWithPatient) flags.push('[Patient]');
+      if (note.communicateToDoctor) flags.push('[Doctor]');
+      const flagPrefix = flags.length > 0 ? `${flags.join(' ')} ` : '';
+      
+      if (noteText || pharmacistAction) {
+        notes.push({ 
+          text: `${flagPrefix}${noteText}`, 
+          action: pharmacistAction,
+          originalIndex: index++ 
+        });
       }
     });
 
@@ -381,17 +409,19 @@ export class ReportGenerationPage implements OnInit {
       group.notes.forEach(note => {
         const commentKey = `note_comment_${note.rowKey}`;
         const commentAnswer = this.questionAnswers.find(qa => qa.questionName === commentKey);
-        const text = commentAnswer?.value || note.text || '';
-        if (text) {
-          let displayText = text;
-          if (note.discussWithPatient || note.communicateToDoctor) {
-            const flags = [];
-            if (note.discussWithPatient) flags.push('[Patient]');
-            if (note.communicateToDoctor) flags.push('[Doctor]');
-            displayText = `${flags.join(' ')} ${text}`;
-          }
+        const noteText = note.text || '';
+        const pharmacistAction = commentAnswer?.value || '';
+        
+        // Build flags prefix
+        const flags = [];
+        if (note.discussWithPatient) flags.push('[Patient]');
+        if (note.communicateToDoctor) flags.push('[Doctor]');
+        const flagPrefix = flags.length > 0 ? `${flags.join(' ')} ` : '';
+        
+        if (noteText || pharmacistAction) {
           notes.push({
-            text: displayText,
+            text: `${flagPrefix}${noteText}`,
+            action: pharmacistAction,
             context: group.medicationName,
             originalIndex: index++
           });
@@ -476,6 +506,7 @@ export class ReportGenerationPage implements OnInit {
     try {
       let docDefinition: TDocumentDefinitions;
 
+      // Use the editor content methods that respect user edits
       switch (this.activeTool) {
         case 'patient-summary':
           docDefinition = this.generatePatientPDF();
@@ -513,6 +544,16 @@ export class ReportGenerationPage implements OnInit {
 
     const content: any[] = [];
     const lang = this.transloco.getActiveLang();
+    const colors = {
+      primary: '#3B82F6',
+      accent: '#10B981',
+      text: '#2C3E50',
+      textSecondary: '#5F6476',
+      border: '#E8EBF0',
+      background: '#F8F9FB',
+      noteBackground: '#FEF3C7',
+      actionBackground: '#DBEAFE'
+    };
 
     // Logo and Header
     content.push({
@@ -539,7 +580,7 @@ export class ReportGenerationPage implements OnInit {
           x2: 515,
           y2: 5,
           lineWidth: 1,
-          lineColor: '#E8EBF0'
+          lineColor: colors.border
         }
       ],
       margin: [0, 10, 0, 15]
@@ -570,76 +611,50 @@ export class ReportGenerationPage implements OnInit {
       style: 'bodyText',
       alignment: 'justify'
     });
-    content.push({ text: '', margin: [0, 12, 0, 0] });
+    content.push({ text: '', margin: [0, 16, 0, 0] });
 
-    // Recommendations
+    // Recommendations Section
     if (this.patientContent.recommendations.length > 0) {
       content.push({
         text: this.patientContent.recommendationsHeading,
-        style: 'recommendationsHeading'
+        style: 'sectionHeading'
       });
-      content.push({ text: '', margin: [0, 8, 0, 0] });
+      content.push({ text: '', margin: [0, 12, 0, 0] });
 
       // Group recommendations by context (medication)
-      const groupedRecs = new Map<string, string[]>();
-      const recsWithoutContext: string[] = [];
+      const groupedRecs = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
+      const recsWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
 
       this.patientContent.recommendations.forEach(rec => {
+        const item = { text: rec.text, action: rec.action, isActionOnly: rec.isActionOnly };
         if (rec.context) {
           if (!groupedRecs.has(rec.context)) {
             groupedRecs.set(rec.context, []);
           }
-          groupedRecs.get(rec.context)!.push(rec.text);
+          groupedRecs.get(rec.context)!.push(item);
         } else {
-          recsWithoutContext.push(rec.text);
+          recsWithoutContext.push(item);
         }
       });
 
-      const listItems: any[] = [];
+      // Render recommendations without context as general items first
+      if (recsWithoutContext.length > 0) {
+        const generalLabel = lang === 'nl' ? 'Algemene Aanbevelingen' : lang === 'fr' ? 'Recommandations Générales' : 'General Recommendations';
+        content.push(this.createPatientRecommendationCard(generalLabel, recsWithoutContext, colors, lang));
+      }
 
-      // Add recommendations without context
-      recsWithoutContext.forEach(text => {
-        listItems.push({
-          text,
-          style: 'listItem'
-        });
+      // Render grouped recommendations as medication cards
+      groupedRecs.forEach((items, medicationName) => {
+        content.push(this.createPatientRecommendationCard(medicationName, items, colors, lang));
       });
-
-      // Add grouped recommendations with nested ul
-      groupedRecs.forEach((texts, context) => {
-        if (texts.length === 1) {
-          // Single item: inline format
-          listItems.push({
-            text: `${context}: ${texts[0]}`,
-            style: 'listItem'
-          });
-        } else {
-          // Multiple items: nested list with proper parent
-          listItems.push([
-            context + ':',
-            {
-              ul: texts.map(t => ({
-                text: t,
-                style: 'listItem'
-              })),
-              margin: [0, 2, 0, 4]
-            }
-          ]);
-        }
-      });
-
-      content.push({
-        ul: listItems,
-        margin: [20, 0, 0, 0]
-      });
-      content.push({ text: '', margin: [0, 12, 0, 0] });
     }
 
     // Closing
     content.push({
       text: this.patientContent.closingText,
       style: 'bodyText',
-      alignment: 'justify'
+      alignment: 'justify',
+      margin: [0, 8, 0, 0]
     });
     content.push({ text: '', margin: [0, 20, 0, 0] });
 
@@ -654,7 +669,7 @@ export class ReportGenerationPage implements OnInit {
       content.push({ text: '', margin: [0, 8, 0, 0] });
       content.push({
         text: this.patientContent.pharmacistName,
-        style: 'bodyText'
+        style: 'pharmacistName'
       });
     }
 
@@ -670,6 +685,115 @@ export class ReportGenerationPage implements OnInit {
     };
   }
 
+  /**
+   * Creates a styled recommendation card for patient summary
+   */
+  private createPatientRecommendationCard(
+    title: string,
+    items: { text: string; action?: string; isActionOnly?: boolean }[],
+    colors: any,
+    lang: string
+  ): any {
+    const stack: any[] = [];
+
+    // Card header with accent bar
+    stack.push({
+      columns: [
+        {
+          canvas: [
+            {
+              type: 'rect',
+              x: 0, y: 0,
+              w: 4, h: 20,
+              color: colors.primary
+            }
+          ],
+          width: 8
+        },
+        {
+          text: title,
+          style: 'cardTitle',
+          margin: [8, 2, 0, 0]
+        }
+      ],
+      margin: [0, 0, 0, 10]
+    });
+
+    // Render each recommendation item
+    items.forEach((item, index) => {
+      if (index > 0) {
+        stack.push({
+          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 435, y2: 0, lineWidth: 0.5, lineColor: colors.border }],
+          margin: [0, 8, 0, 8]
+        });
+      }
+
+      // Note text (if not action-only)
+      if (!item.isActionOnly && item.text) {
+        const noteLabel = lang === 'nl' ? 'Opmerking:' : lang === 'fr' ? 'Remarque:' : 'Note:';
+        stack.push({
+          table: {
+            widths: ['*'],
+            body: [[{
+              stack: [
+                { text: noteLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
+                { text: item.text, style: 'itemText' }
+              ],
+              margin: [10, 8, 10, 8]
+            }]]
+          },
+          layout: {
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+            fillColor: () => colors.noteBackground
+          },
+          margin: [0, 0, 0, 6]
+        });
+      }
+
+      // Action/tip (if present)
+      if (item.action) {
+        const actionLabel = lang === 'nl' ? 'Tip:' : lang === 'fr' ? 'Conseil:' : 'Tip:';
+        stack.push({
+          table: {
+            widths: ['*'],
+            body: [[{
+              stack: [
+                { text: actionLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
+                { text: item.action, style: 'itemText' }
+              ],
+              margin: [10, 8, 10, 8]
+            }]]
+          },
+          layout: {
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+            fillColor: () => colors.actionBackground
+          },
+          margin: [0, 0, 0, 0]
+        });
+      }
+    });
+
+    return {
+      table: {
+        widths: ['*'],
+        body: [[{ stack, margin: [14, 14, 14, 14] }]]
+      },
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => colors.border,
+        vLineColor: () => colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 12]
+    };
+  }
+
   private generateDoctorPDF(): TDocumentDefinitions {
     if (!this.doctorContent) {
       throw new Error('Doctor content not initialized');
@@ -677,6 +801,16 @@ export class ReportGenerationPage implements OnInit {
 
     const content: any[] = [];
     const lang = this.transloco.getActiveLang();
+    const colors = {
+      primary: '#4A90A4',
+      accent: '#6B7280',
+      text: '#2C3E50',
+      textSecondary: '#5F6476',
+      border: '#E8EBF0',
+      background: '#F8F9FB',
+      noteBackground: '#FFF9E6',
+      actionBackground: '#E8F4F8'
+    };
 
     // Logo and Header
     content.push({
@@ -703,7 +837,7 @@ export class ReportGenerationPage implements OnInit {
           x2: 515,
           y2: 5,
           lineWidth: 1,
-          lineColor: '#E8EBF0'
+          lineColor: colors.border
         }
       ],
       margin: [0, 10, 0, 15]
@@ -727,10 +861,17 @@ export class ReportGenerationPage implements OnInit {
     else if (lang === 'en') patientRef = 'Regarding: Patient';
 
     content.push({
-      text: patientRef,
-      style: 'patientReference'
+      table: {
+        widths: ['*'],
+        body: [[{ text: patientRef, style: 'patientReference', margin: [8, 6, 8, 6] }]]
+      },
+      layout: {
+        hLineWidth: () => 0,
+        vLineWidth: () => 0,
+        fillColor: () => colors.background
+      },
+      margin: [0, 0, 0, 15]
     });
-    content.push({ text: '', margin: [0, 15, 0, 0] });
 
     // Salutation
     content.push({
@@ -745,76 +886,50 @@ export class ReportGenerationPage implements OnInit {
       style: 'bodyText',
       alignment: 'justify'
     });
-    content.push({ text: '', margin: [0, 12, 0, 0] });
+    content.push({ text: '', margin: [0, 16, 0, 0] });
 
-    // Observations
+    // Observations Section
     if (this.doctorContent.observations.length > 0) {
       content.push({
         text: this.doctorContent.observationsHeading,
-        style: 'observationsHeading'
+        style: 'sectionHeading'
       });
-      content.push({ text: '', margin: [0, 8, 0, 0] });
+      content.push({ text: '', margin: [0, 12, 0, 0] });
 
       // Group observations by context (medication)
-      const groupedObs = new Map<string, string[]>();
-      const obsWithoutContext: string[] = [];
+      const groupedObs = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
+      const obsWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
 
       this.doctorContent.observations.forEach(obs => {
+        const item = { text: obs.text, action: obs.action, isActionOnly: obs.isActionOnly };
         if (obs.context) {
           if (!groupedObs.has(obs.context)) {
             groupedObs.set(obs.context, []);
           }
-          groupedObs.get(obs.context)!.push(obs.text);
+          groupedObs.get(obs.context)!.push(item);
         } else {
-          obsWithoutContext.push(obs.text);
+          obsWithoutContext.push(item);
         }
       });
 
-      const listItems: any[] = [];
+      // Render observations without context as general items first
+      if (obsWithoutContext.length > 0) {
+        const generalLabel = lang === 'nl' ? 'Algemene Observaties' : lang === 'fr' ? 'Observations Générales' : 'General Observations';
+        content.push(this.createObservationCard(generalLabel, obsWithoutContext, colors, lang));
+      }
 
-      // Add observations without context
-      obsWithoutContext.forEach(text => {
-        listItems.push({
-          text,
-          style: 'listItem'
-        });
+      // Render grouped observations as medication cards
+      groupedObs.forEach((items, medicationName) => {
+        content.push(this.createObservationCard(medicationName, items, colors, lang));
       });
-
-      // Add grouped observations with nested ul
-      groupedObs.forEach((texts, context) => {
-        if (texts.length === 1) {
-          // Single item: inline format
-          listItems.push({
-            text: `${context}: ${texts[0]}`,
-            style: 'listItem'
-          });
-        } else {
-          // Multiple items: nested list with proper parent
-          listItems.push([
-            context + ':',
-            {
-              ul: texts.map(t => ({
-                text: t,
-                style: 'listItem'
-              })),
-              margin: [0, 2, 0, 4]
-            }
-          ]);
-        }
-      });
-
-      content.push({
-        ul: listItems,
-        margin: [20, 0, 0, 0]
-      });
-      content.push({ text: '', margin: [0, 12, 0, 0] });
     }
 
     // Closing
     content.push({
       text: this.doctorContent.closingText,
       style: 'bodyText',
-      alignment: 'justify'
+      alignment: 'justify',
+      margin: [0, 8, 0, 0]
     });
     content.push({ text: '', margin: [0, 20, 0, 0] });
 
@@ -829,7 +944,7 @@ export class ReportGenerationPage implements OnInit {
       content.push({ text: '', margin: [0, 8, 0, 0] });
       content.push({
         text: this.doctorContent.pharmacistName,
-        style: 'bodyText'
+        style: 'pharmacistName'
       });
     }
 
@@ -845,6 +960,115 @@ export class ReportGenerationPage implements OnInit {
     };
   }
 
+  /**
+   * Creates a styled observation card for doctor summary
+   */
+  private createObservationCard(
+    title: string,
+    items: { text: string; action?: string; isActionOnly?: boolean }[],
+    colors: any,
+    lang: string
+  ): any {
+    const stack: any[] = [];
+
+    // Card header with accent bar
+    stack.push({
+      columns: [
+        {
+          canvas: [
+            {
+              type: 'rect',
+              x: 0, y: 0,
+              w: 4, h: 20,
+              color: colors.primary
+            }
+          ],
+          width: 8
+        },
+        {
+          text: title,
+          style: 'cardTitle',
+          margin: [8, 2, 0, 0]
+        }
+      ],
+      margin: [0, 0, 0, 10]
+    });
+
+    // Render each observation item
+    items.forEach((item, index) => {
+      if (index > 0) {
+        stack.push({
+          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 435, y2: 0, lineWidth: 0.5, lineColor: colors.border }],
+          margin: [0, 8, 0, 8]
+        });
+      }
+
+      // Note text (if not action-only)
+      if (!item.isActionOnly && item.text) {
+        const noteLabel = lang === 'nl' ? 'Observatie:' : lang === 'fr' ? 'Observation:' : 'Observation:';
+        stack.push({
+          table: {
+            widths: ['*'],
+            body: [[{
+              stack: [
+                { text: noteLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
+                { text: item.text, style: 'itemText' }
+              ],
+              margin: [10, 8, 10, 8]
+            }]]
+          },
+          layout: {
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+            fillColor: () => colors.noteBackground
+          },
+          margin: [0, 0, 0, 6]
+        });
+      }
+
+      // Action/suggestion (if present)
+      if (item.action) {
+        const actionLabel = lang === 'nl' ? 'Suggestie:' : lang === 'fr' ? 'Suggestion:' : 'Suggestion:';
+        stack.push({
+          table: {
+            widths: ['*'],
+            body: [[{
+              stack: [
+                { text: actionLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
+                { text: item.action, style: 'itemText' }
+              ],
+              margin: [10, 8, 10, 8]
+            }]]
+          },
+          layout: {
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+            fillColor: () => colors.actionBackground
+          },
+          margin: [0, 0, 0, 0]
+        });
+      }
+    });
+
+    return {
+      table: {
+        widths: ['*'],
+        body: [[{ stack, margin: [14, 14, 14, 14] }]]
+      },
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => colors.border,
+        vLineColor: () => colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 12]
+    };
+  }
+
   private generatePharmacyPDF(): TDocumentDefinitions {
     if (!this.pharmacyContent) {
       throw new Error('Pharmacy content not initialized');
@@ -852,6 +1076,18 @@ export class ReportGenerationPage implements OnInit {
 
     const content: any[] = [];
     const lang = this.transloco.getActiveLang();
+    const colors = {
+      primary: '#6B5B95',
+      accent: '#5F6476',
+      text: '#2C3E50',
+      textSecondary: '#5F6476',
+      border: '#E8EBF0',
+      background: '#F8F9FB',
+      noteBackground: '#F0F4F8',
+      actionBackground: '#EDE7F6',
+      flagPatient: '#E3F2FD',
+      flagDoctor: '#FFF3E0'
+    };
 
     // Logo and Header
     content.push({
@@ -878,7 +1114,7 @@ export class ReportGenerationPage implements OnInit {
           x2: 515,
           y2: 5,
           lineWidth: 1,
-          lineColor: '#E8EBF0'
+          lineColor: colors.border
         }
       ],
       margin: [0, 10, 0, 15]
@@ -894,123 +1130,120 @@ export class ReportGenerationPage implements OnInit {
       text: date,
       style: 'dateText'
     });
-    content.push({ text: '', margin: [0, 20, 0, 0] });
+    content.push({ text: '', margin: [0, 16, 0, 0] });
 
-    // Internal notice
+    // Internal notice banner
     content.push({
-      text: this.pharmacyContent.internalNotice,
-      style: 'bodyText',
-      alignment: 'justify'
+      table: {
+        widths: ['*'],
+        body: [[{
+          text: this.pharmacyContent.internalNotice,
+          style: 'internalNotice',
+          margin: [12, 10, 12, 10]
+        }]]
+      },
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => colors.primary,
+        vLineColor: () => colors.primary,
+        fillColor: () => '#F5F3FF'
+      },
+      margin: [0, 0, 0, 16]
     });
-    content.push({ text: '', margin: [0, 12, 0, 0] });
 
-    // Medications
+    // Medications Table
     if (this.medications.length > 0) {
       content.push({
         text: this.transloco.translate('pdf.current_medications'),
-        style: 'simpleHeading'
+        style: 'sectionHeading'
       });
-      content.push({ text: '', margin: [0, 6, 0, 0] });
+      content.push({ text: '', margin: [0, 8, 0, 0] });
       content.push(this.createMedicationScheduleTable());
-      content.push({ text: '', margin: [0, 12, 0, 0] });
+      content.push({ text: '', margin: [0, 16, 0, 0] });
     }
 
     // Contraindications
     if (this.contraindications.length > 0) {
       content.push({
         text: this.transloco.translate('tools.contraindications'),
-        style: 'simpleHeading'
+        style: 'sectionHeading'
       });
-      content.push({ text: '', margin: [0, 6, 0, 0] });
-      const ciList = this.contraindications.map(ci => ({
-        text: ci.name || ci.contraindicationCode,
-        style: 'listItem'
+      content.push({ text: '', margin: [0, 8, 0, 0] });
+      
+      const ciStack: any[] = this.contraindications.map(ci => ({
+        columns: [
+          { text: '•', width: 12, color: colors.primary },
+          { text: ci.name || ci.contraindicationCode, style: 'listItem' }
+        ],
+        margin: [0, 2, 0, 2]
       }));
-      content.push({ ul: ciList, margin: [20, 0, 0, 0] });
-      content.push({ text: '', margin: [0, 12, 0, 0] });
+      
+      content.push({
+        table: {
+          widths: ['*'],
+          body: [[{ stack: ciStack, margin: [12, 10, 12, 10] }]]
+        },
+        layout: {
+          hLineWidth: () => 1,
+          vLineWidth: () => 1,
+          hLineColor: () => colors.border,
+          vLineColor: () => colors.border,
+          fillColor: () => colors.background
+        },
+        margin: [0, 0, 0, 16]
+      });
     }
 
-    // Notes
+    // Review Notes Section
     if (this.pharmacyContent.notes.length > 0) {
       content.push({
         text: this.pharmacyContent.reviewNotesHeading,
-        style: 'simpleHeading'
+        style: 'sectionHeading'
       });
-      content.push({ text: '', margin: [0, 8, 0, 0] });
+      content.push({ text: '', margin: [0, 12, 0, 0] });
 
       // Group notes by context (medication)
-      const groupedNotes = new Map<string, string[]>();
-      const notesWithoutContext: string[] = [];
+      const groupedNotes = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
+      const notesWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
 
       this.pharmacyContent.notes.forEach(note => {
+        const item = { text: note.text, action: note.action, isActionOnly: note.isActionOnly };
         if (note.context) {
           if (!groupedNotes.has(note.context)) {
             groupedNotes.set(note.context, []);
           }
-          groupedNotes.get(note.context)!.push(note.text);
+          groupedNotes.get(note.context)!.push(item);
         } else {
-          notesWithoutContext.push(note.text);
-        }
-      });
-      
-      groupedNotes.forEach((notes, med) => {
-      });
-
-      // Build list items with proper nesting
-      const listItems: any[] = [];
-
-      // Add notes without context first
-      notesWithoutContext.forEach(text => {
-        listItems.push({
-          text,
-          style: 'listItem'
-        });
-      });
-
-      // Add grouped notes with medication context using nested ul
-      groupedNotes.forEach((notes, medicationName) => {
-        if (notes.length === 1) {
-          // Single note: display inline
-          listItems.push({
-            text: `${medicationName}: ${notes[0]}`,
-            style: 'listItem'
-          });
-        } else {
-          // Multiple notes: create nested structure with proper parent
-          
-          listItems.push([
-            medicationName + ':',
-            {
-              ul: notes.map(note => ({
-                text: note,
-                style: 'indentedNote'
-              })),
-              margin: [0, 2, 0, 4]
-            }
-          ]);
+          notesWithoutContext.push(item);
         }
       });
 
-      content.push({
-        ul: listItems,
-        margin: [20, 0, 0, 0]
+      // Render notes without context as general items
+      if (notesWithoutContext.length > 0) {
+        const generalLabel = lang === 'nl' ? 'Algemene Notities' : lang === 'fr' ? 'Notes Générales' : 'General Notes';
+        content.push(this.createPharmacyNoteCard(generalLabel, notesWithoutContext, colors, lang));
+      }
+
+      // Render grouped notes as medication cards
+      groupedNotes.forEach((items, medicationName) => {
+        content.push(this.createPharmacyNoteCard(medicationName, items, colors, lang));
       });
-      content.push({ text: '', margin: [0, 12, 0, 0] });
     }
 
     // Closing
     content.push({
       text: this.pharmacyContent.closingText,
       style: 'bodyText',
-      alignment: 'left'
+      alignment: 'left',
+      margin: [0, 8, 0, 0]
     });
-    content.push({ text: '', margin: [0, 12, 0, 0] });
 
     // Pharmacist name
     if (this.pharmacyContent.pharmacistName) {
       content.push({
         text: this.pharmacyContent.pharmacistName,
-        style: 'bodyText',
+        style: 'pharmacistName',
         margin: [0, 20, 0, 0]
       });
     }
@@ -1024,6 +1257,115 @@ export class ReportGenerationPage implements OnInit {
         fontSize: 10,
         lineHeight: 1.4
       }
+    };
+  }
+
+  /**
+   * Creates a styled note card for pharmacy summary
+   */
+  private createPharmacyNoteCard(
+    title: string,
+    items: { text: string; action?: string; isActionOnly?: boolean }[],
+    colors: any,
+    lang: string
+  ): any {
+    const stack: any[] = [];
+
+    // Card header with accent bar
+    stack.push({
+      columns: [
+        {
+          canvas: [
+            {
+              type: 'rect',
+              x: 0, y: 0,
+              w: 4, h: 20,
+              color: colors.primary
+            }
+          ],
+          width: 8
+        },
+        {
+          text: title,
+          style: 'cardTitle',
+          margin: [8, 2, 0, 0]
+        }
+      ],
+      margin: [0, 0, 0, 10]
+    });
+
+    // Render each note item
+    items.forEach((item, index) => {
+      if (index > 0) {
+        stack.push({
+          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 435, y2: 0, lineWidth: 0.5, lineColor: colors.border }],
+          margin: [0, 8, 0, 8]
+        });
+      }
+
+      // Note text (if not action-only)
+      if (!item.isActionOnly && item.text) {
+        const noteLabel = lang === 'nl' ? 'Notitie:' : lang === 'fr' ? 'Note:' : 'Note:';
+        stack.push({
+          table: {
+            widths: ['*'],
+            body: [[{
+              stack: [
+                { text: noteLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
+                { text: item.text, style: 'itemText' }
+              ],
+              margin: [10, 8, 10, 8]
+            }]]
+          },
+          layout: {
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+            fillColor: () => colors.noteBackground
+          },
+          margin: [0, 0, 0, 6]
+        });
+      }
+
+      // Action (if present)
+      if (item.action) {
+        const actionLabel = lang === 'nl' ? 'Actie:' : lang === 'fr' ? 'Action:' : 'Action:';
+        stack.push({
+          table: {
+            widths: ['*'],
+            body: [[{
+              stack: [
+                { text: actionLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
+                { text: item.action, style: 'itemText' }
+              ],
+              margin: [10, 8, 10, 8]
+            }]]
+          },
+          layout: {
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+            fillColor: () => colors.actionBackground
+          },
+          margin: [0, 0, 0, 0]
+        });
+      }
+    });
+
+    return {
+      table: {
+        widths: ['*'],
+        body: [[{ stack, margin: [14, 14, 14, 14] }]]
+      },
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => colors.border,
+        vLineColor: () => colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 12]
     };
   }
 
@@ -1246,19 +1588,32 @@ export class ReportGenerationPage implements OnInit {
         color: '#2C3E50',
         lineHeight: 1.6
       },
-      recommendationsHeading: {
+      sectionHeading: {
+        fontSize: 12,
+        bold: true,
+        color: '#2C3E50',
+        margin: [0, 0, 0, 0]
+      },
+      cardTitle: {
         fontSize: 11,
         bold: true,
-        color: '#454B60',
-        margin: [0, 0, 0, 0],
-        decoration: 'underline',
-        decorationColor: '#E8EBF0'
+        color: '#2C3E50'
       },
-      listItem: {
+      itemLabel: {
+        fontSize: 8,
+        bold: true,
+        color: '#5F6476',
+        margin: [0, 0, 0, 0]
+      },
+      itemText: {
         fontSize: 10,
         color: '#2C3E50',
-        lineHeight: 1.6,
-        margin: [0, 3, 0, 3]
+        lineHeight: 1.5
+      },
+      pharmacistName: {
+        fontSize: 10,
+        bold: true,
+        color: '#2C3E50'
       }
     };
   }
@@ -1285,23 +1640,39 @@ export class ReportGenerationPage implements OnInit {
       patientReference: {
         fontSize: 10,
         bold: true,
-        color: '#454B60',
-        margin: [0, 0, 0, 0],
-        background: '#F8F9FB',
-        padding: [8, 4, 8, 4]
+        color: '#454B60'
       },
       bodyText: {
         fontSize: 10,
         color: '#2C3E50',
         lineHeight: 1.6
       },
-      observationsHeading: {
+      sectionHeading: {
+        fontSize: 12,
+        bold: true,
+        color: '#2C3E50',
+        margin: [0, 0, 0, 0]
+      },
+      cardTitle: {
         fontSize: 11,
         bold: true,
-        color: '#454B60',
-        margin: [0, 0, 0, 0],
-        decoration: 'underline',
-        decorationColor: '#E8EBF0'
+        color: '#2C3E50'
+      },
+      itemLabel: {
+        fontSize: 8,
+        bold: true,
+        color: '#5F6476',
+        characterSpacing: 0.5
+      },
+      itemText: {
+        fontSize: 10,
+        color: '#2C3E50',
+        lineHeight: 1.5
+      },
+      pharmacistName: {
+        fontSize: 10,
+        bold: true,
+        color: '#2C3E50'
       },
       listItem: {
         fontSize: 10,
@@ -1331,38 +1702,49 @@ export class ReportGenerationPage implements OnInit {
         color: '#7F8C9F',
         margin: [0, 0, 0, 0]
       },
-      patientReference: {
+      internalNotice: {
         fontSize: 10,
-        bold: true,
-        color: '#454B60',
-        margin: [0, 0, 0, 0],
-        background: '#F8F9FB',
-        padding: [8, 4, 8, 4]
+        color: '#6B5B95',
+        italics: true,
+        lineHeight: 1.5
       },
       bodyText: {
         fontSize: 10,
         color: '#2C3E50',
         lineHeight: 1.6
       },
-      simpleHeading: {
+      sectionHeading: {
+        fontSize: 12,
+        bold: true,
+        color: '#2C3E50',
+        margin: [0, 0, 0, 0]
+      },
+      cardTitle: {
         fontSize: 11,
         bold: true,
-        color: '#454B60',
-        margin: [0, 0, 0, 0],
-        decoration: 'underline',
-        decorationColor: '#E8EBF0'
+        color: '#2C3E50'
+      },
+      itemLabel: {
+        fontSize: 8,
+        bold: true,
+        color: '#5F6476',
+        characterSpacing: 0.5
+      },
+      itemText: {
+        fontSize: 10,
+        color: '#2C3E50',
+        lineHeight: 1.5
+      },
+      pharmacistName: {
+        fontSize: 10,
+        bold: true,
+        color: '#2C3E50'
       },
       listItem: {
         fontSize: 10,
         color: '#2C3E50',
         lineHeight: 1.6,
         margin: [0, 3, 0, 3]
-      },
-      indentedNote: {
-        fontSize: 9,
-        color: '#454B60',
-        lineHeight: 1.5,
-        margin: [0, 2, 0, 0]
       },
       tableHeader: {
         fontSize: 9,

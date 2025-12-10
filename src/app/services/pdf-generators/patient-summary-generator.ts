@@ -1,8 +1,13 @@
 import { TranslocoService } from '@jsverse/transloco';
-import { TDocumentDefinitions, Content } from 'pdfmake/interfaces';
+import { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
+import { BasePdfGenerator, MedicationWithNotes } from './base-pdf-generator';
 import { ReviewNote } from '../review-notes.service';
-import { Patient, MedicationReview, Medication } from '../../models/api.models';
-import { BasePdfGenerator } from './base-pdf-generator';
+import { Patient, MedicationReview, Medication, QuestionAnswer } from '../../models/api.models';
+
+interface ActionItem {
+  label: string;
+  value: string;
+}
 
 export class PatientSummaryGenerator extends BasePdfGenerator {
   constructor(transloco: TranslocoService) {
@@ -14,183 +19,76 @@ export class PatientSummaryGenerator extends BasePdfGenerator {
     review: MedicationReview | null,
     medications: Medication[],
     notes: ReviewNote[],
-    questionAnswers: any[]
+    questionAnswers: QuestionAnswer[]
   ): TDocumentDefinitions {
     const content: Content[] = [];
 
-    // Simple letter-style header
-    content.push(this.createLetterHeader());
-    content.push(this.createSpacer(20));
+    // 1. Header
+    content.push(this.createDocumentHeader(
+      this.getTitle(),
+      this.getSubtitle()
+    ));
 
-    // Date
-    content.push(this.createDate());
-    content.push(this.createSpacer(20));
+    // 2. Introduction
+    content.push(this.createIntroduction(
+      this.getSalutation(),
+      this.getIntroText()
+    ));
 
-    // Patient Info - compact
-    content.push(this.createCompactPatientInfo(patient, review));
-    content.push(this.createSpacer(15));
+    // Get action items from questionnaire (Part 1 actions)
+    const actionItems = this.getPatientActionItems(questionAnswers);
 
-    // Opening salutation
-    content.push(this.createSalutation());
-    content.push(this.createSpacer(10));
-
-    // Introduction paragraph
-    content.push(this.createIntroductionParagraph());
-    content.push(this.createSpacer(12));
-
-    // Get Part 1 action items and notes to discuss with patient
-    const part1Actions = this.getPatientPart1Actions(questionAnswers);
+    // Filter notes for patient (only notes marked to discuss with patient)
     const patientNotes = notes.filter(note => note.discussWithPatient && note.text);
-    
-    const hasAnyContent = part1Actions.length > 0 || patientNotes.length > 0;
-    
-    if (hasAnyContent) {
-      // Recommendations heading
-      content.push(this.createRecommendationsHeading());
-      content.push(this.createSpacer(8));
-      
-      // Collect all recommendations into a simple list
-      const allRecommendations: Array<{ text: string, context?: string }> = [];
-      
-      // Add Part 1 actions
-      part1Actions.forEach(action => {
-        allRecommendations.push({
-          text: action.value,
-          context: action.label
+
+    // 3. Medication sections with notes
+    const { medicationsWithNotes, generalNotes } = this.groupNotesByMedication(patientNotes, medications);
+
+    const hasContent = medicationsWithNotes.length > 0 || generalNotes.length > 0 || actionItems.length > 0;
+
+    if (hasContent) {
+      // Section header
+      content.push(this.createSectionHeader(this.getRecommendationsTitle()));
+
+      // First, add questionnaire action items as general recommendations
+      if (actionItems.length > 0) {
+        content.push(this.createActionItemsCard(actionItems));
+      }
+
+      // Create a card for each medication with notes (without dosage)
+      medicationsWithNotes.forEach(medWithNotes => {
+        content.push(this.createPatientMedicationCard(medWithNotes, questionAnswers));
+      });
+
+      // General notes (not linked to specific medication)
+      if (generalNotes.length > 0) {
+        generalNotes.forEach(note => {
+          content.push(this.createPatientNoteCard(note, questionAnswers));
         });
-      });
-      
-      // Group review notes
-      const groupedNotes = this.groupNotesByMedication(patientNotes, medications, questionAnswers);
-      
-      // Add general notes
-      groupedNotes.general.forEach(note => {
-        const commentKey = `note_comment_${note.rowKey}`;
-        const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
-        const text = commentAnswer?.value || note.text || '';
-        if (text) {
-          allRecommendations.push({ text });
-        }
-      });
-      
-      // Add medication-specific notes
-      groupedNotes.byMedication.forEach(group => {
-        group.notes.forEach(note => {
-          const commentKey = `note_comment_${note.rowKey}`;
-          const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
-          const text = commentAnswer?.value || note.text || '';
-          if (text) {
-            allRecommendations.push({
-              text,
-              context: group.medicationName
-            });
-          }
-        });
-      });
-      
-      // Render recommendations as a simple bullet list
-      content.push(this.createRecommendationsList(allRecommendations));
-      content.push(this.createSpacer(12));
+      }
     } else {
-      content.push(this.createNoRecommendationsParagraph());
-      content.push(this.createSpacer(12));
+      // No notes to display
+      content.push(this.createEmptyState(this.getNoNotesMessage()));
     }
 
-    // Closing paragraph
-    content.push(this.createClosingParagraph());
-    content.push(this.createSpacer(20));
-
-    // Sign-off
-    content.push(this.createSignOff());
+    // 4. Closing
+    content.push(this.createClosing(
+      this.getClosingText(),
+      this.getSignOff()
+    ));
 
     return {
       content,
-      styles: this.getStyles(),
-      pageMargins: [60, 60, 60, 60],
-      defaultStyle: {
-        font: 'Roboto',
-        fontSize: 10,
-        lineHeight: 1.4
-      }
+      ...this.getDefaultDocumentSettings()
     };
   }
 
-  private createLetterHeader(): Content {
-    return {
-      text: this.transloco.translate('pdf.patient_summary') || 'Patient Summary',
-      style: 'letterHeader'
-    };
-  }
-
-  private createDate(): Content {
-    const lang = this.transloco.getActiveLang();
-    const date = new Date().toLocaleDateString(lang === 'nl' ? 'nl-BE' : lang === 'fr' ? 'fr-BE' : 'en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+  /**
+   * Gets action items from questionnaire answers (Part 1 actions for patient)
+   */
+  private getPatientActionItems(questionAnswers: QuestionAnswer[]): ActionItem[] {
+    const actions: ActionItem[] = [];
     
-    return {
-      text: date,
-      style: 'dateText'
-    };
-  }
-
-  private createCompactPatientInfo(patient: Patient | null, review: MedicationReview | null): Content {
-    // Return empty content - patient reference removed
-    return {
-      text: '',
-      margin: [0, 0, 0, 0]
-    };
-  }
-
-  private createSalutation(): Content {
-    const lang = this.transloco.getActiveLang();
-    let salutation = 'Beste patiënt,';
-    if (lang === 'fr') salutation = 'Cher patient,';
-    else if (lang === 'en') salutation = 'Dear Patient,';
-
-    return {
-      text: salutation,
-      style: 'bodyText'
-    };
-  }
-
-  private createIntroductionParagraph(): Content {
-    const lang = this.transloco.getActiveLang();
-    let text = '';
-    
-    if (lang === 'nl') {
-      text = 'Hierbij ontvangt u een samenvatting van ons gesprek over uw medicatie. Dit document bevat belangrijke informatie en aanbevelingen om u te helpen het beste uit uw medicatie te halen.';
-    } else if (lang === 'fr') {
-      text = 'Voici un résumé de notre conversation sur vos médicaments. Ce document contient des informations importantes et des recommandations pour vous aider à tirer le meilleur parti de vos médicaments.';
-    } else {
-      text = 'This is a summary of our conversation about your medication. This document contains important information and recommendations to help you get the most out of your treatment.';
-    }
-
-    return {
-      text,
-      style: 'bodyText',
-      alignment: 'justify'
-    };
-  }
-
-  private createRecommendationsHeading(): Content {
-    const lang = this.transloco.getActiveLang();
-    let heading = 'Aanbevelingen:';
-    if (lang === 'fr') heading = 'Recommandations :';
-    else if (lang === 'en') heading = 'Recommendations:';
-
-    return {
-      text: heading,
-      style: 'recommendationsHeading'
-    };
-  }
-
-  private getPatientPart1Actions(questionAnswers: any[]): Array<{ label: string, value: string }> {
-    const actions: Array<{ label: string, value: string }> = [];
-    
-    // Define all Part 1 action fields with their user-friendly labels
     const actionFields = [
       { key: 'p1_concerns_tooManyAction', label: this.transloco.translate('pdf.patient_concern_tooMany') },
       { key: 'p1_concerns_financialBurdenAction', label: this.transloco.translate('pdf.patient_concern_financialBurden') },
@@ -211,10 +109,10 @@ export class PatientSummaryGenerator extends BasePdfGenerator {
     
     actionFields.forEach(field => {
       const answer = questionAnswers.find(qa => qa.questionName === field.key);
-      if (answer && answer.value && answer.value.trim() && answer.shareWithPatient) {
+      if (answer?.value && answer.value.trim()) {
         actions.push({
-          label: field.label || field.key,
-          value: answer.value
+          label: field.label,
+          value: answer.value.trim()
         });
       }
     });
@@ -222,163 +120,314 @@ export class PatientSummaryGenerator extends BasePdfGenerator {
     return actions;
   }
 
-  private createRecommendationsList(recommendations: Array<{ text: string, context?: string }>): Content {
-    // Group recommendations by context
-    const grouped = new Map<string, string[]>();
-    const noContext: string[] = [];
+  /**
+   * Creates a card for action items from questionnaire
+   */
+  private createActionItemsCard(actionItems: ActionItem[]): Content {
+    const stack: any[] = [];
 
-    recommendations.forEach(rec => {
-      if (rec.context) {
-        if (!grouped.has(rec.context)) {
-          grouped.set(rec.context, []);
+    actionItems.forEach((item, index) => {
+      if (index > 0) {
+        // Add separator between items
+        stack.push({
+          canvas: [
+            {
+              type: 'line',
+              x1: 0, y1: 0,
+              x2: 463, y2: 0,
+              lineWidth: 1,
+              lineColor: this.colors.border,
+              dash: { length: 3, space: 3 }
+            }
+          ],
+          margin: [0, 8, 0, 12] as [number, number, number, number]
+        });
+      }
+
+      // Label (the question context)
+      stack.push({
+        text: item.label,
+        style: 'actionLabel',
+        margin: [0, 0, 0, 6] as [number, number, number, number]
+      });
+
+      // Recommendation box
+      stack.push(this.createCommentBox(
+        this.getPharmacistActionLabel(),
+        item.value,
+        this.colors.accent
+      ));
+    });
+
+    return {
+      table: {
+        widths: ['*'],
+        body: [[
+          {
+            stack,
+            margin: [16, 16, 16, 16] as [number, number, number, number]
+          }
+        ]]
+      },
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => this.colors.border,
+        vLineColor: () => this.colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 16] as [number, number, number, number]
+    };
+  }
+
+  /**
+   * Creates a medication card for patient (no dosage, simplified)
+   */
+  private createPatientMedicationCard(
+    medicationWithNotes: MedicationWithNotes,
+    questionAnswers: QuestionAnswer[]
+  ): Content {
+    const { medication, notes } = medicationWithNotes;
+    const stack: any[] = [];
+
+    // Medication header with accent bar (no dosage)
+    stack.push({
+      columns: [
+        {
+          canvas: [
+            {
+              type: 'rect',
+              x: 0, y: 0,
+              w: 4, h: 24,
+              color: this.colors.primary
+            }
+          ],
+          width: 8
+        },
+        {
+          stack: [
+            {
+              text: medication.name || this.transloco.translate('pdf.no_medication'),
+              style: 'medicationName'
+            },
+            medication.indication ? {
+              text: medication.indication,
+              style: 'medicationIndication',
+              margin: [0, 2, 0, 0] as [number, number, number, number]
+            } : { text: '' }
+          ],
+          width: '*',
+          margin: [8, 0, 0, 0] as [number, number, number, number]
         }
-        grouped.get(rec.context)!.push(rec.text);
-      } else {
-        noContext.push(rec.text);
-      }
+      ],
+      margin: [0, 0, 0, 12] as [number, number, number, number]
     });
 
-    const items: any[] = [];
-
-    // Add items without context
-    noContext.forEach(text => {
-      items.push({ text, style: 'listItem' });
-    });
-
-    // Add grouped items with nested ul
-    grouped.forEach((texts, context) => {
-      if (texts.length === 1) {
-        // Single item: inline format
-        items.push({
-          text: `${context}: ${texts[0]}`,
-          style: 'listItem'
-        });
-      } else {
-        // Multiple items: nested list
-        items.push({
-          text: context,
-          style: 'listItem',
-          ul: texts.map(t => ({ text: t, style: 'listItem' }))
-        });
-      }
+    // Notes for this medication (no category badge, includes pharmacist action)
+    notes.forEach((note, index) => {
+      stack.push(this.createPatientNoteItem(note, questionAnswers, index > 0));
     });
 
     return {
-      ul: items,
-      margin: [20, 0, 0, 0]
+      table: {
+        widths: ['*'],
+        body: [[
+          {
+            stack,
+            margin: [16, 16, 16, 16] as [number, number, number, number]
+          }
+        ]]
+      },
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => this.colors.border,
+        vLineColor: () => this.colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 16] as [number, number, number, number]
     };
   }
 
-  private createNoRecommendationsParagraph(): Content {
-    const lang = this.transloco.getActiveLang();
-    let text = '';
-    
-    if (lang === 'nl') {
-      text = 'Er zijn geen specifieke aanbevelingen op dit moment.';
-    } else if (lang === 'fr') {
-      text = 'Il n\'y a pas de recommandations spécifiques pour le moment.';
-    } else {
-      text = 'There are no specific recommendations at this time.';
+  /**
+   * Creates a note item for patient (no category badge, shows pharmacist action)
+   */
+  private createPatientNoteItem(
+    note: ReviewNote,
+    questionAnswers: QuestionAnswer[],
+    addTopBorder: boolean = false
+  ): Content {
+    const stack: any[] = [];
+
+    // Add separator if not first note
+    if (addTopBorder) {
+      stack.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 463, y2: 0,
+            lineWidth: 1,
+            lineColor: this.colors.border,
+            dash: { length: 3, space: 3 }
+          }
+        ],
+        margin: [0, 8, 0, 12] as [number, number, number, number]
+      });
+    }
+
+    // Note text (the observation/finding) - skip category badge for patient
+    if (note.text) {
+      stack.push({
+        text: note.text,
+        style: 'noteText',
+        margin: [0, 0, 0, 10] as [number, number, number, number]
+      });
+    }
+
+    // Look for pharmacist action/comment in question answers for this note
+    const commentKey = `note_comment_${note.rowKey}`;
+    const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
+    if (commentAnswer?.value && commentAnswer.value.trim()) {
+      stack.push(this.createCommentBox(
+        this.getPharmacistActionLabel(),
+        commentAnswer.value.trim(),
+        this.colors.accent
+      ));
+    }
+
+    return { stack };
+  }
+
+  /**
+   * Creates a standalone note card for patient (general notes)
+   */
+  private createPatientNoteCard(
+    note: ReviewNote,
+    questionAnswers: QuestionAnswer[]
+  ): Content {
+    const stack: any[] = [];
+
+    // Note text (no category badge for patient)
+    if (note.text) {
+      stack.push({
+        text: note.text,
+        style: 'noteText',
+        margin: [0, 0, 0, 10] as [number, number, number, number]
+      });
+    }
+
+    // Look for pharmacist action/comment
+    const commentKey = `note_comment_${note.rowKey}`;
+    const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
+    if (commentAnswer?.value && commentAnswer.value.trim()) {
+      stack.push(this.createCommentBox(
+        this.getPharmacistActionLabel(),
+        commentAnswer.value.trim(),
+        this.colors.accent
+      ));
     }
 
     return {
-      text,
-      style: 'bodyText',
-      alignment: 'justify'
+      table: {
+        widths: ['*'],
+        body: [[
+          {
+            stack,
+            margin: [16, 16, 16, 16] as [number, number, number, number]
+          }
+        ]]
+      },
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => this.colors.border,
+        vLineColor: () => this.colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 12] as [number, number, number, number]
     };
   }
 
-  private groupNotesByMedication(notes: ReviewNote[], medications: Medication[], questionAnswers: any[]): {
-    general: ReviewNote[],
-    byMedication: Array<{ medicationName: string, notes: ReviewNote[] }>
-  } {
-    const general: ReviewNote[] = [];
-    const byMedMap = new Map<string, ReviewNote[]>();
-
-    notes.forEach(note => {
-      if (!note.linkedCnk || !note.medicationName) {
-        general.push(note);
-      } else {
-        const existing = byMedMap.get(note.medicationName) || [];
-        existing.push(note);
-        byMedMap.set(note.medicationName, existing);
-      }
-    });
-
-    const byMedication = Array.from(byMedMap.entries()).map(([medicationName, notes]) => ({
-      medicationName,
-      notes
-    }));
-
-    return { general, byMedication };
+  // Override to customize action label for patient
+  protected override getPharmacistActionLabel(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Aanbeveling';
+    if (lang === 'fr') return 'Recommandation';
+    return 'Recommendation';
   }
 
-  private createClosingParagraph(): Content {
-    const lang = this.transloco.getActiveLang();
-    let text = '';
-    
+  // Localized text getters
+  private getTitle(): string {
+    return this.transloco.translate('pdf.patient_summary');
+  }
+
+  private getSubtitle(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Samenvatting medicatienazicht';
+    if (lang === 'fr') return 'Résumé de l\'examen de médication';
+    return 'Medication Review Summary';
+  }
+
+  private getSalutation(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Beste patiënt,';
+    if (lang === 'fr') return 'Cher patient,';
+    return 'Dear Patient,';
+  }
+
+  private getIntroText(): string {
+    const lang = this.getLang();
     if (lang === 'nl') {
-      text = 'Heeft u vragen over deze informatie? Neem gerust contact met ons op. Wij staan altijd klaar om u te helpen.';
-    } else if (lang === 'fr') {
-      text = 'Avez-vous des questions sur ces informations ? N\'hésitez pas à nous contacter. Nous sommes toujours là pour vous aider.';
-    } else {
-      text = 'Do you have any questions about this information? Please feel free to contact us. We are always here to help.';
+      return 'Naar aanleiding van uw recente medicatienazicht in onze apotheek, vindt u hieronder een overzicht van de besproken punten en aanbevelingen met betrekking tot uw medicatie.';
     }
-
-    return {
-      text,
-      style: 'bodyText',
-      alignment: 'justify'
-    };
+    if (lang === 'fr') {
+      return 'Suite à votre récent examen de médication dans notre pharmacie, vous trouverez ci-dessous un aperçu des points discutés et des recommandations concernant vos médicaments.';
+    }
+    return 'Following your recent medication review at our pharmacy, please find below an overview of the discussed points and recommendations regarding your medication.';
   }
 
-  private createSignOff(): Content {
-    const lang = this.transloco.getActiveLang();
-    let signOff = 'Met vriendelijke groet,';
-    if (lang === 'fr') signOff = 'Cordialement,';
-    else if (lang === 'en') signOff = 'Kind regards,';
-
-    return {
-      text: signOff,
-      style: 'bodyText'
-    };
+  private getClosingText(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') {
+      return 'Indien u vragen heeft over deze aanbevelingen of uw medicatie in het algemeen, aarzel dan niet om contact met ons op te nemen. Wij staan altijd klaar om u te helpen.';
+    }
+    if (lang === 'fr') {
+      return 'Si vous avez des questions concernant ces recommandations ou vos médicaments en général, n\'hésitez pas à nous contacter. Nous sommes toujours disponibles pour vous aider.';
+    }
+    return 'If you have any questions about these recommendations or your medication in general, please do not hesitate to contact us. We are always available to help you.';
   }
 
-  protected override getStyles(): any {
+  private getSignOff(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Met vriendelijke groet,\n\nUw apotheker';
+    if (lang === 'fr') return 'Cordialement,\n\nVotre pharmacien';
+    return 'Kind regards,\n\nYour pharmacist';
+  }
+
+  private getRecommendationsTitle(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Aanbevelingen';
+    if (lang === 'fr') return 'Recommandations';
+    return 'Recommendations';
+  }
+
+  protected override getStyles(): Record<string, any> {
     return {
-      letterHeader: {
-        fontSize: 14,
-        bold: true,
-        color: '#333333',
-        margin: [0, 0, 0, 0]
-      },
-      dateText: {
+      ...super.getStyles(),
+      actionLabel: {
         fontSize: 10,
-        color: '#666666',
-        margin: [0, 0, 0, 0]
-      },
-      patientReference: {
-        fontSize: 10,
-        bold: true,
-        color: '#333333',
-        margin: [0, 0, 0, 0]
-      },
-      bodyText: {
-        fontSize: 10,
-        color: '#333333',
-        lineHeight: 1.5
-      },
-      recommendationsHeading: {
-        fontSize: 10,
-        bold: true,
-        color: '#333333',
-        margin: [0, 0, 0, 0]
-      },
-      listItem: {
-        fontSize: 10,
-        color: '#333333',
-        lineHeight: 1.5,
-        margin: [0, 2, 0, 2]
+        color: this.colors.textMedium,
+        italics: true
       }
     };
   }

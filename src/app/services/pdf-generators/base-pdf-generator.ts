@@ -1,439 +1,787 @@
 import { TranslocoService } from '@jsverse/transloco';
-import { Content } from 'pdfmake/interfaces';
+import { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { ReviewNote } from '../review-notes.service';
-import { Patient, MedicationReview, Medication, LabValue, QuestionAnswer } from '../../models/api.models';
+import { Patient, MedicationReview, Medication, LabValue, QuestionAnswer, Contraindication } from '../../models/api.models';
+
+export interface MedicationWithNotes {
+  medication: Medication;
+  notes: ReviewNote[];
+}
 
 export abstract class BasePdfGenerator {
-  // Clinical Modern color palette
-  protected readonly brandPrimary = '#0F4C81'; // Deep Navy Blue
-  protected readonly brandSecondary = '#1e6b8f'; // Clinical Teal
-  protected readonly brandAccent = '#10b981'; // Medical Green
-  protected readonly textPrimary = '#1f2937'; // Dark Slate
-  protected readonly textSecondary = '#6b7280'; // Medium Gray
-  protected readonly borderColor = '#e5e7eb'; // Light Border
-  protected readonly backgroundLight = '#f9fafb'; // Subtle Background
+  // Modern, professional color palette
+  protected readonly colors = {
+    primary: '#1e3a5f',        // Deep navy blue
+    secondary: '#2563eb',      // Bright blue
+    accent: '#059669',         // Emerald green
+    warning: '#d97706',        // Amber
+    textDark: '#1f2937',       // Near black
+    textMedium: '#4b5563',     // Medium gray
+    textLight: '#9ca3af',      // Light gray
+    border: '#e5e7eb',         // Light border
+    backgroundLight: '#f9fafb', // Subtle background
+    backgroundCard: '#f3f4f6', // Card background
+    white: '#ffffff'
+  };
 
   constructor(protected transloco: TranslocoService) {}
 
-  protected createHeader(title: string): Content {
+  protected getLang(): string {
+    return this.transloco.getActiveLang();
+  }
+
+  protected formatDate(): string {
+    const lang = this.getLang();
+    const locale = lang === 'nl' ? 'nl-BE' : lang === 'fr' ? 'fr-BE' : 'en-GB';
+    return new Date().toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  /**
+   * Groups notes by their linked medication
+   */
+  protected groupNotesByMedication(
+    notes: ReviewNote[],
+    medications: Medication[]
+  ): { medicationsWithNotes: MedicationWithNotes[], generalNotes: ReviewNote[] } {
+    const generalNotes: ReviewNote[] = [];
+    const medicationNotesMap = new Map<string, ReviewNote[]>();
+
+    // Initialize map with all medications
+    medications.forEach(med => {
+      if (med.cnk) {
+        medicationNotesMap.set(String(med.cnk), []);
+      }
+    });
+
+    // Sort notes into their respective medications
+    notes.forEach(note => {
+      if (note.linkedCnk && medicationNotesMap.has(note.linkedCnk)) {
+        medicationNotesMap.get(note.linkedCnk)!.push(note);
+      } else if (note.linkedCnk) {
+        // Note is linked to a CNK that might match a medication
+        const matchingMed = medications.find(m => String(m.cnk) === note.linkedCnk);
+        if (matchingMed) {
+          if (!medicationNotesMap.has(note.linkedCnk)) {
+            medicationNotesMap.set(note.linkedCnk, []);
+          }
+          medicationNotesMap.get(note.linkedCnk)!.push(note);
+        } else {
+          generalNotes.push(note);
+        }
+      } else {
+        generalNotes.push(note);
+      }
+    });
+
+    // Build the result array
+    const medicationsWithNotes: MedicationWithNotes[] = medications
+      .filter(med => {
+        const cnk = String(med.cnk);
+        const medNotes = medicationNotesMap.get(cnk) || [];
+        return medNotes.length > 0; // Only include medications that have notes
+      })
+      .map(med => ({
+        medication: med,
+        notes: medicationNotesMap.get(String(med.cnk)) || []
+      }));
+
+    return { medicationsWithNotes, generalNotes };
+  }
+
+  /**
+   * Creates the document header with title and date
+   */
+  protected createDocumentHeader(title: string, subtitle?: string): Content {
     return {
       stack: [
-        {
-          canvas: [
-            {
-              type: 'rect',
-              x: 0, y: 0,
-              w: 515, h: 60,
-              color: this.brandPrimary
-            }
-          ]
-        },
         {
           columns: [
             {
-              text: title.toUpperCase(),
-              style: 'header',
+              stack: [
+                {
+                  text: title,
+                  style: 'documentTitle'
+                },
+                subtitle ? {
+                  text: subtitle,
+                  style: 'documentSubtitle',
+                  margin: [0, 4, 0, 0] as [number, number, number, number]
+                } : { text: '' }
+              ],
               width: '*'
             },
             {
-              text: new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: 'long', year: 'numeric' }),
-              style: 'headerDate',
-              width: 'auto'
+              text: this.formatDate(),
+              style: 'dateText',
+              width: 'auto',
+              alignment: 'right' as const
             }
           ],
-          absolutePosition: { x: 70, y: 70 }
+          margin: [0, 0, 0, 12] as [number, number, number, number]
         },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0, y1: 0,
+              x2: 495, y2: 0,
+              lineWidth: 3,
+              lineColor: this.colors.primary
+            }
+          ]
+        },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0, y1: 0,
+              x2: 120, y2: 0,
+              lineWidth: 3,
+              lineColor: this.colors.accent
+            }
+          ],
+          margin: [0, 2, 0, 0] as [number, number, number, number]
+        }
+      ],
+      margin: [0, 0, 0, 30] as [number, number, number, number]
+    };
+  }
+
+  /**
+   * Creates the introduction section
+   */
+  protected createIntroduction(salutation: string, introText: string): Content {
+    return {
+      stack: [
+        {
+          text: salutation,
+          style: 'salutation',
+          margin: [0, 0, 0, 12] as [number, number, number, number]
+        },
+        {
+          text: introText,
+          style: 'bodyText',
+          alignment: 'justify' as const
+        }
+      ],
+      margin: [0, 0, 0, 25] as [number, number, number, number]
+    };
+  }
+
+  /**
+   * Creates a section header
+   */
+  protected createSectionHeader(title: string): Content {
+    return {
+      stack: [
+        {
+          text: title,
+          style: 'sectionTitle'
+        },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0, y1: 0,
+              x2: 495, y2: 0,
+              lineWidth: 1,
+              lineColor: this.colors.border
+            }
+          ],
+          margin: [0, 6, 0, 12] as [number, number, number, number]
+        }
+      ],
+      margin: [0, 0, 0, 0] as [number, number, number, number]
+    };
+  }
+
+  /**
+   * Creates a medication card with its notes
+   */
+  protected createMedicationCard(
+    medicationWithNotes: MedicationWithNotes,
+    questionAnswers: QuestionAnswer[],
+    showPatientComment: boolean,
+    showPharmacistAction: boolean
+  ): Content {
+    const { medication, notes } = medicationWithNotes;
+    const stack: any[] = [];
+
+    // Medication header with accent bar
+    stack.push({
+      columns: [
         {
           canvas: [
             {
               type: 'rect',
               x: 0, y: 0,
-              w: 515, h: 4,
-              color: this.brandAccent
+              w: 4, h: 24,
+              color: this.colors.primary
             }
           ],
-          margin: [0, 8, 0, 0]
+          width: 8
+        },
+        {
+          stack: [
+            {
+              text: medication.name || this.transloco.translate('pdf.no_medication'),
+              style: 'medicationName'
+            },
+            medication.indication ? {
+              text: medication.indication,
+              style: 'medicationIndication',
+              margin: [0, 2, 0, 0] as [number, number, number, number]
+            } : { text: '' }
+          ],
+          width: '*',
+          margin: [8, 0, 0, 0] as [number, number, number, number]
         }
       ],
-      margin: [0, 0, 0, 25]
-    };
-  }
-
-  protected createPatientInfoSection(patient: Patient | null, review: MedicationReview | null): Content {
-    // For MVP: Keep patient info anonymous - don't show name, DOB, or sex
-    // Only show a generic "Patient" label
-    const items: any[] = [];
-
-    // Use generic "Patient" label instead of actual name for MVP anonymity
-    items.push({ 
-      stack: [
-        { text: this.transloco.translate('patient.name').toUpperCase(), style: 'infoLabel' },
-        { text: 'Patiënt', style: 'infoValue' }
-      ],
-      width: '*'
+      margin: [0, 0, 0, 12] as [number, number, number, number]
     });
 
-    // Don't include date of birth for MVP anonymity
-    // Don't include sex for MVP anonymity
-
-    if (items.length === 0) {
-      return { text: '' };
-    }
-
-    return {
-      table: {
-        widths: ['*'],
-        body: [
-          [
-            {
-              stack: [
-                {
-                  text: 'PATIËNTGEGEVENS',
-                  style: 'cardTitle',
-                  margin: [0, 0, 0, 10]
-                },
-                {
-                  columns: items,
-                  margin: [0, 0, 0, 0]
-                }
-              ],
-              style: 'patientInfo'
-            }
-          ]
-        ]
-      },
-      layout: {
-        hLineWidth: () => 2,
-        vLineWidth: () => 2,
-        hLineColor: () => '#9ca3af',
-        vLineColor: () => '#9ca3af',
-        paddingLeft: () => 14,
-        paddingRight: () => 14,
-        paddingTop: () => 12,
-        paddingBottom: () => 12
-      },
-      margin: [0, 0, 0, 0]
-    };
-  }
-
-  protected createSectionTitle(title: string): Content {
-    return {
-      text: title.toUpperCase(),
-      style: 'sectionTitle',
-      margin: [0, 12, 0, 6]
-    };
-  }
-
-  protected createNoteCard(note: ReviewNote, medications: Medication[]): Content {
-    const stack: any[] = [];
-    
-    // Add category if available
-    if (note.category) {
+    // Posology line
+    const posology = this.formatPosology(medication);
+    if (posology) {
       stack.push({
-        text: note.category.toUpperCase(),
-        style: 'noteCategory',
-        margin: [0, 0, 0, 4]
+        text: `${this.getPosologyLabel()}: ${posology}`,
+        style: 'posologyText',
+        margin: [12, 0, 0, 12] as [number, number, number, number]
       });
     }
-    
-    // Add medication name if linked to a medication
-    if (note.linkedCnk && note.medicationName) {
-      stack.push({
-        text: `${this.transloco.translate('pdf.medication')}: ${note.medicationName}`,
-        style: 'noteMedication',
-        margin: [0, 0, 0, 4]
-      });
-    }
-    
-    // Add the actual note content
-    stack.push({
-      text: note.text || '',
-      style: 'noteContent',
-      margin: [0, 4, 0, 0]
+
+    // Notes for this medication
+    notes.forEach((note, index) => {
+      stack.push(this.createNoteItem(note, questionAnswers, showPatientComment, showPharmacistAction, index > 0));
     });
-    
+
     return {
       table: {
         widths: ['*'],
         body: [[
           {
             stack,
-            style: 'noteCard'
+            margin: [16, 16, 16, 16] as [number, number, number, number]
           }
         ]]
       },
       layout: {
-        hLineWidth: () => 2,
-        vLineWidth: () => 2,
-        hLineColor: () => '#d1d5db',
-        vLineColor: () => '#d1d5db',
-        paddingLeft: () => 12,
-        paddingRight: () => 12,
-        paddingTop: () => 10,
-        paddingBottom: () => 10
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => this.colors.border,
+        vLineColor: () => this.colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
       },
-      margin: [0, 0, 0, 8]
+      margin: [0, 0, 0, 16] as [number, number, number, number]
     };
   }
 
-  protected createMedicationScheduleTable(medications: Medication[]): Content {
-    const tableBody: any[] = [
-      [
-        { text: this.transloco.translate('pdf.medication').toUpperCase(), style: 'tableHeader' },
-        { text: this.transloco.translate('medication.breakfast').toUpperCase(), style: 'tableHeader', alignment: 'center' },
-        { text: this.transloco.translate('medication.lunch').toUpperCase(), style: 'tableHeader', alignment: 'center' },
-        { text: this.transloco.translate('medication.dinner').toUpperCase(), style: 'tableHeader', alignment: 'center' },
-        { text: this.transloco.translate('medication.bedtime').toUpperCase(), style: 'tableHeader', alignment: 'center' }
-      ]
-    ];
+  /**
+   * Creates a single note item with optional patient comment and pharmacist action
+   */
+  protected createNoteItem(
+    note: ReviewNote,
+    questionAnswers: QuestionAnswer[],
+    showPatientComment: boolean,
+    showPharmacistAction: boolean,
+    addTopBorder: boolean = false
+  ): Content {
+    const stack: any[] = [];
 
-    medications.forEach((med, index) => {
-      const rowColor = index % 2 === 0 ? '#ffffff' : '#f9f9f9';
-      
-      // Check for special frequency (non-daily)
-      if (med.specialFrequency && med.specialDescription) {
-        const frequencyMap: Record<number, string> = {
-          1: 'daily',
-          2: 'twice weekly',
-          3: 'three times weekly',
-          4: 'weekly',
-          5: 'every 2 weeks',
-          6: 'every 3 weeks',
-          7: 'every 4 weeks',
-          8: 'monthly',
-          9: 'every 2 months',
-          10: 'quarterly',
-          11: 'annually'
-        };
-        const freqText = frequencyMap[med.specialFrequency] || `code ${med.specialFrequency}`;
-        tableBody.push([
-          { text: med.name || this.transloco.translate('pdf.unknown'), style: 'tableCell', fillColor: rowColor },
-          { text: `${med.specialDescription}`, style: 'tableCell', alignment: 'center', fillColor: rowColor },
-          { text: `(${freqText})`, style: 'tableCell', alignment: 'center', colSpan: 3, fillColor: rowColor },
-          {}, {} // Empty cells for colspan
-        ]);
-      } else if (med.asNeeded) {
-        // As needed medication
-        tableBody.push([
-          { text: med.name || this.transloco.translate('pdf.unknown'), style: 'tableCell', fillColor: rowColor },
-          { text: this.transloco.translate('pdf.as_needed'), style: 'tableCell', alignment: 'center', colSpan: 4, fillColor: rowColor },
-          {}, {}, {} // Empty cells for colspan
-        ]);
-      } else {
-        // Standard daily schedule
-        const morning = [med.unitsBeforeBreakfast, med.unitsDuringBreakfast]
-          .filter(u => u && u > 0)
-          .map(u => String(u))
-          .join('+') || '-';
-        
-        const noon = [med.unitsBeforeLunch, med.unitsDuringLunch]
-          .filter(u => u && u > 0)
-          .map(u => String(u))
-          .join('+') || '-';
-        
-        const evening = [med.unitsBeforeDinner, med.unitsDuringDinner]
-          .filter(u => u && u > 0)
-          .map(u => String(u))
-          .join('+') || '-';
-        
-        const bedtime = med.unitsAtBedtime && med.unitsAtBedtime > 0 
-          ? String(med.unitsAtBedtime) 
-          : '-';
+    // Add separator if not first note
+    if (addTopBorder) {
+      stack.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 463, y2: 0,
+            lineWidth: 1,
+            lineColor: this.colors.border,
+            dash: { length: 3, space: 3 }
+          }
+        ],
+        margin: [0, 8, 0, 12] as [number, number, number, number]
+      });
+    }
 
-        tableBody.push([
-          { text: med.name || this.transloco.translate('pdf.unknown'), style: 'tableCell', fillColor: rowColor },
-          { text: morning, style: 'tableCell', alignment: 'center', fillColor: rowColor },
-          { text: noon, style: 'tableCell', alignment: 'center', fillColor: rowColor },
-          { text: evening, style: 'tableCell', alignment: 'center', fillColor: rowColor },
-          { text: bedtime, style: 'tableCell', alignment: 'center', fillColor: rowColor }
-        ]);
+    // Category badge if present
+    if (note.category) {
+      stack.push({
+        table: {
+          body: [[
+            {
+              text: this.formatCategory(note.category),
+              style: 'categoryBadge',
+              margin: [8, 4, 8, 4] as [number, number, number, number]
+            }
+          ]]
+        },
+        layout: {
+          hLineWidth: () => 0,
+          vLineWidth: () => 0,
+          paddingLeft: () => 0,
+          paddingRight: () => 0,
+          paddingTop: () => 0,
+          paddingBottom: () => 0,
+          fillColor: () => this.colors.secondary
+        },
+        margin: [0, 0, 0, 10] as [number, number, number, number]
+      });
+    }
+
+    // Note text (the observation/finding)
+    if (note.text) {
+      stack.push({
+        text: note.text,
+        style: 'noteText',
+        margin: [0, 0, 0, 12] as [number, number, number, number]
+      });
+    }
+
+    // Patient comment box
+    if (showPatientComment) {
+      const patientComment = this.findPatientComment(note, questionAnswers);
+      if (patientComment) {
+        stack.push(this.createCommentBox(
+          this.getPatientCommentLabel(),
+          patientComment,
+          this.colors.secondary
+        ));
       }
+    }
+
+    // Pharmacist action box
+    if (showPharmacistAction) {
+      const pharmacistAction = this.findPharmacistAction(note, questionAnswers);
+      if (pharmacistAction) {
+        stack.push(this.createCommentBox(
+          this.getPharmacistActionLabel(),
+          pharmacistAction,
+          this.colors.accent
+        ));
+      }
+    }
+
+    return { stack };
+  }
+
+  /**
+   * Creates a styled comment/action box
+   */
+  protected createCommentBox(label: string, text: string, accentColor: string): Content {
+    return {
+      table: {
+        widths: [4, '*'],
+        body: [[
+          {
+            text: '',
+            fillColor: accentColor
+          },
+          {
+            stack: [
+              {
+                text: label,
+                style: 'boxLabel'
+              },
+              {
+                text: text,
+                style: 'boxContent'
+              }
+            ],
+            margin: [12, 10, 12, 10] as [number, number, number, number],
+            fillColor: this.colors.backgroundLight
+          }
+        ]]
+      },
+      layout: {
+        hLineWidth: () => 0,
+        vLineWidth: () => 0,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 10] as [number, number, number, number]
+    };
+  }
+
+  /**
+   * Creates a general notes section (notes not linked to any medication)
+   */
+  protected createGeneralNotesSection(
+    notes: ReviewNote[],
+    questionAnswers: QuestionAnswer[],
+    showPatientComment: boolean,
+    showPharmacistAction: boolean
+  ): Content {
+    if (notes.length === 0) {
+      return { text: '' };
+    }
+
+    const stack: any[] = [];
+    
+    stack.push(this.createSectionHeader(this.getGeneralNotesTitle()));
+
+    notes.forEach((note) => {
+      stack.push(this.createStandaloneNoteCard(note, questionAnswers, showPatientComment, showPharmacistAction));
     });
+
+    return { stack, margin: [0, 20, 0, 0] as [number, number, number, number] };
+  }
+
+  /**
+   * Creates a standalone note card (for general notes not linked to medication)
+   */
+  protected createStandaloneNoteCard(
+    note: ReviewNote,
+    questionAnswers: QuestionAnswer[],
+    showPatientComment: boolean,
+    showPharmacistAction: boolean
+  ): Content {
+    const stack: any[] = [];
+
+    // Category badge if present
+    if (note.category) {
+      stack.push({
+        table: {
+          body: [[
+            {
+              text: this.formatCategory(note.category),
+              style: 'categoryBadge',
+              margin: [8, 4, 8, 4] as [number, number, number, number]
+            }
+          ]]
+        },
+        layout: {
+          hLineWidth: () => 0,
+          vLineWidth: () => 0,
+          paddingLeft: () => 0,
+          paddingRight: () => 0,
+          paddingTop: () => 0,
+          paddingBottom: () => 0,
+          fillColor: () => this.colors.secondary
+        },
+        margin: [0, 0, 0, 10] as [number, number, number, number]
+      });
+    }
+
+    // Note text
+    if (note.text) {
+      stack.push({
+        text: note.text,
+        style: 'noteText',
+        margin: [0, 0, 0, 12] as [number, number, number, number]
+      });
+    }
+
+    // Patient comment
+    if (showPatientComment) {
+      const patientComment = this.findPatientComment(note, questionAnswers);
+      if (patientComment) {
+        stack.push(this.createCommentBox(
+          this.getPatientCommentLabel(),
+          patientComment,
+          this.colors.secondary
+        ));
+      }
+    }
+
+    // Pharmacist action
+    if (showPharmacistAction) {
+      const pharmacistAction = this.findPharmacistAction(note, questionAnswers);
+      if (pharmacistAction) {
+        stack.push(this.createCommentBox(
+          this.getPharmacistActionLabel(),
+          pharmacistAction,
+          this.colors.accent
+        ));
+      }
+    }
 
     return {
       table: {
-        headerRows: 1,
-        widths: ['*', 60, 60, 60, 60],
-        body: tableBody
+        widths: ['*'],
+        body: [[
+          {
+            stack,
+            margin: [16, 16, 16, 16] as [number, number, number, number]
+          }
+        ]]
       },
       layout: {
-        hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length) ? 0 : 1,
-        vLineWidth: () => 0,
-        hLineColor: () => '#eeeeee',
-        paddingLeft: () => 6,
-        paddingRight: () => 6,
-        paddingTop: () => 6,
-        paddingBottom: () => 6
-      }
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => this.colors.border,
+        vLineColor: () => this.colors.border,
+        paddingLeft: () => 0,
+        paddingRight: () => 0,
+        paddingTop: () => 0,
+        paddingBottom: () => 0
+      },
+      margin: [0, 0, 0, 12] as [number, number, number, number]
     };
   }
 
-  protected createLabValuesTable(labValues: LabValue[]): Content {
-    const tableBody: any[] = [
-      [
-        { text: this.transloco.translate('pdf.parameter').toUpperCase(), style: 'tableHeader' },
-        { text: this.transloco.translate('pdf.value').toUpperCase(), style: 'tableHeader', alignment: 'right' },
-        { text: this.transloco.translate('pdf.unit').toUpperCase(), style: 'tableHeader' }
-      ]
-    ];
-
-    labValues.forEach((lab, index) => {
-      const rowColor = index % 2 === 0 ? '#ffffff' : '#f9f9f9';
-      tableBody.push([
-        { text: lab.name || this.transloco.translate('pdf.unknown'), style: 'tableCell', fillColor: rowColor },
-        { text: String(lab.value), style: 'tableCell', alignment: 'right', fillColor: rowColor },
-        { text: lab.unit || '', style: 'tableCell', fillColor: rowColor }
-      ]);
-    });
-
+  /**
+   * Creates an empty state message
+   */
+  protected createEmptyState(message: string): Content {
     return {
       table: {
-        headerRows: 1,
-        widths: ['*', 'auto', 'auto'],
-        body: tableBody
+        widths: ['*'],
+        body: [[
+          {
+            text: message,
+            style: 'emptyState',
+            margin: [20, 30, 20, 30] as [number, number, number, number]
+          }
+        ]]
       },
       layout: {
-        hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length) ? 0 : 1,
-        vLineWidth: () => 0,
-        hLineColor: () => '#eeeeee',
-        paddingLeft: () => 6,
-        paddingRight: () => 6,
-        paddingTop: () => 6,
-        paddingBottom: () => 6
-      }
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => this.colors.border,
+        vLineColor: () => this.colors.border,
+        hLineStyle: () => ({ dash: { length: 4, space: 4 } }),
+        vLineStyle: () => ({ dash: { length: 4, space: 4 } })
+      },
+      margin: [0, 0, 0, 16] as [number, number, number, number]
     };
   }
 
-  protected createSpacer(height: number): Content {
-    return { text: '', margin: [0, height, 0, 0] };
+  /**
+   * Creates the closing section
+   */
+  protected createClosing(closingText: string, signOff: string): Content {
+    return {
+      stack: [
+        {
+          text: closingText,
+          style: 'bodyText',
+          alignment: 'justify' as const,
+          margin: [0, 0, 0, 20] as [number, number, number, number]
+        },
+        {
+          text: signOff,
+          style: 'signOff'
+        }
+      ],
+      margin: [0, 30, 0, 0] as [number, number, number, number]
+    };
   }
 
-  protected getStyles(): any {
+  /**
+   * Formats medication posology into a readable string
+   */
+  protected formatPosology(medication: Medication): string {
+    if (medication.asNeeded) {
+      return this.transloco.translate('pdf.as_needed');
+    }
+
+    if (medication.specialFrequency && medication.specialDescription) {
+      return medication.specialDescription;
+    }
+
+    const values = [
+      (medication.unitsBeforeBreakfast || 0) + (medication.unitsDuringBreakfast || 0),
+      (medication.unitsBeforeLunch || 0) + (medication.unitsDuringLunch || 0),
+      (medication.unitsBeforeDinner || 0) + (medication.unitsDuringDinner || 0),
+      medication.unitsAtBedtime || 0
+    ];
+
+    const nonZeroValues = values.filter(v => v > 0);
+    if (nonZeroValues.length === 0) return '';
+
+    // Simple format: just show the dosing pattern
+    const pattern = values.map(v => v > 0 ? v : '-').join(' - ');
+    return pattern;
+  }
+
+  /**
+   * Formats category name for display
+   */
+  protected formatCategory(category: string): string {
+    const categoryMap: Record<string, string> = {
+      'TherapyAdherence': this.transloco.translate('pdf.medication_adherence'),
+      'Effectiveness': this.transloco.translate('pdf.effectiveness_side_effects'),
+      'SideEffects': this.transloco.translate('pdf.effectiveness_side_effects'),
+      'MedicationSchema': this.transloco.translate('pdf.medication'),
+      'PatientConcerns': this.transloco.translate('pdf.patient_concerns'),
+      'PracticalProblems': this.transloco.translate('pdf.practical_problems'),
+      'Interactions': this.transloco.translate('tools.interactions'),
+      'Posology': this.transloco.translate('tools.posology'),
+      'GheOPS': this.transloco.translate('tools.gheops'),
+      'Contraindications': this.transloco.translate('tools.contraindications')
+    };
+    
+    return categoryMap[category] || category;
+  }
+
+  /**
+   * Finds patient comment associated with a note
+   * The comment is stored as note_comment_{rowKey}
+   */
+  protected findPatientComment(note: ReviewNote, questionAnswers: QuestionAnswer[]): string | null {
+    // Patient comments are not stored separately - the note text itself is the observation
+    // This method is kept for potential future use
+    return null;
+  }
+
+  /**
+   * Finds pharmacist action/comment associated with a note
+   * The action is stored as note_comment_{rowKey} in questionAnswers
+   */
+  protected findPharmacistAction(note: ReviewNote, questionAnswers: QuestionAnswer[]): string | null {
+    const commentKey = `note_comment_${note.rowKey}`;
+    const commentAnswer = questionAnswers.find(qa => qa.questionName === commentKey);
+    if (commentAnswer?.value && commentAnswer.value.trim()) {
+      return commentAnswer.value.trim();
+    }
+    return null;
+  }
+
+  // Localized labels
+  protected getPatientCommentLabel(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Opmerking patiënt';
+    if (lang === 'fr') return 'Commentaire du patient';
+    return 'Patient Comment';
+  }
+
+  protected getPharmacistActionLabel(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Actie apotheker';
+    if (lang === 'fr') return 'Action du pharmacien';
+    return 'Pharmacist Action';
+  }
+
+  protected getGeneralNotesTitle(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Algemene opmerkingen';
+    if (lang === 'fr') return 'Remarques générales';
+    return 'General Notes';
+  }
+
+  protected getMedicationsTitle(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Medicatie-overzicht';
+    if (lang === 'fr') return 'Aperçu des médicaments';
+    return 'Medication Overview';
+  }
+
+  protected getPosologyLabel(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Dosering';
+    if (lang === 'fr') return 'Posologie';
+    return 'Dosage';
+  }
+
+  protected getNoNotesMessage(): string {
+    const lang = this.getLang();
+    if (lang === 'nl') return 'Geen opmerkingen toegevoegd voor deze beoordeling.';
+    if (lang === 'fr') return 'Aucune remarque ajoutée pour cette évaluation.';
+    return 'No notes added for this review.';
+  }
+
+  /**
+   * Returns the base styles for the document
+   */
+  protected getStyles(): Record<string, any> {
     return {
-      header: {
+      documentTitle: {
         fontSize: 22,
         bold: true,
-        color: '#ffffff',
-        margin: [0, 0, 0, 0],
-        letterSpacing: 1.5
+        color: this.colors.primary
       },
-      headerDate: {
-        fontSize: 10,
-        color: '#ffffff',
-        alignment: 'right',
-        margin: [0, 0, 0, 0]
-      },
-      cardTitle: {
-        fontSize: 10,
-        bold: true,
-        color: this.brandSecondary,
-        letterSpacing: 1.2,
-        margin: [0, 0, 0, 6]
-      },
-      sectionTitle: {
-        fontSize: 16,
-        bold: true,
-        color: this.brandPrimary,
-        margin: [0, 0, 0, 0],
-        letterSpacing: 1,
-        decoration: 'underline',
-        decorationColor: this.brandAccent,
-        decorationStyle: 'solid'
-      },
-      subsectionTitle: {
-        fontSize: 13,
-        bold: true,
-        color: this.brandSecondary,
-        margin: [0, 3, 0, 0],
-        letterSpacing: 0.5
-      },
-      questionLabel: {
-        fontSize: 10,
-        color: this.textSecondary,
-        bold: false,
-        margin: [0, 2, 0, 2]
-      },
-      answerValue: {
+      documentSubtitle: {
         fontSize: 11,
-        color: this.textPrimary,
-        bold: false,
-        margin: [0, 0, 0, 5]
+        color: this.colors.textMedium
       },
-      patientInfo: {
-        fillColor: '#f9fafb',
-        margin: [0, 0, 0, 0]
-      },
-      infoLabel: {
-        fontSize: 9,
-        bold: true,
-        color: this.textSecondary,
-        margin: [0, 0, 0, 3],
-        letterSpacing: 0.5
-      },
-      infoValue: {
-        fontSize: 13,
-        color: this.textPrimary,
-        bold: true
-      },
-      noteCard: {
-        fillColor: '#f9fafb',
-        margin: [0, 0, 0, 8]
-      },
-      noteCategory: {
-        fontSize: 9,
-        bold: true,
-        color: '#ffffff',
-        background: this.brandAccent,
-        padding: [4, 2, 4, 2],
-        borderRadius: 2
-      },
-      noteMedication: {
-        fontSize: 11,
-        bold: true,
-        color: this.brandPrimary
-      },
-      noteQuestion: {
+      dateText: {
         fontSize: 10,
-        color: this.textSecondary,
-        italics: true
+        color: this.colors.textMedium
       },
-      noteLabel: {
+      salutation: {
         fontSize: 11,
-        bold: true,
-        color: this.brandPrimary,
-        margin: [0, 0, 0, 3]
+        color: this.colors.textDark
       },
-      noteContent: {
-        fontSize: 11,
-        color: this.textPrimary,
+      bodyText: {
+        fontSize: 10,
+        color: this.colors.textDark,
         lineHeight: 1.5
       },
-      tableHeader: {
-        fontSize: 10,
+      sectionTitle: {
+        fontSize: 14,
         bold: true,
-        color: '#ffffff',
-        fillColor: this.brandPrimary,
-        margin: [0, 6, 0, 6],
-        letterSpacing: 0.5
+        color: this.colors.primary
       },
-      tableCell: {
+      medicationName: {
+        fontSize: 13,
+        bold: true,
+        color: this.colors.primary
+      },
+      medicationIndication: {
+        fontSize: 9,
+        color: this.colors.textMedium,
+        italics: true
+      },
+      posologyText: {
+        fontSize: 9,
+        color: this.colors.textMedium
+      },
+      categoryBadge: {
+        fontSize: 8,
+        bold: true,
+        color: this.colors.white
+      },
+      noteText: {
         fontSize: 10,
-        color: this.textPrimary,
-        margin: [0, 4, 0, 4]
+        color: this.colors.textDark,
+        lineHeight: 1.5
       },
-      listItem: {
-        fontSize: 11,
-        color: this.textPrimary,
-        margin: [0, 3, 0, 3],
+      boxLabel: {
+        fontSize: 9,
+        bold: true,
+        color: this.colors.textMedium
+      },
+      boxContent: {
+        fontSize: 10,
+        color: this.colors.textDark,
         lineHeight: 1.4
       },
-      emptyState: {
+      signOff: {
         fontSize: 11,
-        color: this.textSecondary,
+        color: this.colors.textDark
+      },
+      emptyState: {
+        fontSize: 10,
+        color: this.colors.textLight,
         italics: true,
-        alignment: 'center',
-        margin: [0, 6, 0, 6]
+        alignment: 'center' as const
       }
+    };
+  }
+
+  /**
+   * Returns the default document definition settings
+   */
+  protected getDefaultDocumentSettings(): Partial<TDocumentDefinitions> {
+    return {
+      pageMargins: [50, 50, 50, 50] as [number, number, number, number],
+      defaultStyle: {
+        font: 'Roboto',
+        fontSize: 10,
+        lineHeight: 1.4
+      },
+      styles: this.getStyles()
     };
   }
 }
