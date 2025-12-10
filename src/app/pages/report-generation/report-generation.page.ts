@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -58,7 +58,8 @@ interface PharmacySummaryContent {
   selector: 'app-report-generation',
   imports: [CommonModule, TranslocoModule, FormsModule],
   templateUrl: './report-generation.page.html',
-  styleUrls: ['./report-generation.page.scss']
+  styleUrls: ['./report-generation.page.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReportGenerationPage implements OnInit {
   private router = inject(Router);
@@ -66,6 +67,7 @@ export class ReportGenerationPage implements OnInit {
   private apiService = inject(ApiService);
   private transloco = inject(TranslocoService);
   private pdfService = inject(PdfGenerationService);
+  private cdr = inject(ChangeDetectorRef);
 
   activeTool: ReportTool = null;
   isGenerating = false;
@@ -103,6 +105,7 @@ export class ReportGenerationPage implements OnInit {
     if (tool) {
       this.initializeContent(tool);
     }
+    this.cdr.markForCheck();
   }
 
   private loadReportData() {
@@ -111,6 +114,7 @@ export class ReportGenerationPage implements OnInit {
     const reviewId = this.stateService.medicationReviewId;
     if (!reviewId) {
       this.isLoadingData = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -136,6 +140,7 @@ export class ReportGenerationPage implements OnInit {
       if (this.activeTool) {
         this.initializeContent(this.activeTool);
       }
+      this.cdr.markForCheck();
     });
   }
 
@@ -454,7 +459,7 @@ export class ReportGenerationPage implements OnInit {
 
     const newRec: EditableRecommendation = {
       text: '',
-      originalIndex: -1
+      originalIndex: Date.now() // Use timestamp for unique stable tracking
     };
 
     switch (this.activeTool) {
@@ -474,6 +479,7 @@ export class ReportGenerationPage implements OnInit {
         }
         break;
     }
+    this.cdr.markForCheck();
   }
 
   removeRecommendation(index: number) {
@@ -496,12 +502,14 @@ export class ReportGenerationPage implements OnInit {
         }
         break;
     }
+    this.cdr.markForCheck();
   }
 
   generateAndDownloadPDF() {
     if (!this.activeTool) return;
 
     this.isGenerating = true;
+    this.cdr.markForCheck();
 
     try {
       let docDefinition: TDocumentDefinitions;
@@ -519,6 +527,7 @@ export class ReportGenerationPage implements OnInit {
           break;
         default:
           this.isGenerating = false;
+          this.cdr.markForCheck();
           return;
       }
 
@@ -531,9 +540,11 @@ export class ReportGenerationPage implements OnInit {
         link.download = filename;
         link.click();
         this.isGenerating = false;
+        this.cdr.markForCheck();
       });
     } catch (error) {
       this.isGenerating = false;
+      this.cdr.markForCheck();
     }
   }
 
