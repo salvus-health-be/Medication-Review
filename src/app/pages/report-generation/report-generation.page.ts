@@ -753,7 +753,7 @@ export class ReportGenerationPage implements OnInit {
 
       // Action/tip (if present)
       if (item.action) {
-        const actionLabel = lang === 'nl' ? 'Tip:' : lang === 'fr' ? 'Conseil:' : 'Tip:';
+        const actionLabel = lang === 'nl' ? 'Actiepunt:' : lang === 'fr' ? 'Point d\'Action:' : 'Action Point:';
         stack.push({
           table: {
             widths: ['*'],

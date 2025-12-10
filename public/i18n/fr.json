@@ -448,6 +448,7 @@
     "note_text": "Note",
     "action_text": "Recommandation",
     "action_text_placeholder": "Saisir la recommandation du pharmacien...",
+    "action_point": "Point d'Action",
     "suggestion_text": "Suggestion",
     "suggestion_text_placeholder": "Saisir la suggestion pour le médecin...",
     "no_items_yet": "Aucun élément pour le moment. Cliquez sur 'Ajouter un Élément' pour commencer.",

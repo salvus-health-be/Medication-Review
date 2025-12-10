@@ -459,6 +459,7 @@
     "note_text": "Notitie",
     "action_text": "Aanbeveling",
     "action_text_placeholder": "Voer apothekers aanbeveling in...",
+    "action_point": "Actiepunt",
     "suggestion_text": "Suggestie",
     "suggestion_text_placeholder": "Voer suggestie voor arts in...",
     "no_items_yet": "Nog geen items. Klik op 'Item Toevoegen' om te beginnen.",
