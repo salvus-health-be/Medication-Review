@@ -186,11 +186,11 @@
     } @else if (activeTool) {
       <div class="tool-content">
         <h2>{{ getToolTitle() }}</h2>
-        <p>Tool panel for {{ getToolTitle() }}</p>
+        <p>{{ 'analysis.tool_panel_for' | transloco }} {{ getToolTitle() }}</p>
       </div>
     } @else {
       <div class="no-tool-selected">
-        <p>Select a tool from the toolbar to begin</p>
+        <p>{{ 'analysis.select_tool_hint' | transloco }}</p>
       </div>
     }
   </div>

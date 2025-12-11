@@ -4,12 +4,12 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M19 12H5M12 19l-7-7 7-7"/>
       </svg>
-      Back to Analysis
+      {{ 'note_overview.back_to_analysis' | transloco }}
     </button>
     <h1>{{ 'note_modal.title' | transloco }}</h1>
     <div class="notes-count">{{ notes.length }} {{ 'note_modal.notes' | transloco }}</div>
     <div class="generate-actions">
-      <button class="btn-primary" (click)="generatePatientConversation()">Create patient conversation</button>
+      <button class="btn-primary" (click)="generatePatientConversation()">{{ 'note_overview.create_patient_conversation' | transloco }}</button>
     </div>
   </div>
 
@@ -19,9 +19,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        <h2>No notes yet</h2>
-        <p>Add notes from the analysis page using the "Add Note" buttons on each tool.</p>
-        <button class="btn-primary" (click)="goBack()">Go to Analysis</button>
+        <h2>{{ 'note_overview.no_notes_yet' | transloco }}</h2>
+        <p>{{ 'note_overview.add_notes_hint' | transloco }}</p>
+        <button class="btn-primary" (click)="goBack()">{{ 'common.go_to_analysis' | transloco }}</button>
       </div>
     } @else {
       <!-- Notes for Patient Conversation -->
@@ -34,7 +34,7 @@
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
-            For Patient Conversation ({{ notesForPatient.length }})
+            {{ 'note_overview.for_patient_conversation' | transloco }} ({{ notesForPatient.length }})
           </h2>
           <div class="notes-list">
             @for (note of notesForPatient; track note.rowKey) {
@@ -56,18 +56,18 @@
                       class="category-btn"
                       [class.active]="note.discussWithPatient"
                       (click)="toggleDiscussWithPatient(note)"
-                      [title]="note.discussWithPatient ? 'Remove from patient conversation' : 'Add to patient conversation'">
-                      Patient
+                      [title]="'interaction_notes.add_to_patient' | transloco">
+                      {{ 'common.patient' | transloco }}
                     </button>
                     <button 
                       class="category-btn"
                       [class.active]="note.communicateToDoctor"
                       (click)="toggleCommunicateToDoctor(note)"
-                      [title]="note.communicateToDoctor ? 'Remove from GP report' : 'Add to GP report'">
-                      GP report
+                      [title]="'note_modal.include_in_gp_report' | transloco">
+                      {{ 'common.gp_report' | transloco }}
                     </button>
                   </div>
-                  <button class="delete-button" (click)="deleteNote(note)" title="Delete note">
+                  <button class="delete-button" (click)="deleteNote(note)" [title]="'note_modal.delete_note' | transloco">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="3 6 5 6 21 6"></polyline>
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -91,7 +91,7 @@
               <line x1="16" y1="17" x2="8" y2="17"></line>
               <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
-            For GP Report ({{ notesForDoctor.length }})
+            {{ 'note_overview.for_gp_report' | transloco }} ({{ notesForDoctor.length }})
           </h2>
           <div class="notes-list">
             @for (note of notesForDoctor; track note.rowKey) {
@@ -113,18 +113,18 @@
                       class="category-btn"
                       [class.active]="note.discussWithPatient"
                       (click)="toggleDiscussWithPatient(note)"
-                      [title]="note.discussWithPatient ? 'Remove from patient conversation' : 'Add to patient conversation'">
-                      Patient
+                      [title]="'interaction_notes.add_to_patient' | transloco">
+                      {{ 'common.patient' | transloco }}
                     </button>
                     <button 
                       class="category-btn"
                       [class.active]="note.communicateToDoctor"
                       (click)="toggleCommunicateToDoctor(note)"
-                      [title]="note.communicateToDoctor ? 'Remove from GP report' : 'Add to GP report'">
-                      GP report
+                      [title]="'note_modal.include_in_gp_report' | transloco">
+                      {{ 'common.gp_report' | transloco }}
                     </button>
                   </div>
-                  <button class="delete-button" (click)="deleteNote(note)" title="Delete note">
+                  <button class="delete-button" (click)="deleteNote(note)" [title]="'note_modal.delete_note' | transloco">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="3 6 5 6 21 6"></polyline>
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -145,7 +145,7 @@
               <path d="M12 20h9"></path>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
             </svg>
-            Internal Notes ({{ internalNotes.length }})
+            {{ 'note_overview.internal_notes' | transloco }} ({{ internalNotes.length }})
           </h2>
           <div class="notes-list">
             @for (note of internalNotes; track note.rowKey) {
@@ -167,18 +167,18 @@
                       class="category-btn"
                       [class.active]="note.discussWithPatient"
                       (click)="toggleDiscussWithPatient(note)"
-                      [title]="note.discussWithPatient ? 'Remove from patient conversation' : 'Add to patient conversation'">
-                      Patient
+                      [title]="'interaction_notes.add_to_patient' | transloco">
+                      {{ 'common.patient' | transloco }}
                     </button>
                     <button 
                       class="category-btn"
                       [class.active]="note.communicateToDoctor"
                       (click)="toggleCommunicateToDoctor(note)"
-                      [title]="note.communicateToDoctor ? 'Remove from GP report' : 'Add to GP report'">
-                      GP report
+                      [title]="'note_modal.include_in_gp_report' | transloco">
+                      {{ 'common.gp_report' | transloco }}
                     </button>
                   </div>
-                  <button class="delete-button" (click)="deleteNote(note)" title="Delete note">
+                  <button class="delete-button" (click)="deleteNote(note)" [title]="'note_modal.delete_note' | transloco">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="3 6 5 6 21 6"></polyline>
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -196,10 +196,10 @@
   <!-- Delete confirmation modal -->
   @if (showDeleteConfirmation) {
     <app-confirmation-modal
-      [title]="'Delete Note'"
-      [message]="'Are you sure you want to delete this note? This action cannot be undone.'"
-      [confirmText]="'Delete'"
-      [cancelText]="'Cancel'"
+      [title]="'note_modal.delete_note' | transloco"
+      [message]="'report_generation.confirm_delete_note' | transloco"
+      [confirmText]="'common.delete' | transloco"
+      [cancelText]="'common.cancel' | transloco"
       (confirm)="onConfirmDelete()"
       (cancel)="onCancelDelete()"
     ></app-confirmation-modal>

@@ -11,13 +11,13 @@
   } @else {
     <div class="contraindications-content">
       <!-- Refresh button (top right, next to general note) -->
-      <button class="refresh-tool-button" (click)="refreshContraindications()" title="Refresh contraindications">
+      <button class="refresh-tool-button" (click)="refreshContraindications()" [title]="'tooltips.refresh' | transloco">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       <!-- General note button (top right) -->
-      <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal()" title="Add general note">
+      <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal()" [title]="'tooltips.add_general_note' | transloco">
         +
       </button>
 
@@ -65,13 +65,13 @@
                       </span>
                     </div>
                     <div class="cell description-cell">
-                      <span class="count-badge">{{ contraindication.contraindications.length }} reason(s)</span>
+                      <span class="count-badge">{{ contraindication.contraindications.length }} {{ 'common.reasons' | transloco }}</span>
                       <svg class="expand-icon" [class.rotated]="expandedContraindication === getUniqueKey(contraindication, $index)" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </div>
                     <div class="cell notes-cell" (click)="$event.stopPropagation()">
-                      <button class="add-note-button" (click)="openNotesModal(contraindication, 'match')" title="Add notes">
+                      <button class="add-note-button" (click)="openNotesModal(contraindication, 'match')" [title]="'tooltips.add_note' | transloco">
                         +
                       </button>
                     </div>
@@ -80,7 +80,7 @@
                   @if (expandedContraindication === getUniqueKey(contraindication, $index)) {
                     <div class="contraindication-details" (click)="$event.stopPropagation()">
                       <div class="details-header">
-                        <h4>Contraindication Details</h4>
+                        <h4>{{ 'contraindications_component.contraindication_details' | transloco }}</h4>
                       </div>
                       <div class="details-list">
                         @for (detail of contraindication.contraindications; track detail.code) {
@@ -121,7 +121,7 @@
           </div>
         } @else if (getFilteredProductContraindications().length === 0) {
           <div class="no-contraindications">
-            <p>✓ No additional contraindications found</p>
+            <p>✓ {{ 'contraindications_component.no_additional_found' | transloco }}</p>
           </div>
         } @else {
           <!-- Table Header -->
@@ -155,13 +155,13 @@
                       </span>
                     </div>
                     <div class="cell description-cell">
-                      <span class="count-badge">{{ contraindication.contraindications.length }} reason(s)</span>
+                      <span class="count-badge">{{ contraindication.contraindications.length }} {{ 'common.reasons' | transloco }}</span>
                       <svg class="expand-icon" [class.rotated]="expandedContraindication === getUniqueKey(contraindication, $index)" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </div>
                     <div class="cell notes-cell" (click)="$event.stopPropagation()">
-                      <button class="add-note-button" (click)="openNotesModal(contraindication, 'product')" title="Add notes">
+                      <button class="add-note-button" (click)="openNotesModal(contraindication, 'product')" [title]="'tooltips.add_note' | transloco">
                         +
                       </button>
                     </div>
@@ -170,7 +170,7 @@
                   @if (expandedContraindication === getUniqueKey(contraindication, $index)) {
                     <div class="contraindication-details" (click)="$event.stopPropagation()">
                       <div class="details-header">
-                        <h4>Contraindication Details</h4>
+                        <h4>{{ 'contraindications_component.contraindication_details' | transloco }}</h4>
                       </div>
                       <div class="details-list">
                         @for (detail of contraindication.contraindications; track detail.code) {

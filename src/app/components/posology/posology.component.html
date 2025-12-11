@@ -1,19 +1,19 @@
 <div class="posology-container">
   <!-- General note button (top right) -->
   <button class="add-note-button general-note floating-top-right" (click)="openGeneralNotesModal()"
-    title="Add general note">
+    [title]="'questionnaire_component.add_general_note' | transloco">
     +
   </button>
 
   @if (medications.length === 0) {
   <div class="no-medications">
-    <p>No medications with CNK codes found</p>
-    <p class="hint">Click on a medication in the left panel to view dosage information</p>
+    <p>{{ 'renadaptor_component.no_medications_with_cnk' | transloco }}</p>
+    <p class="hint">{{ 'posology_component.click_medication_left' | transloco }}</p>
   </div>
   } @else if (!selectedMedicationId) {
   <div class="no-selection">
-    <p>Select a medication from the left panel</p>
-    <p class="hint">Click on any medication box to view posology information</p>
+    <p>{{ 'renadaptor_component.select_medication_left' | transloco }}</p>
+    <p class="hint">{{ 'posology_component.click_any_medication' | transloco }}</p>
   </div>
   } @else {
   @if (getSelectedMedicationDosage(); as medDosage) {
@@ -23,7 +23,7 @@
       <div class="header-info">
         <h2>{{ medDosage.medicationName }}</h2>
       </div>
-      <button class="add-note-button" (click)="openNotesModal()" title="Add note">
+      <button class="add-note-button" (click)="openNotesModal()" [title]="'notes.add_note' | transloco">
         +
       </button>
     </div>

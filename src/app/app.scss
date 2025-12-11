@@ -1,5 +1,46 @@
 @import '../styles/colors';
 
+.mobile-not-supported {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, $button-primary-background 0%, darken($button-primary-background, 15%) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 2rem;
+
+  .mobile-message-container {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+    svg {
+      color: $button-primary-background;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: $text-primary;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      color: $text-secondary;
+      line-height: 1.6;
+    }
+  }
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -9,7 +50,7 @@
 
   .main-content {
     flex: 1;
-    background-color: $main-background;
     overflow-y: auto;
+    height: 100%;
   }
 }

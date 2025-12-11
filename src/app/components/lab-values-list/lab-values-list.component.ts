@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { LabValueItemComponent } from '../lab-value-item/lab-value-item.component';
 import { AddLabValueModalComponent, LabValueData } from '../add-lab-value-modal/add-lab-value-modal.component';
 import { ApiService } from '../../services/api.service';
@@ -21,7 +21,8 @@ export class LabValuesListComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private stateService: StateService
+    private stateService: StateService,
+    private transloco: TranslocoService
   ) {}
 
   ngOnInit() {
@@ -77,7 +78,7 @@ export class LabValuesListComponent implements OnInit {
         this.loadLabValues();
       },
       error: (error) => {
-        alert('Failed to add lab value. Please try again.');
+        alert(this.transloco.translate('errors.failed_add_lab_value'));
       }
     });
   }
@@ -94,7 +95,7 @@ export class LabValuesListComponent implements OnInit {
         this.labValues = this.labValues.filter(lv => lv.labValueId !== labValueId);
       },
       error: (error) => {
-        alert('Failed to delete lab value. Please try again.');
+        alert(this.transloco.translate('errors.failed_delete_lab_value'));
       }
     });
   }

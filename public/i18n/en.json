@@ -33,7 +33,23 @@
     "help": "Help",
     "logout": "Logout",
     "profile": "Profile",
-    "retry": "Retry"
+    "retry": "Retry",
+    "reset": "Reset",
+    "from": "From",
+    "until": "Until",
+    "pan": "Pan",
+    "zoom": "Zoom",
+    "expired": "Expired",
+    "general": "General",
+    "patient": "Patient",
+    "gp_report": "GP Report",
+    "save_note": "Save Note",
+    "continue": "Continue",
+    "go_to_analysis": "Go to Analysis",
+    "reasons": "reason(s)",
+    "select": "Select",
+    "enter_answer": "Enter your answer",
+    "language_selector": "Language selector"
   },
   "header": {
     "step_1": "Input",
@@ -96,7 +112,9 @@
     "as_needed_short": "As needed",
     "indication_label": "Indication",
     "plus_add": "+Add",
-    "not_enabled": "Not enabled"
+    "not_enabled": "Not enabled",
+    "mobile_not_supported_title": "Desktop Required",
+    "mobile_not_supported_message": "This application requires a larger screen to function properly. Please use a desktop or laptop computer."
   },
   "input": {
     "start_preparation": "Start Preparation"
@@ -153,7 +171,9 @@
     "select_cnk_instruction": "Multiple medications match this name. Please select the correct one:",
     "skip_medication": "Skip This Medication",
     "matching_cnk": "Matching medication to CNK...",
-    "cnk_match_failed": "Could not automatically match medication to CNK"
+    "cnk_match_failed": "Could not automatically match medication to CNK",
+    "no_vmp": "No VMP",
+    "no_vmp_warning": "This medication does not have a VMP code. Therapy adherence matching may be limited."
   },
   "modals": {
     "add_contraindications": "Add Contraindications",
@@ -699,5 +719,115 @@
     "submitting": "Submitting...",
     "success": "Thank you for your feedback!",
     "error_submitting": "Failed to submit feedback. Please try again."
+  },
+  "therapy_chart": {
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "reset_zoom": "Reset zoom",
+    "toggle_pan": "Toggle pan mode",
+    "as_needed_medication": "As needed medication",
+    "no_dispensing_data": "No dispensing data",
+    "no_medications_in_review": "No medications in the medication review",
+    "stock_level": "Stock Level",
+    "dispensing": "Dispensing",
+    "dispensed": "Dispensed"
+  },
+  "renadaptor_component": {
+    "no_medications_with_cnk": "No medications with CNK codes found",
+    "click_medication_left": "Click on a medication in the left panel to access Renadaptor",
+    "select_medication_left": "Select a medication from the left panel",
+    "click_any_medication": "Click on any medication box to access Renadaptor for renal dosing information",
+    "ml_min_optional": "mL/min (optional)",
+    "info_banner": "Renadaptor provides renal dosing adjustments and guidance for patients with kidney disease. URLs expire after 5 minutes.",
+    "url_expired": "URL Expired",
+    "url_expired_message": "This Renadaptor link has expired. Click refresh to generate a new one.",
+    "refresh_url": "Refresh URL",
+    "open_in_new_tab": "Open in new tab"
+  },
+  "posology_component": {
+    "click_medication_left": "Click on a medication in the left panel to view dosage information",
+    "click_any_medication": "Click on any medication box to view posology information"
+  },
+  "note_overview": {
+    "no_notes_yet": "No notes yet",
+    "add_notes_hint": "Add notes from the analysis page using the \"Add Note\" buttons on each tool.",
+    "for_patient_conversation": "For Patient Conversation",
+    "for_gp_report": "For GP Report",
+    "internal_notes": "Internal Notes",
+    "note_text_label": "Note Text:",
+    "note_placeholder": "Enter your note here...",
+    "category_label": "Category:",
+    "category_therapy_adherence": "Therapy Adherence (Part 2)",
+    "category_effectiveness": "Effectiveness (Part 3)",
+    "back_to_analysis": "Back to Analysis",
+    "create_patient_conversation": "Create patient conversation"
+  },
+  "interaction_notes": {
+    "add_note_title": "Add Note for Interaction",
+    "interaction_label": "Interaction:",
+    "type_label": "Type:",
+    "severity_label": "Severity:",
+    "number_label": "Number:",
+    "note_label": "Note:",
+    "note_placeholder": "Enter your note about this interaction...",
+    "add_to_patient": "Add to patient conversation",
+    "add_to_gp": "Add to GP report",
+    "add_to_anamnesis": "Add to anamnesis"
+  },
+  "contraindications_component": {
+    "contraindication_details": "Contraindication Details",
+    "no_additional_found": "No additional contraindications found",
+    "plausibility": "Plausibility:",
+    "frequency": "Frequency:",
+    "source": "Source:"
+  },
+  "questionnaire_component": {
+    "add_general_note": "Add general note",
+    "select_category_hint": "Select a question category from the left to begin"
+  },
+  "analysis": {
+    "tool_panel_for": "Tool panel for {{tool}}",
+    "select_tool_hint": "Select a tool from the toolbar to begin"
+  },
+  "pdf_preview": {
+    "title": "PDF Preview",
+    "download": "Download PDF",
+    "continue_to_actions": "Continue to Actions",
+    "generating": "Generating PDF preview...",
+    "error_message": "Please try again or contact support if the problem persists."
+  },
+  "errors": {
+    "failed_to_load_data": "Failed to load data",
+    "failed_to_load_medications": "Failed to load medications",
+    "failed_to_load_renadaptor": "Failed to load Renadaptor. Please try again.",
+    "failed_to_load_posology": "Failed to load dosage information",
+    "session_not_available": "Session data not available. Please log in again.",
+    "failed_to_delete_note": "Failed to delete note. Please try again.",
+    "failed_to_update_note": "Failed to update note. Please try again.",
+    "failed_to_save_note": "Failed to save note. Please try again.",
+    "failed_to_clear_answers": "Failed to clear all answers. Please try again.",
+    "failed_to_update_medication": "Failed to update medication. Please try again.",
+    "failed_to_add_medication": "Failed to add medication. Please try again.",
+    "failed_add_dispensing": "Failed to add all dispensing moments. Please try again.",
+    "add_dispensing_moment": "Please add at least one dispensing moment",
+    "search_failed": "Search failed. Please try again.",
+    "failed_load_contraindications": "Failed to load contraindications from APB. Please try again.",
+    "no_review_selected": "No medication review selected",
+    "failed_save_contraindications": "Failed to save contraindications. Please try again.",
+    "enter_lab_name": "Please enter a name for the lab value.",
+    "enter_lab_value": "Please enter a value.",
+    "enter_lab_unit": "Please enter a unit.",
+    "failed_add_lab_value": "Failed to add lab value. Please try again.",
+    "failed_delete_lab_value": "Failed to delete lab value. Please try again.",
+    "no_medications_in_csv": "No medications found in the CSV file. Please check the file format or try a different export.",
+    "failed_read_csv": "Failed to read the CSV file. Please try again.",
+    "create_review_first": "Please create or select a medication review first.",
+    "failed_match_cnk": "Failed to match medications to CNK codes. Please try again.",
+    "no_medications_to_delete": "No medications to delete.",
+    "cannot_delete_moment": "Cannot delete: moment ID is missing or empty.",
+    "failed_remove_contraindication": "Failed to remove contra-indication. Please try again.",
+    "invalid_vmp_code": "Invalid VMP code. Please enter a valid number.",
+    "import_success": "Successfully imported {{count}} medication(s).",
+    "delete_success": "Deleted {{count}} medication(s)."
   }
 }

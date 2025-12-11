@@ -60,20 +60,20 @@
 
       <div class="therapy-view">
         <!-- Refresh button (top right, next to general note) -->
-        <button class="refresh-tool-button" (click)="checkExistingFile()" title="Refresh dispensing history">
+        <button class="refresh-tool-button" (click)="checkExistingFile()" [title]="'common.refresh' | transloco">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
         <!-- General note button (top right) -->
-        <button class="add-note-button general-note floating-top-right" (click)="openNotesModal()" title="Add general note">
+        <button class="add-note-button general-note floating-top-right" (click)="openNotesModal()" [title]="'questionnaire_component.add_general_note' | transloco">
           +
         </button>
         
         <!-- Date filter controls -->
         <div class="date-controls">
           <div class="date-filter-group">
-            <label for="filter-start">From:</label>
+            <label for="filter-start">{{ 'common.from' | transloco }}:</label>
             <input 
               type="date" 
               id="filter-start" 
@@ -82,7 +82,7 @@
               class="date-input"
             />
             
-            <label for="filter-end">Until:</label>
+            <label for="filter-end">{{ 'common.until' | transloco }}:</label>
             <input 
               type="date" 
               id="filter-end" 
@@ -91,14 +91,14 @@
               class="date-input"
             />
             
-            <button class="control-button reset-button" (click)="resetDateFilter()" title="Reset filters">
-              <span>Reset</span>
+            <button class="control-button reset-button" (click)="resetDateFilter()" [title]="'common.reset' | transloco">
+              <span>{{ 'common.reset' | transloco }}</span>
             </button>
             
             <!-- Pan slider (only visible when zoomed in) -->
             @if (isPanEnabled()) {
               <div class="pan-control-inline">
-                <label for="pan-slider">Pan:</label>
+                <label for="pan-slider">{{ 'common.pan' | transloco }}:</label>
                 <input 
                   type="range" 
                   id="pan-slider" 
@@ -114,11 +114,11 @@
           </div>
           
           <div class="zoom-controls">
-            <button class="control-button zoom-button" (click)="zoomOut()" [disabled]="zoomLevel >= 1" title="Zoom out">
+            <button class="control-button zoom-button" (click)="zoomOut()" [disabled]="zoomLevel >= 1" [title]="'therapy_chart.zoom_out' | transloco">
               <span>−</span>
             </button>
-            <span class="zoom-label">Zoom: {{ (zoomLevel * 100).toFixed(0) }}%</span>
-            <button class="control-button zoom-button" (click)="zoomIn()" [disabled]="zoomLevel <= 0.1" title="Zoom in">
+            <span class="zoom-label">{{ 'common.zoom' | transloco }}: {{ (zoomLevel * 100).toFixed(0) }}%</span>
+            <button class="control-button zoom-button" (click)="zoomIn()" [disabled]="zoomLevel <= 0.1" [title]="'therapy_chart.zoom_in' | transloco">
               <span>+</span>
             </button>
           </div>
@@ -144,10 +144,10 @@
                 />
                 <div class="graph-wrapper">
                   <div class="no-data-compact">
-                    <span>Zo nodig medicatie</span>
+                    <span>{{ 'therapy_chart.as_needed_medication' | transloco }}</span>
                   </div>
                 </div>
-                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" [title]="'notes.add_note' | transloco">
                   +
                 </button>
               </div>
@@ -169,7 +169,7 @@
                     <span>{{ 'therapy_adherence.amount_per_package_not_set' | transloco }}</span>
                   </div>
                 </div>
-                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" [title]="'notes.add_note' | transloco">
                   +
                 </button>
               </div>
@@ -191,7 +191,7 @@
                     <canvas [id]="item.chartId"></canvas>
                   </div>
                 </div>
-                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" [title]="'notes.add_note' | transloco">
                   +
                 </button>
               </div>
@@ -210,17 +210,17 @@
                 />
                 <div class="graph-wrapper">
                   <div class="no-data-compact">
-                    <span>No dispensing data</span>
+                    <span>{{ 'therapy_chart.no_dispensing_data' | transloco }}</span>
                   </div>
                 </div>
-                <button class="add-note-button" (click)="openNotesModal(item.medication)" title="Add note">
+                <button class="add-note-button" (click)="openNotesModal(item.medication)" [title]="'notes.add_note' | transloco">
                   +
                 </button>
               </div>
             }
           }          @if (medicationsWithData.length === 0) {
             <div class="no-medications">
-              <p>No medications in the medication review</p>
+              <p>{{ 'therapy_chart.no_medications_in_review' | transloco }}</p>
             </div>
           }
         </div>

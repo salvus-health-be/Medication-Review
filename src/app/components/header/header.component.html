@@ -1,33 +1,11 @@
 <header class="app-header">
   <div class="header-left">
-    <img src="/images/Top_bar_logo.png" alt="Salvus Health" class="logo">
+    <img src="/images/Top_bar_logo.png" alt="Salvus Health" class="logo clickable" (click)="goToLogin()" title="Return to login">
     <div class="beta-warning">
       {{ 'header.beta_warning' | transloco }}
     </div>
     
     @if (showPatientInfo) {
-      <!-- Patient icon -->
-      <div class="patient-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </div>
-
-      <!-- Patient info -->
-      <div class="patient-info">
-        <span class="patient-name">{{ patientName }}</span>
-        <span class="patient-details">
-          @if (patientAge !== null) {
-            <span>{{ patientAge }} {{ 'patient.age' | transloco }}</span>
-          }
-          @if (patientSex) {
-            <span class="separator">•</span>
-            <span>{{ patientSex }}</span>
-          }
-        </span>
-      </div>
-      
       <!-- Contra-indications section -->
       <div class="contraindications-section">
         <div class="contraindications-header">

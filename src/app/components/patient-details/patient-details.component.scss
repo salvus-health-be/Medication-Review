@@ -1,5 +1,6 @@
 @import '../../../styles/colors';
 @import '../../../styles/fonts';
+@import '../../../styles/responsive';
 
 .patient-details-box {
   background-color: $box-background;
@@ -7,27 +8,60 @@
   border-radius: $box-border-radius;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  overflow: hidden; // Prevent children from overflowing
+
+  @include lg {
+    padding: 1.25rem;
+  }
+
+  @include md {
+    padding: 1rem;
+  }
 
   .box-title {
     font-size: 1.2rem;
     margin-bottom: 1rem;
     color: $text-primary;
+
+    @include lg {
+      font-size: 1.1rem;
+    }
+
+    @include md {
+      font-size: 1rem;
+    }
   }
 
   .fields-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+    width: 100%;
+    min-width: 0; // Allow grid to shrink
+
+    @include md {
+      grid-template-columns: 1fr; // Single column on smaller screens
+      gap: 0.75rem;
+    }
 
     .field-group {
       display: flex;
       flex-direction: column;
+      min-width: 0; // Allow flex item to shrink below content size
+      overflow: hidden; // Prevent overflow
 
       label {
         font-size: 0.875rem;
         color: $text-secondary;
         margin-bottom: 0.25rem;
         font-weight: $font-weight-regular;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        @include lg {
+          font-size: 0.8rem;
+        }
       }
 
       input {
@@ -37,6 +71,14 @@
         font-family: $primary-font;
         font-size: 0.875rem;
         transition: all 0.2s ease;
+        width: 100%;
+        min-width: 0; // Allow input to shrink
+        box-sizing: border-box;
+
+        @include lg {
+          font-size: 0.8rem;
+          padding: 0.4rem;
+        }
         
         &:hover {
           border-color: rgba($button-primary-background, 0.3);
@@ -79,6 +121,12 @@
           border: 2px solid rgba(#10b981, 0.3);
           font-size: 0.95rem;
           background: linear-gradient(to right, rgba(#10b981, 0.02), transparent);
+
+          @include lg {
+            max-width: 250px;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.875rem;
+          }
 
           &:hover {
             border-color: rgba(#10b981, 0.5);

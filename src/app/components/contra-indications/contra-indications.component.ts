@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ContraindicationModalComponent } from '../contraindication-modal/contraindication-modal.component';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
@@ -20,7 +20,8 @@ export class ContraIndicationsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private stateService: StateService
+    private stateService: StateService,
+    private transloco: TranslocoService
   ) {}
 
   ngOnInit() {
@@ -77,7 +78,7 @@ export class ContraIndicationsComponent implements OnInit {
         this.stateService.notifyContraindicationsChanged();
       },
       error: (error) => {
-        alert('Failed to delete contraindication. Please try again.');
+        alert(this.transloco.translate('errors.failed_remove_contraindication'));
       }
     });
   }

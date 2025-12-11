@@ -35,7 +35,7 @@
         >
           <div class="medication-name">
             {{ medication.benaming }}
-            <span *ngIf="!medication.vmp" class="no-vmp-warning" title="This medication does not have a VMP code. Therapy adherence matching may be limited.">⚠️ No VMP</span>
+            <span *ngIf="!medication.vmp" class="no-vmp-warning" [title]="'medication.no_vmp_warning' | transloco">⚠️ {{ 'medication.no_vmp' | transloco }}</span>
           </div>
           <div class="medication-details">
             <span class="cnk-code">CNK: {{ medication.cnk }}</span>

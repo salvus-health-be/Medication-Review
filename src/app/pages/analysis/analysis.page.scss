@@ -7,12 +7,13 @@
   height: calc(100vh - 7vh); // Full viewport height minus header (7vh)
   width: 100%;
   position: relative;
-  padding-left: 9vh; // Account for fixed toolbar width
+  padding-left: max(9vh, 60px); // Account for fixed toolbar width with minimum
   overflow-y: auto; // Single scroll for the entire page
-  overflow-x: hidden;
+  overflow-x: auto; // Allow horizontal scrolling when zoomed in
+  background-color: $main-background;
 
   @include lg {
-    padding-left: 8vh;
+    padding-left: max(8vh, 55px);
   }
 
   @include md {
@@ -20,6 +21,7 @@
     padding-left: 0;
     height: auto;
     min-height: calc(100vh - 7vh);
+    overflow-x: hidden;
   }
 
   .medications-panel {
@@ -27,7 +29,7 @@
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    margin-top: 4rem;
+    margin-top: 1rem; // Reduced since title is now fixed
     margin-left: 2rem; // Margin between toolbar and medication boxes
     padding-right: 2rem; // Padding on the right side
 
@@ -50,10 +52,7 @@
       color: $text-primary;
       font-size: 1.5rem;
       margin: 0 0 1rem 0;
-      padding: 1rem 0 0.5rem 0;
-      position: sticky;
-      top: 4rem; // Offset from the top when scrolling
-      z-index: 10;
+      padding: 0.5rem 0;
 
       @include lg {
         font-size: 1.375rem;
@@ -61,8 +60,6 @@
 
       @include md {
         font-size: 1.25rem;
-        position: relative;
-        top: 0;
       }
     }
 
@@ -134,12 +131,12 @@
 
   .tools-panel {
     flex: 1; // Takes remaining 60% of the space
-    padding: 2rem 2rem 2rem 1rem; // Match left padding with gap between schema rows and add note buttons
-    overflow-x: visible; // Ensure controls extending beyond edge are not clipped
+    padding: 1rem 2rem 2rem 1rem; // Reduced top padding to align with medications
+    overflow: visible; // Let parent handle scrolling
     transition: background-color 0.3s ease;
 
     @include lg {
-      padding: 1.5rem 1.5rem 1.5rem 0.75rem;
+      padding: 0.75rem 1.5rem 1.5rem 0.75rem;
     }
 
     @include md {
@@ -211,13 +208,13 @@
       background-color: #f8f9fa;
       border: 1px solid $box-border-primary;
       border-radius: $box-border-radius-small;
-      margin: 0 5rem 1rem 2rem;
+      margin: 0 5rem -1.5rem 2rem;
       font-weight: $font-weight-semibold;
       color: $text-primary;
       font-family: $primary-font;
       text-align: center;
-      position: sticky;
-      top: 2rem;
+      position: relative;
+      top: -2rem;
       z-index: 10;
 
       @include lg {

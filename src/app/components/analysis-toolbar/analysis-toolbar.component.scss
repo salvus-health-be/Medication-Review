@@ -4,6 +4,7 @@
 
 .toolbar {
   width: 9vh; // Same width as header height
+  min-width: 60px; // Prevent toolbar from getting too narrow when zoomed
   height: calc(100vh - 7vh); // Match the analysis page height
   background-color: $button-primary;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
@@ -11,26 +12,53 @@
   z-index: 100;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: flex-start; // Changed from space-evenly to allow scrolling
+  gap: 0.5rem; // Add gap between items
   padding: 1rem 0;
   position: fixed;
   top: 7vh;
   left: 0;
+  overflow-y: auto; // Allow vertical scrolling when tools don't fit
+  overflow-x: hidden;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  }
 
   @include lg {
     width: 8vh;
+    min-width: 55px;
   }
 
   @include md {
     width: 100%;
     height: auto;
+    max-height: none;
     position: sticky;
     top: 0;
     left: auto;
     flex-direction: row;
+    flex-wrap: wrap; // Allow wrapping on mobile if needed
     justify-content: space-around;
     padding: 0.5rem 0.25rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow-y: visible;
+    overflow-x: auto; // Horizontal scroll on mobile if needed
+    gap: 0.25rem;
   }
 
   .tool-item {

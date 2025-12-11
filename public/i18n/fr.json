@@ -27,13 +27,29 @@
     "import": "Importer",
     "download": "Télécharger",
     "upload": "Téléverser",
+    "or": "ou",
     "home": "Accueil",
     "settings": "Paramètres",
     "help": "Aide",
     "logout": "Déconnexion",
-    "profile": "Profil"
-    ,
-    "retry": "Réessayer"
+    "profile": "Profil",
+    "retry": "Réessayer",
+    "reset": "Réinitialiser",
+    "from": "De",
+    "until": "Jusqu'à",
+    "pan": "Déplacer",
+    "zoom": "Zoom",
+    "expired": "Expiré",
+    "general": "Général",
+    "patient": "Patient",
+    "gp_report": "Rapport médecin",
+    "save_note": "Enregistrer la note",
+    "continue": "Continuer",
+    "go_to_analysis": "Aller à l'analyse",
+    "reasons": "raison(s)",
+    "select": "Sélectionner",
+    "enter_answer": "Entrez votre réponse",
+    "language_selector": "Sélecteur de langue"
   },
   "header": {
     "step_1": "Saisie",
@@ -96,7 +112,9 @@
     "as_needed_short": "Si besoin",
     "indication_label": "Indication",
     "plus_add": "+ Ajouter",
-    "not_enabled": "Non activé"
+    "not_enabled": "Non activé",
+    "mobile_not_supported_title": "Ordinateur requis",
+    "mobile_not_supported_message": "Cette application nécessite un écran plus grand pour fonctionner correctement. Veuillez utiliser un ordinateur de bureau ou un ordinateur portable."
   },
   "medication": {
     "medication_schema": "Schéma de médication",
@@ -140,7 +158,15 @@
     "period_biweekly": "toutes les 2 semaines",
     "period_monthly": "mensuel",
     "period_quarterly": "trimestriel",
-    "period_yearly": "annuel"
+    "period_yearly": "annuel",
+    "select_cnk": "Sélectionner le CNK du médicament",
+    "select_cnk_instruction": "Plusieurs médicaments correspondent à ce nom. Veuillez sélectionner le bon:",
+    "skip_medication": "Ignorer ce médicament",
+    "matching_cnk": "Correspondance du médicament au CNK...",
+    "cnk_match_failed": "Impossible de faire correspondre automatiquement le médicament au CNK",
+    "no_vmp": "Pas de VMP",
+    "no_vmp_warning": "Ce médicament n'a pas de code VMP. La correspondance d'adhérence thérapeutique peut être limitée.",
+    "medication_list": "Liste des médicaments"
   },
   "modals": {
     "add_contraindications": "Ajouter des contre-indications",
@@ -666,5 +692,115 @@
     "submitting": "Envoi en cours...",
     "success": "Merci pour vos commentaires !",
     "error_submitting": "Échec de l'envoi des commentaires. Veuillez réessayer."
+  },
+  "therapy_chart": {
+    "zoom_in": "Zoom avant",
+    "zoom_out": "Zoom arrière",
+    "reset_zoom": "Réinitialiser le zoom",
+    "toggle_pan": "Mode déplacement",
+    "as_needed_medication": "Médicament au besoin",
+    "no_dispensing_data": "Aucune donnée de dispensation",
+    "no_medications_in_review": "Aucun médicament dans la revue",
+    "stock_level": "Niveau de stock",
+    "dispensing": "Dispensation",
+    "dispensed": "Dispensé"
+  },
+  "renadaptor_component": {
+    "no_medications_with_cnk": "Aucun médicament avec codes CNK trouvé",
+    "click_medication_left": "Cliquez sur un médicament dans le panneau de gauche pour accéder à Renadaptor",
+    "select_medication_left": "Sélectionnez un médicament dans le panneau de gauche",
+    "click_any_medication": "Cliquez sur une boîte de médicament pour accéder aux informations de dosage rénal Renadaptor",
+    "ml_min_optional": "mL/min (optionnel)",
+    "info_banner": "Renadaptor fournit des ajustements de dosage rénal et des conseils pour les patients atteints de maladie rénale. Les URLs expirent après 5 minutes.",
+    "url_expired": "URL expirée",
+    "url_expired_message": "Ce lien Renadaptor a expiré. Cliquez sur actualiser pour en générer un nouveau.",
+    "refresh_url": "Actualiser l'URL",
+    "open_in_new_tab": "Ouvrir dans un nouvel onglet"
+  },
+  "posology_component": {
+    "click_medication_left": "Cliquez sur un médicament dans le panneau de gauche pour voir les informations de dosage",
+    "click_any_medication": "Cliquez sur une boîte de médicament pour voir les informations de posologie"
+  },
+  "note_overview": {
+    "no_notes_yet": "Pas encore de notes",
+    "add_notes_hint": "Ajoutez des notes depuis la page d'analyse en utilisant les boutons \"Ajouter une note\" sur chaque outil.",
+    "for_patient_conversation": "Pour la conversation patient",
+    "for_gp_report": "Pour le rapport médecin",
+    "internal_notes": "Notes internes",
+    "note_text_label": "Texte de la note :",
+    "note_placeholder": "Entrez votre note ici...",
+    "category_label": "Catégorie :",
+    "category_therapy_adherence": "Observance thérapeutique (Partie 2)",
+    "category_effectiveness": "Efficacité (Partie 3)",
+    "back_to_analysis": "Retour à l'analyse",
+    "create_patient_conversation": "Créer une conversation patient"
+  },
+  "interaction_notes": {
+    "add_note_title": "Ajouter une note pour l'interaction",
+    "interaction_label": "Interaction :",
+    "type_label": "Type :",
+    "severity_label": "Gravité :",
+    "number_label": "Numéro :",
+    "note_label": "Note :",
+    "note_placeholder": "Entrez votre note sur cette interaction...",
+    "add_to_patient": "Ajouter à la conversation patient",
+    "add_to_gp": "Ajouter au rapport médecin",
+    "add_to_anamnesis": "Ajouter à l'anamnèse"
+  },
+  "contraindications_component": {
+    "contraindication_details": "Détails de la contre-indication",
+    "no_additional_found": "Aucune contre-indication supplémentaire trouvée",
+    "plausibility": "Plausibilité :",
+    "frequency": "Fréquence :",
+    "source": "Source :"
+  },
+  "questionnaire_component": {
+    "add_general_note": "Ajouter une note générale",
+    "select_category_hint": "Sélectionnez une catégorie de questions à gauche pour commencer"
+  },
+  "analysis": {
+    "tool_panel_for": "Panneau d'outil pour {{tool}}",
+    "select_tool_hint": "Sélectionnez un outil dans la barre d'outils pour commencer"
+  },
+  "pdf_preview": {
+    "title": "Aperçu PDF",
+    "download": "Télécharger le PDF",
+    "continue_to_actions": "Continuer vers les actions",
+    "generating": "Génération de l'aperçu PDF...",
+    "error_message": "Veuillez réessayer ou contacter le support si le problème persiste."
+  },
+  "errors": {
+    "failed_to_load_data": "Échec du chargement des données",
+    "failed_to_load_medications": "Échec du chargement des médicaments",
+    "failed_to_load_renadaptor": "Échec du chargement de Renadaptor. Veuillez réessayer.",
+    "failed_to_load_posology": "Échec du chargement des informations de dosage",
+    "session_not_available": "Données de session non disponibles. Veuillez vous reconnecter.",
+    "failed_to_delete_note": "Échec de la suppression de la note. Veuillez réessayer.",
+    "failed_to_update_note": "Échec de la mise à jour de la note. Veuillez réessayer.",
+    "failed_to_save_note": "Échec de l'enregistrement de la note. Veuillez réessayer.",
+    "failed_to_clear_answers": "Échec de l'effacement de toutes les réponses. Veuillez réessayer.",
+    "failed_to_update_medication": "Échec de la mise à jour du médicament. Veuillez réessayer.",
+    "failed_to_add_medication": "Échec de l'ajout du médicament. Veuillez réessayer.",
+    "failed_add_dispensing": "Échec de l'ajout de tous les moments de dispensation. Veuillez réessayer.",
+    "add_dispensing_moment": "Veuillez ajouter au moins un moment de dispensation",
+    "search_failed": "Échec de la recherche. Veuillez réessayer.",
+    "failed_load_contraindications": "Échec du chargement des contre-indications depuis APB. Veuillez réessayer.",
+    "no_review_selected": "Aucune revue de médicaments sélectionnée",
+    "failed_save_contraindications": "Échec de l'enregistrement des contre-indications. Veuillez réessayer.",
+    "enter_lab_name": "Veuillez entrer un nom pour la valeur de laboratoire.",
+    "enter_lab_value": "Veuillez entrer une valeur.",
+    "enter_lab_unit": "Veuillez entrer une unité.",
+    "failed_add_lab_value": "Échec de l'ajout de la valeur de laboratoire. Veuillez réessayer.",
+    "failed_delete_lab_value": "Échec de la suppression de la valeur de laboratoire. Veuillez réessayer.",
+    "no_medications_in_csv": "Aucun médicament trouvé dans le fichier CSV. Veuillez vérifier le format du fichier ou essayer une autre exportation.",
+    "failed_read_csv": "Échec de la lecture du fichier CSV. Veuillez réessayer.",
+    "create_review_first": "Veuillez d'abord créer ou sélectionner une revue de médicaments.",
+    "failed_match_cnk": "Échec de la correspondance des médicaments aux codes CNK. Veuillez réessayer.",
+    "no_medications_to_delete": "Aucun médicament à supprimer.",
+    "cannot_delete_moment": "Impossible de supprimer : l'ID du moment est manquant ou vide.",
+    "failed_remove_contraindication": "Échec de la suppression de la contre-indication. Veuillez réessayer.",
+    "invalid_vmp_code": "Code VMP invalide. Veuillez entrer un numéro valide.",
+    "import_success": "{{count}} médicament(s) importé(s) avec succès.",
+    "delete_success": "{{count}} médicament(s) supprimé(s)."
   }
 }

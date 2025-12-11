@@ -5,9 +5,9 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: visible; // Let parent handle scrolling
-  overflow-x: visible; // Ensure controls are not clipped horizontally
+  overflow: visible; // Let parent handle all scrolling to keep alignment with medications
   margin-top: 0; // Remove top margin to align controls
+  min-width: 0; // Allow flex shrinking
 }
 
 .loading-state {
@@ -101,12 +101,13 @@
   flex-direction: column;
   position: relative;
   overflow: visible; // Ensure controls above are not clipped
-  margin-top: 2rem; // Add top margin to replace removed graphs-header spacing
+  margin-top: -0.67rem; // Remove top margin - controls will handle their own spacing
+  padding-top: 0rem; // Add padding to make room for floating buttons
 
   // Floating general note button in top right
   .floating-top-right {
     position: absolute;
-    top: 1rem;
+    top: 0;
     right: 2rem;
     z-index: 10;
   }
@@ -114,8 +115,8 @@
   // Refresh button in top right (next to general note)
   .refresh-tool-button {
     position: absolute;
-    top: 1rem;
-    right: 4.5rem;
+    top: 0;
+    right: -0.5rem;
     z-index: 10;
     width: 32px;
     height: 32px;
@@ -201,7 +202,9 @@
   margin: 0 5rem 0.25rem 2rem;
   gap: 1rem;
   position: relative;
-  top: 0rem; // Move controls above the graph area
+  top: 0.5rem; // Move controls above the graph area
+  min-width: 700px; // Minimum width to prevent controls from getting too squished
+  flex-shrink: 0;
 }
 
 .date-filter-group {
@@ -360,8 +363,9 @@
 
 .units-per-package-inline {
   position: absolute;
-  left: -60px;
-  width: 50px;
+  left: -65px;
+  width: 55px;
+  min-width: 55px; // Prevent shrinking
   height: 4.5rem; // Match graph box height
   padding: 0.375rem 0.25rem;
   border: 1px solid $box-border-primary;
@@ -371,6 +375,7 @@
   color: $text-primary;
   text-align: center;
   flex-shrink: 0;
+  box-sizing: border-box;
   
   &:focus {
     outline: none;
@@ -395,7 +400,7 @@
   position: relative;
   gap: 0;
   margin-bottom: 1rem; // Match medication item margin-bottom
-  margin-left: 2rem;
+  margin-left: 5rem; // Increased to ensure quantity input is fully visible when zoomed
   margin-right: 5rem; // Match header right margin
   overflow: visible; // Allow tooltip to render outside
 }

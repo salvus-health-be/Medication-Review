@@ -33,10 +33,26 @@
     "help": "Help",
     "logout": "Uitloggen",
     "profile": "Profiel",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "reset": "Resetten",
+    "from": "Van",
+    "until": "Tot",
+    "pan": "Verschuiven",
+    "zoom": "Zoom",
+    "expired": "Verlopen",
+    "general": "Algemeen",
+    "patient": "Patiënt",
+    "gp_report": "Huisartsrapport",
+    "save_note": "Notitie opslaan",
+    "continue": "Doorgaan",
+    "go_to_analysis": "Ga naar analyse",
+    "reasons": "reden(en)",
+    "select": "Selecteren",
+    "enter_answer": "Voer uw antwoord in",
+    "language_selector": "Taalkeuze"
   },
   "header": {
-    "step_1": "Input",
+    "step_1": "Invoer",
     "step_2": "Analyse",
     "step_3": "Acties",
     "step_4": "Documentatie",
@@ -96,7 +112,9 @@
     "as_needed_short": "Zo nodig",
     "indication_label": "Indicatie",
     "plus_add": "+ Toevoegen",
-    "not_enabled": "Niet ingeschakeld"
+    "not_enabled": "Niet ingeschakeld",
+    "mobile_not_supported_title": "Desktop vereist",
+    "mobile_not_supported_message": "Deze applicatie vereist een groter scherm om goed te functioneren. Gebruik een desktop of laptop computer."
   },
   "input": {
     "start_preparation": "Voorbereiding starten"
@@ -153,7 +171,9 @@
     "select_cnk_instruction": "Meerdere medicijnen komen overeen met deze naam. Selecteer de juiste:",
     "skip_medication": "Deze Medicatie Overslaan",
     "matching_cnk": "Medicatie koppelen aan CNK...",
-    "cnk_match_failed": "Kon medicatie niet automatisch koppelen aan CNK"
+    "cnk_match_failed": "Kon medicatie niet automatisch koppelen aan CNK",
+    "no_vmp": "Geen VMP",
+    "no_vmp_warning": "Dit medicijn heeft geen VMP-code. Therapietrouwmatching kan beperkt zijn."
   },
   "modals": {
     "add_contraindications": "Contra-indicaties toevoegen",
@@ -700,5 +720,115 @@
     "submitting": "Verzenden...",
     "success": "Bedankt voor uw feedback!",
     "error_submitting": "Feedback verzenden is mislukt. Probeer het opnieuw."
+  },
+  "therapy_chart": {
+    "zoom_in": "Inzoomen",
+    "zoom_out": "Uitzoomen",
+    "reset_zoom": "Zoom resetten",
+    "toggle_pan": "Verschuifmodus",
+    "as_needed_medication": "Zo nodig medicatie",
+    "no_dispensing_data": "Geen aflevergegevens",
+    "no_medications_in_review": "Geen medicijnen in het medicatieoverzicht",
+    "stock_level": "Voorraadniveau",
+    "dispensing": "Aflevering",
+    "dispensed": "Afgeleverd"
+  },
+  "renadaptor_component": {
+    "no_medications_with_cnk": "Geen medicijnen met CNK-codes gevonden",
+    "click_medication_left": "Klik op een medicijn in het linkerpaneel om Renadaptor te openen",
+    "select_medication_left": "Selecteer een medicijn uit het linkerpaneel",
+    "click_any_medication": "Klik op een medicijnvak om Renadaptor te openen voor nierdoseringsinformatie",
+    "ml_min_optional": "mL/min (optioneel)",
+    "info_banner": "Renadaptor biedt nierdoseringsaanpassingen en begeleiding voor patiënten met nierziekte. URL's verlopen na 5 minuten.",
+    "url_expired": "URL verlopen",
+    "url_expired_message": "Deze Renadaptor-link is verlopen. Klik op vernieuwen om een nieuwe te genereren.",
+    "refresh_url": "URL vernieuwen",
+    "open_in_new_tab": "Openen in nieuw tabblad"
+  },
+  "posology_component": {
+    "click_medication_left": "Klik op een medicijn in het linkerpaneel om doseringsinformatie te bekijken",
+    "click_any_medication": "Klik op een medicijnvak om posologie-informatie te bekijken"
+  },
+  "note_overview": {
+    "no_notes_yet": "Nog geen notities",
+    "add_notes_hint": "Voeg notities toe vanaf de analysepagina met de \"Notitie toevoegen\" knoppen bij elk hulpmiddel.",
+    "for_patient_conversation": "Voor patiëntgesprek",
+    "for_gp_report": "Voor huisartsrapport",
+    "internal_notes": "Interne notities",
+    "note_text_label": "Notitietekst:",
+    "note_placeholder": "Voer hier uw notitie in...",
+    "category_label": "Categorie:",
+    "category_therapy_adherence": "Therapietrouw (Deel 2)",
+    "category_effectiveness": "Effectiviteit (Deel 3)",
+    "back_to_analysis": "Terug naar analyse",
+    "create_patient_conversation": "Patiëntgesprek maken"
+  },
+  "interaction_notes": {
+    "add_note_title": "Notitie toevoegen voor interactie",
+    "interaction_label": "Interactie:",
+    "type_label": "Type:",
+    "severity_label": "Ernst:",
+    "number_label": "Nummer:",
+    "note_label": "Notitie:",
+    "note_placeholder": "Voer uw notitie over deze interactie in...",
+    "add_to_patient": "Toevoegen aan patiëntgesprek",
+    "add_to_gp": "Toevoegen aan huisartsrapport",
+    "add_to_anamnesis": "Toevoegen aan anamnese"
+  },
+  "contraindications_component": {
+    "contraindication_details": "Contra-indicatie details",
+    "no_additional_found": "Geen aanvullende contra-indicaties gevonden",
+    "plausibility": "Plausibiliteit:",
+    "frequency": "Frequentie:",
+    "source": "Bron:"
+  },
+  "questionnaire_component": {
+    "add_general_note": "Algemene notitie toevoegen",
+    "select_category_hint": "Selecteer een vraagcategorie aan de linkerkant om te beginnen"
+  },
+  "analysis": {
+    "tool_panel_for": "Hulpmiddelpaneel voor {{tool}}",
+    "select_tool_hint": "Selecteer een hulpmiddel uit de werkbalk om te beginnen"
+  },
+  "pdf_preview": {
+    "title": "PDF-voorbeeld",
+    "download": "PDF downloaden",
+    "continue_to_actions": "Doorgaan naar acties",
+    "generating": "PDF-voorbeeld genereren...",
+    "error_message": "Probeer het opnieuw of neem contact op met support als het probleem aanhoudt."
+  },
+  "errors": {
+    "failed_to_load_data": "Gegevens laden mislukt",
+    "failed_to_load_medications": "Medicijnen laden mislukt",
+    "failed_to_load_renadaptor": "Renadaptor laden mislukt. Probeer het opnieuw.",
+    "session_not_available": "Sessiegegevens niet beschikbaar. Log opnieuw in.",
+    "failed_to_delete_note": "Notitie verwijderen mislukt. Probeer het opnieuw.",
+    "failed_to_update_note": "Notitie bijwerken mislukt. Probeer het opnieuw.",
+    "failed_to_save_note": "Notitie opslaan mislukt. Probeer het opnieuw.",
+    "failed_to_clear_answers": "Alle antwoorden wissen mislukt. Probeer het opnieuw.",
+    "failed_to_update_medication": "Medicijn bijwerken mislukt. Probeer het opnieuw.",
+    "failed_to_add_medication": "Medicijn toevoegen mislukt. Probeer het opnieuw.",
+    "failed_add_dispensing": "Alle afleveringsmomenten toevoegen mislukt. Probeer het opnieuw.",
+    "add_dispensing_moment": "Voeg minimaal één afleveringsmoment toe",
+    "search_failed": "Zoeken mislukt. Probeer het opnieuw.",
+    "failed_load_contraindications": "Contra-indicaties laden van APB mislukt. Probeer het opnieuw.",
+    "no_review_selected": "Geen medicatieoverzicht geselecteerd",
+    "failed_save_contraindications": "Contra-indicaties opslaan mislukt. Probeer het opnieuw.",
+    "enter_lab_name": "Voer een naam in voor de labwaarde.",
+    "enter_lab_value": "Voer een waarde in.",
+    "enter_lab_unit": "Voer een eenheid in.",
+    "failed_add_lab_value": "Labwaarde toevoegen mislukt. Probeer het opnieuw.",
+    "failed_delete_lab_value": "Labwaarde verwijderen mislukt. Probeer het opnieuw.",
+    "no_medications_in_csv": "Geen medicijnen gevonden in het CSV-bestand. Controleer het bestandsformaat of probeer een andere export.",
+    "failed_read_csv": "CSV-bestand lezen mislukt. Probeer het opnieuw.",
+    "create_review_first": "Maak eerst een medicatieoverzicht aan of selecteer er één.",
+    "failed_match_cnk": "Medicijnen koppelen aan CNK-codes mislukt. Probeer het opnieuw.",
+    "no_medications_to_delete": "Geen medicijnen om te verwijderen.",
+    "cannot_delete_moment": "Kan niet verwijderen: moment-ID ontbreekt of is leeg.",
+    "failed_to_load_posology": "Doseringsinformatie laden mislukt",
+    "failed_remove_contraindication": "Contra-indicatie verwijderen mislukt. Probeer het opnieuw.",
+    "invalid_vmp_code": "Ongeldige VMP-code. Voer een geldig nummer in.",
+    "import_success": "{{count}} medicijn(en) succesvol geïmporteerd.",
+    "delete_success": "{{count}} medicijn(en) verwijderd."
   }
 }

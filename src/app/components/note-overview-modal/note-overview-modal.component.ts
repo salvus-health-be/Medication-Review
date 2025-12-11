@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ReviewNotesService, ReviewNote } from '../../services/review-notes.service';
 import { StateService } from '../../services/state.service';
 import { ConfirmationModalComponent } from '../confirmation-modal/confirmation-modal.component';
@@ -36,7 +36,8 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
   constructor(
     private reviewNotesService: ReviewNotesService,
     private stateService: StateService,
-    private router: Router
+    private router: Router,
+    private transloco: TranslocoService
   ) {}
 
   ngOnInit() {
@@ -94,7 +95,7 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
         this.selectedNoteToDelete = null;
       },
       error: (error) => {
-        alert('Failed to delete note. Please try again.');
+        alert(this.transloco.translate('errors.failed_to_delete_note'));
         this.showDeleteConfirmation = false;
         this.selectedNoteToDelete = null;
       }
@@ -115,7 +116,7 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
       discussWithPatient: !note.discussWithPatient
     }).subscribe({
       error: (error) => {
-        alert('Failed to update note. Please try again.');
+        alert(this.transloco.translate('errors.failed_to_update_note'));
       }
     });
   }
@@ -129,7 +130,7 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
       communicateToDoctor: !note.communicateToDoctor
     }).subscribe({
       error: (error) => {
-        alert('Failed to update note. Please try again.');
+        alert(this.transloco.translate('errors.failed_to_update_note'));
       }
     });
   }
@@ -159,7 +160,7 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
         this.cancelEditing();
       },
       error: (error) => {
-        alert('Failed to update note. Please try again.');
+        alert(this.transloco.translate('errors.failed_to_update_note'));
       }
     });
   }
@@ -227,7 +228,7 @@ export class NoteOverviewModalComponent implements OnInit, OnDestroy {
         this.newNoteText = '';
       },
       error: (error) => {
-        alert('Failed to save note. Please try again.');
+        alert(this.transloco.translate('errors.failed_to_save_note'));
       }
     });
   }

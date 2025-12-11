@@ -48,6 +48,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     { number: 3, label: 'header.step_3', route: 'anamnesis' },
     { number: 4, label: 'header.step_4', route: 'report-generation' }
   ];
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
+  }
   
   private destroy$ = new Subject<void>();
 
@@ -249,7 +253,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.stateService.notifyContraindicationsChanged();
       },
       error: (error) => {
-        alert('Failed to remove contra-indication. Please try again.');
+        alert(this.transloco.translate('errors.failed_remove_contraindication'));
       }
     });
   }

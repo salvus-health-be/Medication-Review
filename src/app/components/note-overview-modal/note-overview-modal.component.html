@@ -32,8 +32,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
-          <h2>No notes yet</h2>
-          <p>Add notes from the analysis page using the "Add Note" buttons on each tool.</p>
+          <h2>{{ 'note_overview.no_notes_yet' | transloco }}</h2>
+          <p>{{ 'note_overview.add_notes_hint' | transloco }}</p>
         </div>
       } @else {
         <div class="notes-list">
@@ -57,7 +57,7 @@
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                       </svg>
-                      General
+                      {{ 'common.general' | transloco }}
                     </div>
                   }
                   @if (note.category) {
@@ -110,12 +110,12 @@
                       class="toggle-btn"
                       [class.active]="note.discussWithPatient"
                       (click)="toggleDiscussWithPatient(note)"
-                      title="Include in patient conversation">
+                      [title]="'interaction_notes.add_to_patient' | transloco">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                       </svg>
-                      Patient
+                      {{ 'common.patient' | transloco }}
                     </button>
                     <button 
                       class="toggle-btn"
@@ -156,24 +156,24 @@
       <div class="general-note-form">
         <h3>{{ 'note_modal.add_general_note' | transloco }}</h3>
         <div class="form-group">
-          <label for="noteText">Note Text:</label>
+          <label for="noteText">{{ 'note_overview.note_text_label' | transloco }}</label>
           <textarea 
             id="noteText" 
             [(ngModel)]="newNoteText" 
-            placeholder="Enter your note here..."
+            [placeholder]="'note_overview.note_placeholder' | transloco"
             rows="4"
           ></textarea>
         </div>
         <div class="form-group">
-          <label for="noteCategory">Category:</label>
+          <label for="noteCategory">{{ 'note_overview.category_label' | transloco }}</label>
           <select id="noteCategory" [(ngModel)]="newNoteCategory">
-            <option value="TherapyAdherence">Therapy Adherence (Part 2)</option>
-            <option value="Effectiveness">Effectiveness (Part 3)</option>
+            <option value="TherapyAdherence">{{ 'note_overview.category_therapy_adherence' | transloco }}</option>
+            <option value="Effectiveness">{{ 'note_overview.category_effectiveness' | transloco }}</option>
           </select>
         </div>
         <div class="form-actions">
-          <button class="btn-secondary" (click)="cancelAddGeneralNote()">Cancel</button>
-          <button class="btn-primary" (click)="saveGeneralNote()" [disabled]="!newNoteText.trim()">Save Note</button>
+          <button class="btn-secondary" (click)="cancelAddGeneralNote()">{{ 'common.cancel' | transloco }}</button>
+          <button class="btn-primary" (click)="saveGeneralNote()" [disabled]="!newNoteText.trim()">{{ 'common.save_note' | transloco }}</button>
         </div>
       </div>
     }
