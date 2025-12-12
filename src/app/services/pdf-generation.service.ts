@@ -7,7 +7,7 @@ import { ApiService } from './api.service';
 import { StateService } from './state.service';
 import { ReviewNotesService, ReviewNote } from './review-notes.service';
 import { forkJoin, Observable, of } from 'rxjs';
-import { map, catchError, mergeMap } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { 
   QuestionAnswer, 
   Medication, 
@@ -16,9 +16,6 @@ import {
   Patient,
   MedicationReview 
 } from '../models/api.models';
-import { PatientSummaryGenerator } from './pdf-generators/patient-summary-generator';
-import { DoctorSummaryGenerator } from './pdf-generators/doctor-summary-generator';
-import { PharmacySummaryGenerator } from './pdf-generators/pharmacy-summary-generator';
 
 // Initialize pdfMake with fonts
 (pdfMake as any).vfs = vfs;
@@ -42,24 +39,13 @@ export class PdfGenerationService {
   private transloco = inject(TranslocoService);
   private reviewNotesService = inject(ReviewNotesService);
 
-  // Specialized document generators
-  private patientGenerator: PatientSummaryGenerator;
-  private doctorGenerator: DoctorSummaryGenerator;
-  private pharmacyGenerator: PharmacySummaryGenerator;
-
-  // Brand colors (kept for deprecated methods only)
+  // Brand colors
   private readonly brandPrimary = '#454B60';
   private readonly brandSecondary = '#5F6476';
   private readonly brandAccent = '#9DC9A2';
   private readonly textPrimary = '#454B60';
   private readonly textSecondary = '#666666';
   private readonly borderColor = '#e0e0e0';
-
-  constructor() {
-    this.patientGenerator = new PatientSummaryGenerator(this.transloco);
-    this.doctorGenerator = new DoctorSummaryGenerator(this.transloco);
-    this.pharmacyGenerator = new PharmacySummaryGenerator(this.transloco);
-  }
 
   private loadReportData(): Observable<ReportData> {
     const apbNumber = this.stateService.apbNumber;
@@ -97,53 +83,6 @@ export class PdfGenerationService {
     );
   }
 
-  generatePatientSummary(): Observable<Blob> {
-    return this.loadReportData().pipe(
-      mergeMap((data: ReportData) => {
-        const docDefinition = this.patientGenerator.generate(
-          data.patient,
-          data.review,
-          data.medications,
-          data.reviewNotes,
-          data.questionAnswers
-        );
-        return this.createPdfBlob(docDefinition);
-      })
-    );
-  }
-
-  generateDoctorSummary(): Observable<Blob> {
-    return this.loadReportData().pipe(
-      mergeMap((data: ReportData) => {
-        const docDefinition = this.doctorGenerator.generate(
-          data.patient,
-          data.review,
-          data.medications,
-          data.reviewNotes,
-          data.questionAnswers
-        );
-        return this.createPdfBlob(docDefinition);
-      })
-    );
-  }
-
-  generatePharmacySummary(): Observable<Blob> {
-    return this.loadReportData().pipe(
-      mergeMap((data: ReportData) => {
-        const docDefinition = this.pharmacyGenerator.generate(
-          data.patient,
-          data.review,
-          data.medications,
-          data.questionAnswers,
-          data.contraindications,
-          data.labValues,
-          data.reviewNotes
-        );
-        return this.createPdfBlob(docDefinition);
-      })
-    );
-  }
-
   private createPdfBlob(docDefinition: TDocumentDefinitions): Observable<Blob> {
     return new Observable<Blob>(observer => {
       try {
@@ -160,9 +99,7 @@ export class PdfGenerationService {
   }
 
   // ============================================================================
-  // DEPRECATED: Old document creation methods below are kept for backward
-  // compatibility. New code should use the specialized generator classes.
-  // These methods may be removed in a future version.
+  // Helper methods for PDF generation
   // ============================================================================
 
   private createPatientSummaryDocument(data: ReportData): TDocumentDefinitions {

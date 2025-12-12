@@ -553,111 +553,66 @@ export class ReportGenerationPage implements OnInit {
       throw new Error('Patient content not initialized');
     }
 
-    const content: any[] = [];
     const lang = this.transloco.getActiveLang();
-    const colors = {
-      primary: '#3B82F6',
-      accent: '#10B981',
-      text: '#2C3E50',
-      textSecondary: '#5F6476',
-      border: '#E8EBF0',
-      background: '#F8F9FB',
-      noteBackground: '#FEF3C7',
-      actionBackground: '#DBEAFE'
-    };
-
-    // Logo and Header
-    content.push({
-      columns: [
-        {
-          width: '*',
-          text: this.patientContent.documentTitle,
-          style: 'letterHeader'
-        },
-        {
-          width: 80,
-          text: 'Salvus Health',
-          style: 'logoText',
-          alignment: 'right'
-        }
-      ]
-    });
-    content.push({
-      canvas: [
-        {
-          type: 'line',
-          x1: 0,
-          y1: 5,
-          x2: 515,
-          y2: 5,
-          lineWidth: 1,
-          lineColor: colors.border
-        }
-      ],
-      margin: [0, 10, 0, 15]
-    });
-
-    // Date
     const date = new Date().toLocaleDateString(lang === 'nl' ? 'nl-BE' : lang === 'fr' ? 'fr-BE' : 'en-GB', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
-    content.push({
-      text: date,
-      style: 'dateText'
-    });
-    content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Salutation
+    // Group recommendations by context
+    const groupedRecs = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
+    const recsWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
+
+    this.patientContent.recommendations.forEach(rec => {
+      const item = { text: rec.text, action: rec.action, isActionOnly: rec.isActionOnly };
+      if (rec.context) {
+        if (!groupedRecs.has(rec.context)) {
+          groupedRecs.set(rec.context, []);
+        }
+        groupedRecs.get(rec.context)!.push(item);
+      } else {
+        recsWithoutContext.push(item);
+      }
+    });
+
+    const content: any[] = [];
+
+    // Build recommendation sections
+    const recommendationContent: any[] = [];
+    
+    if (recsWithoutContext.length > 0) {
+      const generalLabel = lang === 'nl' ? 'Algemene aanbevelingen' : lang === 'fr' ? 'Recommandations générales' : 'General recommendations';
+      recommendationContent.push(this.createProfessionalSection(generalLabel, recsWithoutContext, lang, 'patient'));
+    }
+
+    groupedRecs.forEach((items, medicationName) => {
+      recommendationContent.push(this.createProfessionalSection(medicationName, items, lang, 'patient'));
+    });
+
+    // Letter body
     content.push({
       text: this.patientContent.salutation,
-      style: 'bodyText'
+      style: 'salutation',
+      margin: [0, 0, 0, 16]
     });
-    content.push({ text: '', margin: [0, 10, 0, 0] });
 
-    // Introduction
     content.push({
       text: this.patientContent.introText,
       style: 'bodyText',
-      alignment: 'justify'
+      alignment: 'justify',
+      margin: [0, 0, 0, 24]
     });
-    content.push({ text: '', margin: [0, 16, 0, 0] });
 
-    // Recommendations Section
-    if (this.patientContent.recommendations.length > 0) {
+    // Recommendations
+    if (recommendationContent.length > 0) {
       content.push({
         text: this.patientContent.recommendationsHeading,
-        style: 'sectionHeading'
+        style: 'sectionTitle',
+        margin: [0, 0, 0, 16]
       });
-      content.push({ text: '', margin: [0, 12, 0, 0] });
-
-      // Group recommendations by context (medication)
-      const groupedRecs = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
-      const recsWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
-
-      this.patientContent.recommendations.forEach(rec => {
-        const item = { text: rec.text, action: rec.action, isActionOnly: rec.isActionOnly };
-        if (rec.context) {
-          if (!groupedRecs.has(rec.context)) {
-            groupedRecs.set(rec.context, []);
-          }
-          groupedRecs.get(rec.context)!.push(item);
-        } else {
-          recsWithoutContext.push(item);
-        }
-      });
-
-      // Render recommendations without context as general items first
-      if (recsWithoutContext.length > 0) {
-        const generalLabel = lang === 'nl' ? 'Algemene Aanbevelingen' : lang === 'fr' ? 'Recommandations Générales' : 'General Recommendations';
-        content.push(this.createPatientRecommendationCard(generalLabel, recsWithoutContext, colors, lang));
-      }
-
-      // Render grouped recommendations as medication cards
-      groupedRecs.forEach((items, medicationName) => {
-        content.push(this.createPatientRecommendationCard(medicationName, items, colors, lang));
-      });
+      
+      recommendationContent.forEach(section => content.push(section));
     }
 
     // Closing
@@ -665,143 +620,35 @@ export class ReportGenerationPage implements OnInit {
       text: this.patientContent.closingText,
       style: 'bodyText',
       alignment: 'justify',
-      margin: [0, 8, 0, 0]
+      margin: [0, 24, 0, 32]
     });
-    content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Sign-off
     content.push({
       text: this.patientContent.signOff,
-      style: 'bodyText'
+      style: 'bodyText',
+      margin: [0, 0, 0, 8]
     });
 
-    // Pharmacist name
     if (this.patientContent.pharmacistName) {
-      content.push({ text: '', margin: [0, 8, 0, 0] });
       content.push({
         text: this.patientContent.pharmacistName,
-        style: 'pharmacistName'
+        style: 'signature'
       });
     }
 
     return {
+      pageSize: 'A4',
+      pageMargins: [56, 120, 56, 80],
+      header: this.createProfessionalHeader(this.patientContent.documentTitle, date),
+      footer: (currentPage: number, pageCount: number) => this.createProfessionalFooter(currentPage, pageCount, lang),
       content,
-      styles: this.getPatientStyles(),
-      pageMargins: [60, 60, 60, 60],
+      styles: this.getProfessionalStyles(),
       defaultStyle: {
         font: 'Roboto',
-        fontSize: 10,
-        lineHeight: 1.4
+        fontSize: 10.5,
+        lineHeight: 1.5,
+        color: '#2D3748'
       }
-    };
-  }
-
-  /**
-   * Creates a styled recommendation card for patient summary
-   */
-  private createPatientRecommendationCard(
-    title: string,
-    items: { text: string; action?: string; isActionOnly?: boolean }[],
-    colors: any,
-    lang: string
-  ): any {
-    const stack: any[] = [];
-
-    // Card header with accent bar
-    stack.push({
-      columns: [
-        {
-          canvas: [
-            {
-              type: 'rect',
-              x: 0, y: 0,
-              w: 4, h: 20,
-              color: colors.primary
-            }
-          ],
-          width: 8
-        },
-        {
-          text: title,
-          style: 'cardTitle',
-          margin: [8, 2, 0, 0]
-        }
-      ],
-      margin: [0, 0, 0, 10]
-    });
-
-    // Render each recommendation item
-    items.forEach((item, index) => {
-      if (index > 0) {
-        stack.push({
-          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 435, y2: 0, lineWidth: 0.5, lineColor: colors.border }],
-          margin: [0, 8, 0, 8]
-        });
-      }
-
-      // Note text (if not action-only)
-      if (!item.isActionOnly && item.text) {
-        const noteLabel = lang === 'nl' ? 'Opmerking:' : lang === 'fr' ? 'Remarque:' : 'Note:';
-        stack.push({
-          table: {
-            widths: ['*'],
-            body: [[{
-              stack: [
-                { text: noteLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
-                { text: item.text, style: 'itemText' }
-              ],
-              margin: [10, 8, 10, 8]
-            }]]
-          },
-          layout: {
-            hLineWidth: () => 0,
-            vLineWidth: () => 0,
-            fillColor: () => colors.noteBackground
-          },
-          margin: [0, 0, 0, 6]
-        });
-      }
-
-      // Action/tip (if present)
-      if (item.action) {
-        const actionLabel = lang === 'nl' ? 'Actiepunt:' : lang === 'fr' ? 'Point d\'Action:' : 'Action Point:';
-        stack.push({
-          table: {
-            widths: ['*'],
-            body: [[{
-              stack: [
-                { text: actionLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
-                { text: item.action, style: 'itemText' }
-              ],
-              margin: [10, 8, 10, 8]
-            }]]
-          },
-          layout: {
-            hLineWidth: () => 0,
-            vLineWidth: () => 0,
-            fillColor: () => colors.actionBackground
-          },
-          margin: [0, 0, 0, 0]
-        });
-      }
-    });
-
-    return {
-      table: {
-        widths: ['*'],
-        body: [[{ stack, margin: [14, 14, 14, 14] }]]
-      },
-      layout: {
-        hLineWidth: () => 1,
-        vLineWidth: () => 1,
-        hLineColor: () => colors.border,
-        vLineColor: () => colors.border,
-        paddingLeft: () => 0,
-        paddingRight: () => 0,
-        paddingTop: () => 0,
-        paddingBottom: () => 0
-      },
-      margin: [0, 0, 0, 12]
     };
   }
 
@@ -810,128 +657,73 @@ export class ReportGenerationPage implements OnInit {
       throw new Error('Doctor content not initialized');
     }
 
-    const content: any[] = [];
     const lang = this.transloco.getActiveLang();
-    const colors = {
-      primary: '#4A90A4',
-      accent: '#6B7280',
-      text: '#2C3E50',
-      textSecondary: '#5F6476',
-      border: '#E8EBF0',
-      background: '#F8F9FB',
-      noteBackground: '#FFF9E6',
-      actionBackground: '#E8F4F8'
-    };
-
-    // Logo and Header
-    content.push({
-      columns: [
-        {
-          width: '*',
-          text: this.doctorContent.documentTitle,
-          style: 'letterHeader'
-        },
-        {
-          width: 80,
-          text: 'Salvus Health',
-          style: 'logoText',
-          alignment: 'right'
-        }
-      ]
-    });
-    content.push({
-      canvas: [
-        {
-          type: 'line',
-          x1: 0,
-          y1: 5,
-          x2: 515,
-          y2: 5,
-          lineWidth: 1,
-          lineColor: colors.border
-        }
-      ],
-      margin: [0, 10, 0, 15]
-    });
-
-    // Date
     const date = new Date().toLocaleDateString(lang === 'nl' ? 'nl-BE' : lang === 'fr' ? 'fr-BE' : 'en-GB', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
-    content.push({
-      text: date,
-      style: 'dateText'
+
+    // Patient reference
+    let patientRef = lang === 'nl' ? 'Betreft: Medicatiebeoordeling patiënt' : 
+                     lang === 'fr' ? 'Concernant: Revue de médication patient' : 
+                     'Re: Patient medication review';
+
+    // Group observations by context
+    const groupedObs = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
+    const obsWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
+
+    this.doctorContent.observations.forEach(obs => {
+      const item = { text: obs.text, action: obs.action, isActionOnly: obs.isActionOnly };
+      if (obs.context) {
+        if (!groupedObs.has(obs.context)) {
+          groupedObs.set(obs.context, []);
+        }
+        groupedObs.get(obs.context)!.push(item);
+      } else {
+        obsWithoutContext.push(item);
+      }
     });
-    content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Patient info - anonymous for MVP
-    let patientRef = 'Betreft: Patiënt';
-    if (lang === 'fr') patientRef = 'Concernant : Patient(e)';
-    else if (lang === 'en') patientRef = 'Regarding: Patient';
+    const content: any[] = [];
 
+    // Reference line
     content.push({
-      table: {
-        widths: ['*'],
-        body: [[{ text: patientRef, style: 'patientReference', margin: [8, 6, 8, 6] }]]
-      },
-      layout: {
-        hLineWidth: () => 0,
-        vLineWidth: () => 0,
-        fillColor: () => colors.background
-      },
-      margin: [0, 0, 0, 15]
+      text: patientRef,
+      style: 'reference',
+      margin: [0, 0, 0, 20]
     });
 
     // Salutation
     content.push({
       text: this.doctorContent.salutation,
-      style: 'bodyText'
+      style: 'salutation',
+      margin: [0, 0, 0, 16]
     });
-    content.push({ text: '', margin: [0, 10, 0, 0] });
 
     // Introduction
     content.push({
       text: this.doctorContent.introText,
       style: 'bodyText',
-      alignment: 'justify'
+      alignment: 'justify',
+      margin: [0, 0, 0, 24]
     });
-    content.push({ text: '', margin: [0, 16, 0, 0] });
 
-    // Observations Section
+    // Observations section
     if (this.doctorContent.observations.length > 0) {
       content.push({
         text: this.doctorContent.observationsHeading,
-        style: 'sectionHeading'
-      });
-      content.push({ text: '', margin: [0, 12, 0, 0] });
-
-      // Group observations by context (medication)
-      const groupedObs = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
-      const obsWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
-
-      this.doctorContent.observations.forEach(obs => {
-        const item = { text: obs.text, action: obs.action, isActionOnly: obs.isActionOnly };
-        if (obs.context) {
-          if (!groupedObs.has(obs.context)) {
-            groupedObs.set(obs.context, []);
-          }
-          groupedObs.get(obs.context)!.push(item);
-        } else {
-          obsWithoutContext.push(item);
-        }
+        style: 'sectionTitle',
+        margin: [0, 0, 0, 16]
       });
 
-      // Render observations without context as general items first
       if (obsWithoutContext.length > 0) {
-        const generalLabel = lang === 'nl' ? 'Algemene Observaties' : lang === 'fr' ? 'Observations Générales' : 'General Observations';
-        content.push(this.createObservationCard(generalLabel, obsWithoutContext, colors, lang));
+        const generalLabel = lang === 'nl' ? 'Algemene observaties' : lang === 'fr' ? 'Observations générales' : 'General observations';
+        content.push(this.createProfessionalSection(generalLabel, obsWithoutContext, lang, 'doctor'));
       }
 
-      // Render grouped observations as medication cards
       groupedObs.forEach((items, medicationName) => {
-        content.push(this.createObservationCard(medicationName, items, colors, lang));
+        content.push(this.createProfessionalSection(medicationName, items, lang, 'doctor'));
       });
     }
 
@@ -940,143 +732,35 @@ export class ReportGenerationPage implements OnInit {
       text: this.doctorContent.closingText,
       style: 'bodyText',
       alignment: 'justify',
-      margin: [0, 8, 0, 0]
+      margin: [0, 24, 0, 32]
     });
-    content.push({ text: '', margin: [0, 20, 0, 0] });
 
-    // Sign-off
     content.push({
       text: this.doctorContent.signOff,
-      style: 'bodyText'
+      style: 'bodyText',
+      margin: [0, 0, 0, 8]
     });
 
-    // Pharmacist name
     if (this.doctorContent.pharmacistName) {
-      content.push({ text: '', margin: [0, 8, 0, 0] });
       content.push({
         text: this.doctorContent.pharmacistName,
-        style: 'pharmacistName'
+        style: 'signature'
       });
     }
 
     return {
+      pageSize: 'A4',
+      pageMargins: [56, 120, 56, 80],
+      header: this.createProfessionalHeader(this.doctorContent.documentTitle, date),
+      footer: (currentPage: number, pageCount: number) => this.createProfessionalFooter(currentPage, pageCount, lang),
       content,
-      styles: this.getDoctorStyles(),
-      pageMargins: [60, 60, 60, 60],
+      styles: this.getProfessionalStyles(),
       defaultStyle: {
         font: 'Roboto',
-        fontSize: 10,
-        lineHeight: 1.4
+        fontSize: 10.5,
+        lineHeight: 1.5,
+        color: '#2D3748'
       }
-    };
-  }
-
-  /**
-   * Creates a styled observation card for doctor summary
-   */
-  private createObservationCard(
-    title: string,
-    items: { text: string; action?: string; isActionOnly?: boolean }[],
-    colors: any,
-    lang: string
-  ): any {
-    const stack: any[] = [];
-
-    // Card header with accent bar
-    stack.push({
-      columns: [
-        {
-          canvas: [
-            {
-              type: 'rect',
-              x: 0, y: 0,
-              w: 4, h: 20,
-              color: colors.primary
-            }
-          ],
-          width: 8
-        },
-        {
-          text: title,
-          style: 'cardTitle',
-          margin: [8, 2, 0, 0]
-        }
-      ],
-      margin: [0, 0, 0, 10]
-    });
-
-    // Render each observation item
-    items.forEach((item, index) => {
-      if (index > 0) {
-        stack.push({
-          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 435, y2: 0, lineWidth: 0.5, lineColor: colors.border }],
-          margin: [0, 8, 0, 8]
-        });
-      }
-
-      // Note text (if not action-only)
-      if (!item.isActionOnly && item.text) {
-        const noteLabel = lang === 'nl' ? 'Observatie:' : lang === 'fr' ? 'Observation:' : 'Observation:';
-        stack.push({
-          table: {
-            widths: ['*'],
-            body: [[{
-              stack: [
-                { text: noteLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
-                { text: item.text, style: 'itemText' }
-              ],
-              margin: [10, 8, 10, 8]
-            }]]
-          },
-          layout: {
-            hLineWidth: () => 0,
-            vLineWidth: () => 0,
-            fillColor: () => colors.noteBackground
-          },
-          margin: [0, 0, 0, 6]
-        });
-      }
-
-      // Action/suggestion (if present)
-      if (item.action) {
-        const actionLabel = lang === 'nl' ? 'Suggestie:' : lang === 'fr' ? 'Suggestion:' : 'Suggestion:';
-        stack.push({
-          table: {
-            widths: ['*'],
-            body: [[{
-              stack: [
-                { text: actionLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
-                { text: item.action, style: 'itemText' }
-              ],
-              margin: [10, 8, 10, 8]
-            }]]
-          },
-          layout: {
-            hLineWidth: () => 0,
-            vLineWidth: () => 0,
-            fillColor: () => colors.actionBackground
-          },
-          margin: [0, 0, 0, 0]
-        });
-      }
-    });
-
-    return {
-      table: {
-        widths: ['*'],
-        body: [[{ stack, margin: [14, 14, 14, 14] }]]
-      },
-      layout: {
-        hLineWidth: () => 1,
-        vLineWidth: () => 1,
-        hLineColor: () => colors.border,
-        vLineColor: () => colors.border,
-        paddingLeft: () => 0,
-        paddingRight: () => 0,
-        paddingTop: () => 0,
-        paddingBottom: () => 0
-      },
-      margin: [0, 0, 0, 12]
     };
   }
 
@@ -1085,124 +769,84 @@ export class ReportGenerationPage implements OnInit {
       throw new Error('Pharmacy content not initialized');
     }
 
-    const content: any[] = [];
     const lang = this.transloco.getActiveLang();
-    const colors = {
-      primary: '#6B5B95',
-      accent: '#5F6476',
-      text: '#2C3E50',
-      textSecondary: '#5F6476',
-      border: '#E8EBF0',
-      background: '#F8F9FB',
-      noteBackground: '#F0F4F8',
-      actionBackground: '#EDE7F6',
-      flagPatient: '#E3F2FD',
-      flagDoctor: '#FFF3E0'
-    };
-
-    // Logo and Header
-    content.push({
-      columns: [
-        {
-          width: '*',
-          text: this.pharmacyContent.documentTitle,
-          style: 'letterHeader'
-        },
-        {
-          width: 80,
-          text: 'Salvus Health',
-          style: 'logoText',
-          alignment: 'right'
-        }
-      ]
-    });
-    content.push({
-      canvas: [
-        {
-          type: 'line',
-          x1: 0,
-          y1: 5,
-          x2: 515,
-          y2: 5,
-          lineWidth: 1,
-          lineColor: colors.border
-        }
-      ],
-      margin: [0, 10, 0, 15]
-    });
-
-    // Date
     const date = new Date().toLocaleDateString(lang === 'nl' ? 'nl-BE' : lang === 'fr' ? 'fr-BE' : 'en-GB', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
-    content.push({
-      text: date,
-      style: 'dateText'
-    });
-    content.push({ text: '', margin: [0, 16, 0, 0] });
 
-    // Internal notice banner
+    // Group notes by context
+    const groupedNotes = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
+    const notesWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
+
+    this.pharmacyContent.notes.forEach(note => {
+      const item = { text: note.text, action: note.action, isActionOnly: note.isActionOnly };
+      if (note.context) {
+        if (!groupedNotes.has(note.context)) {
+          groupedNotes.set(note.context, []);
+        }
+        groupedNotes.get(note.context)!.push(item);
+      } else {
+        notesWithoutContext.push(item);
+      }
+    });
+
+    const content: any[] = [];
+
+    // Internal document notice
     content.push({
       table: {
         widths: ['*'],
         body: [[{
-          text: this.pharmacyContent.internalNotice,
-          style: 'internalNotice',
-          margin: [12, 10, 12, 10]
+          text: [
+            { text: '⚕ ', fontSize: 12 },
+            { text: this.pharmacyContent.internalNotice }
+          ],
+          alignment: 'center',
+          margin: [16, 12, 16, 12]
         }]]
       },
       layout: {
         hLineWidth: () => 1,
         vLineWidth: () => 1,
-        hLineColor: () => colors.primary,
-        vLineColor: () => colors.primary,
-        fillColor: () => '#F5F3FF'
+        hLineColor: () => '#CBD5E0',
+        vLineColor: () => '#CBD5E0',
+        fillColor: () => '#F7FAFC'
       },
-      margin: [0, 0, 0, 16]
+      margin: [0, 0, 0, 24]
     });
+
+    // Summary statistics
+    const statsContent = this.createSummaryStats(lang);
+    if (statsContent) {
+      content.push(statsContent);
+    }
 
     // Medications Table
     if (this.medications.length > 0) {
       content.push({
         text: this.transloco.translate('pdf.current_medications'),
-        style: 'sectionHeading'
+        style: 'sectionTitle',
+        margin: [0, 0, 0, 12]
       });
-      content.push({ text: '', margin: [0, 8, 0, 0] });
-      content.push(this.createMedicationScheduleTable());
-      content.push({ text: '', margin: [0, 16, 0, 0] });
+      content.push(this.createProfessionalMedicationTable());
+      content.push({ text: '', margin: [0, 20, 0, 0] });
     }
 
     // Contraindications
     if (this.contraindications.length > 0) {
       content.push({
         text: this.transloco.translate('tools.contraindications'),
-        style: 'sectionHeading'
+        style: 'sectionTitle',
+        margin: [0, 0, 0, 12]
       });
-      content.push({ text: '', margin: [0, 8, 0, 0] });
       
-      const ciStack: any[] = this.contraindications.map(ci => ({
-        columns: [
-          { text: '•', width: 12, color: colors.primary },
-          { text: ci.name || ci.contraindicationCode, style: 'listItem' }
-        ],
-        margin: [0, 2, 0, 2]
-      }));
-      
+      const ciItems = this.contraindications.map(ci => ci.name || ci.contraindicationCode);
       content.push({
-        table: {
-          widths: ['*'],
-          body: [[{ stack: ciStack, margin: [12, 10, 12, 10] }]]
-        },
-        layout: {
-          hLineWidth: () => 1,
-          vLineWidth: () => 1,
-          hLineColor: () => colors.border,
-          vLineColor: () => colors.border,
-          fillColor: () => colors.background
-        },
-        margin: [0, 0, 0, 16]
+        ul: ciItems,
+        style: 'bulletList',
+        margin: [0, 0, 0, 20]
       });
     }
 
@@ -1210,35 +854,17 @@ export class ReportGenerationPage implements OnInit {
     if (this.pharmacyContent.notes.length > 0) {
       content.push({
         text: this.pharmacyContent.reviewNotesHeading,
-        style: 'sectionHeading'
-      });
-      content.push({ text: '', margin: [0, 12, 0, 0] });
-
-      // Group notes by context (medication)
-      const groupedNotes = new Map<string, { text: string; action?: string; isActionOnly?: boolean }[]>();
-      const notesWithoutContext: { text: string; action?: string; isActionOnly?: boolean }[] = [];
-
-      this.pharmacyContent.notes.forEach(note => {
-        const item = { text: note.text, action: note.action, isActionOnly: note.isActionOnly };
-        if (note.context) {
-          if (!groupedNotes.has(note.context)) {
-            groupedNotes.set(note.context, []);
-          }
-          groupedNotes.get(note.context)!.push(item);
-        } else {
-          notesWithoutContext.push(item);
-        }
+        style: 'sectionTitle',
+        margin: [0, 0, 0, 16]
       });
 
-      // Render notes without context as general items
       if (notesWithoutContext.length > 0) {
-        const generalLabel = lang === 'nl' ? 'Algemene Notities' : lang === 'fr' ? 'Notes Générales' : 'General Notes';
-        content.push(this.createPharmacyNoteCard(generalLabel, notesWithoutContext, colors, lang));
+        const generalLabel = lang === 'nl' ? 'Algemene notities' : lang === 'fr' ? 'Notes générales' : 'General notes';
+        content.push(this.createProfessionalSection(generalLabel, notesWithoutContext, lang, 'pharmacy'));
       }
 
-      // Render grouped notes as medication cards
       groupedNotes.forEach((items, medicationName) => {
-        content.push(this.createPharmacyNoteCard(medicationName, items, colors, lang));
+        content.push(this.createProfessionalSection(medicationName, items, lang, 'pharmacy'));
       });
     }
 
@@ -1246,199 +872,375 @@ export class ReportGenerationPage implements OnInit {
     content.push({
       text: this.pharmacyContent.closingText,
       style: 'bodyText',
-      alignment: 'left',
-      margin: [0, 8, 0, 0]
+      italics: true,
+      margin: [0, 24, 0, 16]
     });
 
-    // Pharmacist name
     if (this.pharmacyContent.pharmacistName) {
       content.push({
         text: this.pharmacyContent.pharmacistName,
-        style: 'pharmacistName',
-        margin: [0, 20, 0, 0]
+        style: 'signature'
       });
     }
 
     return {
+      pageSize: 'A4',
+      pageMargins: [56, 120, 56, 80],
+      header: this.createProfessionalHeader(this.pharmacyContent.documentTitle, date),
+      footer: (currentPage: number, pageCount: number) => this.createProfessionalFooter(currentPage, pageCount, lang),
       content,
-      styles: this.getPharmacyStyles(),
-      pageMargins: [60, 60, 60, 60],
+      styles: this.getProfessionalStyles(),
       defaultStyle: {
         font: 'Roboto',
-        fontSize: 10,
-        lineHeight: 1.4
+        fontSize: 10.5,
+        lineHeight: 1.5,
+        color: '#2D3748'
       }
     };
   }
 
-  /**
-   * Creates a styled note card for pharmacy summary
-   */
-  private createPharmacyNoteCard(
-    title: string,
-    items: { text: string; action?: string; isActionOnly?: boolean }[],
-    colors: any,
-    lang: string
-  ): any {
-    const stack: any[] = [];
+  // ============================================================================
+  // Professional PDF Helper Methods
+  // ============================================================================
 
-    // Card header with accent bar
-    stack.push({
-      columns: [
+  private createProfessionalHeader(title: string, date: string): any {
+    return {
+      margin: [56, 30, 56, 0],
+      stack: [
         {
-          canvas: [
+          columns: [
             {
-              type: 'rect',
-              x: 0, y: 0,
-              w: 4, h: 20,
-              color: colors.primary
+              width: '*',
+              stack: [
+                { text: title, style: 'documentTitle' },
+                { text: date, style: 'documentDate', margin: [0, 4, 0, 0] }
+              ]
+            },
+            {
+              width: 'auto',
+              stack: [
+                { text: 'SALVUS', style: 'brandName' },
+                { text: 'Health', style: 'brandTagline' }
+              ],
+              alignment: 'right'
             }
-          ],
-          width: 8
+          ]
         },
         {
-          text: title,
-          style: 'cardTitle',
-          margin: [8, 2, 0, 0]
+          canvas: [
+            { type: 'line', x1: 0, y1: 12, x2: 483, y2: 12, lineWidth: 1, lineColor: '#E2E8F0' },
+            { type: 'line', x1: 0, y1: 14, x2: 80, y2: 14, lineWidth: 2, lineColor: '#9DC9A2' }
+          ]
         }
-      ],
-      margin: [0, 0, 0, 10]
-    });
-
-    // Render each note item
-    items.forEach((item, index) => {
-      if (index > 0) {
-        stack.push({
-          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 435, y2: 0, lineWidth: 0.5, lineColor: colors.border }],
-          margin: [0, 8, 0, 8]
-        });
-      }
-
-      // Note text (if not action-only)
-      if (!item.isActionOnly && item.text) {
-        const noteLabel = lang === 'nl' ? 'Notitie:' : lang === 'fr' ? 'Note:' : 'Note:';
-        stack.push({
-          table: {
-            widths: ['*'],
-            body: [[{
-              stack: [
-                { text: noteLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
-                { text: item.text, style: 'itemText' }
-              ],
-              margin: [10, 8, 10, 8]
-            }]]
-          },
-          layout: {
-            hLineWidth: () => 0,
-            vLineWidth: () => 0,
-            fillColor: () => colors.noteBackground
-          },
-          margin: [0, 0, 0, 6]
-        });
-      }
-
-      // Action (if present)
-      if (item.action) {
-        const actionLabel = lang === 'nl' ? 'Actie:' : lang === 'fr' ? 'Action:' : 'Action:';
-        stack.push({
-          table: {
-            widths: ['*'],
-            body: [[{
-              stack: [
-                { text: actionLabel, style: 'itemLabel', margin: [0, 0, 0, 3] },
-                { text: item.action, style: 'itemText' }
-              ],
-              margin: [10, 8, 10, 8]
-            }]]
-          },
-          layout: {
-            hLineWidth: () => 0,
-            vLineWidth: () => 0,
-            fillColor: () => colors.actionBackground
-          },
-          margin: [0, 0, 0, 0]
-        });
-      }
-    });
-
-    return {
-      table: {
-        widths: ['*'],
-        body: [[{ stack, margin: [14, 14, 14, 14] }]]
-      },
-      layout: {
-        hLineWidth: () => 1,
-        vLineWidth: () => 1,
-        hLineColor: () => colors.border,
-        vLineColor: () => colors.border,
-        paddingLeft: () => 0,
-        paddingRight: () => 0,
-        paddingTop: () => 0,
-        paddingBottom: () => 0
-      },
-      margin: [0, 0, 0, 12]
+      ]
     };
   }
 
-  private createMedicationScheduleTable(): any {
+  private createProfessionalFooter(currentPage: number, pageCount: number, lang: string): any {
+    const confidentialText = lang === 'nl' ? 'Vertrouwelijk document' : 
+                             lang === 'fr' ? 'Document confidentiel' : 
+                             'Confidential document';
+    
+    return {
+      margin: [56, 20, 56, 0],
+      stack: [
+        {
+          canvas: [
+            { type: 'line', x1: 0, y1: 0, x2: 483, y2: 0, lineWidth: 0.5, lineColor: '#E2E8F0' }
+          ]
+        },
+        {
+          columns: [
+            { text: confidentialText, style: 'footerText', width: '*' },
+            { text: `${currentPage} / ${pageCount}`, style: 'footerText', alignment: 'right', width: 'auto' }
+          ],
+          margin: [0, 8, 0, 0]
+        }
+      ]
+    };
+  }
+
+  private createProfessionalSection(
+    title: string,
+    items: { text: string; action?: string; isActionOnly?: boolean }[],
+    lang: string,
+    type: 'patient' | 'doctor' | 'pharmacy'
+  ): any {
+    const noteLabel = type === 'doctor' 
+      ? (lang === 'nl' ? 'Observatie' : lang === 'fr' ? 'Observation' : 'Observation')
+      : (lang === 'nl' ? 'Opmerking' : lang === 'fr' ? 'Remarque' : 'Note');
+    
+    const actionLabel = type === 'doctor'
+      ? (lang === 'nl' ? 'Suggestie' : lang === 'fr' ? 'Suggestion' : 'Suggestion')
+      : type === 'patient'
+      ? (lang === 'nl' ? 'Aanbeveling' : lang === 'fr' ? 'Recommandation' : 'Recommendation')
+      : (lang === 'nl' ? 'Actie' : lang === 'fr' ? 'Action' : 'Action');
+
+    const tableBody: any[][] = [];
+
+    items.forEach((item, index) => {
+      if (index > 0) {
+        tableBody.push([{ text: '', colSpan: 2, border: [false, true, false, false], borderColor: ['', '#E2E8F0', '', ''], margin: [0, 8, 0, 8] }, {}]);
+      }
+
+      if (!item.isActionOnly && item.text) {
+        tableBody.push([
+          { text: noteLabel, style: 'fieldLabel', border: [false, false, false, false], width: 80 },
+          { text: item.text, style: 'fieldValue', border: [false, false, false, false] }
+        ]);
+      }
+
+      if (item.action) {
+        tableBody.push([
+          { text: actionLabel, style: 'fieldLabelAccent', border: [false, false, false, false], width: 80 },
+          { text: item.action, style: 'fieldValue', border: [false, false, false, false] }
+        ]);
+      }
+    });
+
+    if (tableBody.length === 0) return { text: '' };
+
+    return {
+      stack: [
+        {
+          columns: [
+            {
+              canvas: [{ type: 'rect', x: 0, y: 0, w: 3, h: 16, color: '#9DC9A2' }],
+              width: 8
+            },
+            { text: title, style: 'subsectionTitle', margin: [4, 0, 0, 0] }
+          ],
+          margin: [0, 0, 0, 12]
+        },
+        {
+          table: {
+            widths: [80, '*'],
+            body: tableBody
+          },
+          layout: {
+            hLineWidth: (i: number) => tableBody[i] && tableBody[i][0]?.border?.[1] ? 0.5 : 0,
+            vLineWidth: () => 0,
+            hLineColor: () => '#E2E8F0',
+            paddingLeft: () => 12,
+            paddingRight: () => 12,
+            paddingTop: () => 4,
+            paddingBottom: () => 4
+          },
+          margin: [0, 0, 0, 0]
+        }
+      ],
+      margin: [0, 0, 0, 20]
+    };
+  }
+
+  private createSummaryStats(lang: string): any {
+    const medicationCount = this.medications.length;
+    const contraindicationCount = this.contraindications.length;
+    const noteCount = this.reviewNotes.length;
+
+    if (medicationCount === 0 && contraindicationCount === 0 && noteCount === 0) {
+      return null;
+    }
+
+    const medLabel = lang === 'nl' ? 'Medicaties' : lang === 'fr' ? 'Médicaments' : 'Medications';
+    const ciLabel = lang === 'nl' ? 'Contra-indicaties' : lang === 'fr' ? 'Contre-indications' : 'Contraindications';
+    const notesLabel = lang === 'nl' ? 'Notities' : lang === 'fr' ? 'Notes' : 'Notes';
+
+    return {
+      columns: [
+        { 
+          stack: [
+            { text: String(medicationCount), style: 'statNumber' },
+            { text: medLabel, style: 'statLabel' }
+          ],
+          width: '*',
+          alignment: 'center'
+        },
+        {
+          stack: [
+            { text: String(contraindicationCount), style: 'statNumber' },
+            { text: ciLabel, style: 'statLabel' }
+          ],
+          width: '*',
+          alignment: 'center'
+        },
+        {
+          stack: [
+            { text: String(noteCount), style: 'statNumber' },
+            { text: notesLabel, style: 'statLabel' }
+          ],
+          width: '*',
+          alignment: 'center'
+        }
+      ],
+      margin: [0, 0, 0, 28]
+    };
+  }
+
+  private createProfessionalMedicationTable(): any {
     const tableBody: any[] = [
       [
-        { text: this.transloco.translate('pdf.medication'), style: 'tableHeader' },
-        { text: this.transloco.translate('medication.breakfast'), style: 'tableHeader' },
-        { text: this.transloco.translate('medication.lunch'), style: 'tableHeader' },
-        { text: this.transloco.translate('medication.dinner'), style: 'tableHeader' },
-        { text: this.transloco.translate('medication.bedtime'), style: 'tableHeader' }
+        { text: this.transloco.translate('pdf.medication'), style: 'tableHeaderCell' },
+        { text: this.transloco.translate('medication.breakfast'), style: 'tableHeaderCell', alignment: 'center' },
+        { text: this.transloco.translate('medication.lunch'), style: 'tableHeaderCell', alignment: 'center' },
+        { text: this.transloco.translate('medication.dinner'), style: 'tableHeaderCell', alignment: 'center' },
+        { text: this.transloco.translate('medication.bedtime'), style: 'tableHeaderCell', alignment: 'center' }
       ]
     ];
 
-    this.medications.forEach(med => {
+    this.medications.forEach((med, index) => {
       const morning = [med.unitsBeforeBreakfast, med.unitsDuringBreakfast]
         .filter(u => u && u > 0)
         .map(u => String(u))
-        .join('+') || '-';
+        .join('+') || '—';
       
       const noon = [med.unitsBeforeLunch, med.unitsDuringLunch]
         .filter(u => u && u > 0)
         .map(u => String(u))
-        .join('+') || '-';
+        .join('+') || '—';
       
       const evening = [med.unitsBeforeDinner, med.unitsDuringDinner]
         .filter(u => u && u > 0)
         .map(u => String(u))
-        .join('+') || '-';
+        .join('+') || '—';
       
       const bedtime = med.unitsAtBedtime && med.unitsAtBedtime > 0 
         ? String(med.unitsAtBedtime) 
-        : '-';
+        : '—';
+
+      const rowStyle = index % 2 === 0 ? 'tableRowEven' : 'tableRowOdd';
 
       tableBody.push([
-        { text: med.name || 'Unknown', fontSize: 9 },
-        { text: morning, fontSize: 9, alignment: 'center' },
-        { text: noon, fontSize: 9, alignment: 'center' },
-        { text: evening, fontSize: 9, alignment: 'center' },
-        { text: bedtime, fontSize: 9, alignment: 'center' }
+        { text: med.name || 'Unknown', style: 'tableCellBold' },
+        { text: morning, style: 'tableCell', alignment: 'center' },
+        { text: noon, style: 'tableCell', alignment: 'center' },
+        { text: evening, style: 'tableCell', alignment: 'center' },
+        { text: bedtime, style: 'tableCell', alignment: 'center' }
       ]);
     });
 
     return {
       table: {
         headerRows: 1,
-        widths: ['*', 'auto', 'auto', 'auto', 'auto'],
+        widths: ['*', 60, 60, 60, 60],
         body: tableBody
       },
       layout: {
-        hLineWidth: (i: number, node: any) => i === 0 || i === node.table.body.length ? 1.5 : 0.5,
-        vLineWidth: () => 0.5,
-        hLineColor: (i: number, node: any) => i === 0 || i === node.table.body.length ? '#5F6476' : '#E8EBF0',
-        vLineColor: () => '#E8EBF0',
-        paddingLeft: () => 10,
-        paddingRight: () => 10,
-        paddingTop: () => 8,
-        paddingBottom: () => 8,
-        fillColor: (i: number) => i === 0 ? '#5F6476' : (i % 2 === 0 ? '#F8F9FB' : null)
+        hLineWidth: (i: number, node: any) => i === 1 ? 1 : 0.5,
+        vLineWidth: () => 0,
+        hLineColor: (i: number) => i === 1 ? '#454B60' : '#E2E8F0',
+        paddingLeft: () => 12,
+        paddingRight: () => 12,
+        paddingTop: () => 10,
+        paddingBottom: () => 10,
+        fillColor: (i: number) => i === 0 ? '#454B60' : (i % 2 === 0 ? '#F7FAFC' : null)
       }
     };
   }
+
+  private getProfessionalStyles(): any {
+    return {
+      documentTitle: {
+        fontSize: 18,
+        bold: true,
+        color: '#1A202C'
+      },
+      documentDate: {
+        fontSize: 10,
+        color: '#718096'
+      },
+      brandName: {
+        fontSize: 14,
+        bold: true,
+        color: '#454B60'
+      },
+      brandTagline: {
+        fontSize: 10,
+        color: '#9DC9A2'
+      },
+      salutation: {
+        fontSize: 11,
+        color: '#2D3748'
+      },
+      reference: {
+        fontSize: 10,
+        bold: true,
+        color: '#4A5568',
+        background: '#F7FAFC',
+        margin: [0, 0, 0, 0]
+      },
+      bodyText: {
+        fontSize: 10.5,
+        color: '#2D3748',
+        lineHeight: 1.6
+      },
+      sectionTitle: {
+        fontSize: 13,
+        bold: true,
+        color: '#1A202C'
+      },
+      subsectionTitle: {
+        fontSize: 11,
+        bold: true,
+        color: '#2D3748'
+      },
+      fieldLabel: {
+        fontSize: 9,
+        color: '#718096',
+        bold: true
+      },
+      fieldLabelAccent: {
+        fontSize: 9,
+        color: '#48BB78',
+        bold: true
+      },
+      fieldValue: {
+        fontSize: 10.5,
+        color: '#2D3748',
+        lineHeight: 1.5
+      },
+      signature: {
+        fontSize: 11,
+        bold: true,
+        color: '#2D3748'
+      },
+      footerText: {
+        fontSize: 8,
+        color: '#A0AEC0'
+      },
+      bulletList: {
+        fontSize: 10.5,
+        color: '#2D3748'
+      },
+      tableHeaderCell: {
+        fontSize: 9,
+        bold: true,
+        color: '#FFFFFF'
+      },
+      tableCell: {
+        fontSize: 10,
+        color: '#2D3748'
+      },
+      tableCellBold: {
+        fontSize: 10,
+        color: '#2D3748',
+        bold: true
+      },
+      statNumber: {
+        fontSize: 24,
+        bold: true,
+        color: '#454B60'
+      },
+      statLabel: {
+        fontSize: 9,
+        color: '#718096'
+      }
+    };
+  }
+
+  // ============================================================================
+  // Data Helper Methods
+  // ============================================================================
 
   private getPatientPart1Actions(): Array<{ label: string, value: string }> {
     const actions: Array<{ label: string, value: string }> = [];
@@ -1565,204 +1367,5 @@ export class ReportGenerationPage implements OnInit {
     }));
 
     return { general, byMedication };
-  }
-
-  private getPatientStyles(): any {
-    return {
-      letterHeader: {
-        fontSize: 16,
-        bold: true,
-        color: '#2C3E50',
-        margin: [0, 0, 0, 0]
-      },
-      logoText: {
-        fontSize: 9,
-        color: '#5F6476',
-        italics: true,
-        margin: [0, 2, 0, 0]
-      },
-      dateText: {
-        fontSize: 10,
-        color: '#7F8C9F',
-        margin: [0, 0, 0, 0]
-      },
-      patientReference: {
-        fontSize: 10,
-        bold: true,
-        color: '#454B60',
-        margin: [0, 0, 0, 0],
-        background: '#F8F9FB',
-        padding: [8, 4, 8, 4]
-      },
-      bodyText: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.6
-      },
-      sectionHeading: {
-        fontSize: 12,
-        bold: true,
-        color: '#2C3E50',
-        margin: [0, 0, 0, 0]
-      },
-      cardTitle: {
-        fontSize: 11,
-        bold: true,
-        color: '#2C3E50'
-      },
-      itemLabel: {
-        fontSize: 8,
-        bold: true,
-        color: '#5F6476',
-        margin: [0, 0, 0, 0]
-      },
-      itemText: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.5
-      },
-      pharmacistName: {
-        fontSize: 10,
-        bold: true,
-        color: '#2C3E50'
-      }
-    };
-  }
-
-  private getDoctorStyles(): any {
-    return {
-      letterHeader: {
-        fontSize: 16,
-        bold: true,
-        color: '#2C3E50',
-        margin: [0, 0, 0, 0]
-      },
-      logoText: {
-        fontSize: 9,
-        color: '#5F6476',
-        italics: true,
-        margin: [0, 2, 0, 0]
-      },
-      dateText: {
-        fontSize: 10,
-        color: '#7F8C9F',
-        margin: [0, 0, 0, 0]
-      },
-      patientReference: {
-        fontSize: 10,
-        bold: true,
-        color: '#454B60'
-      },
-      bodyText: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.6
-      },
-      sectionHeading: {
-        fontSize: 12,
-        bold: true,
-        color: '#2C3E50',
-        margin: [0, 0, 0, 0]
-      },
-      cardTitle: {
-        fontSize: 11,
-        bold: true,
-        color: '#2C3E50'
-      },
-      itemLabel: {
-        fontSize: 8,
-        bold: true,
-        color: '#5F6476',
-        characterSpacing: 0.5
-      },
-      itemText: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.5
-      },
-      pharmacistName: {
-        fontSize: 10,
-        bold: true,
-        color: '#2C3E50'
-      },
-      listItem: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.6,
-        margin: [0, 3, 0, 3]
-      }
-    };
-  }
-
-  private getPharmacyStyles(): any {
-    return {
-      letterHeader: {
-        fontSize: 16,
-        bold: true,
-        color: '#2C3E50',
-        margin: [0, 0, 0, 0]
-      },
-      logoText: {
-        fontSize: 9,
-        color: '#5F6476',
-        italics: true,
-        margin: [0, 2, 0, 0]
-      },
-      dateText: {
-        fontSize: 10,
-        color: '#7F8C9F',
-        margin: [0, 0, 0, 0]
-      },
-      internalNotice: {
-        fontSize: 10,
-        color: '#6B5B95',
-        italics: true,
-        lineHeight: 1.5
-      },
-      bodyText: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.6
-      },
-      sectionHeading: {
-        fontSize: 12,
-        bold: true,
-        color: '#2C3E50',
-        margin: [0, 0, 0, 0]
-      },
-      cardTitle: {
-        fontSize: 11,
-        bold: true,
-        color: '#2C3E50'
-      },
-      itemLabel: {
-        fontSize: 8,
-        bold: true,
-        color: '#5F6476',
-        characterSpacing: 0.5
-      },
-      itemText: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.5
-      },
-      pharmacistName: {
-        fontSize: 10,
-        bold: true,
-        color: '#2C3E50'
-      },
-      listItem: {
-        fontSize: 10,
-        color: '#2C3E50',
-        lineHeight: 1.6,
-        margin: [0, 3, 0, 3]
-      },
-      tableHeader: {
-        fontSize: 9,
-        bold: true,
-        color: '#FFFFFF',
-        fillColor: '#5F6476'
-      }
-    };
   }
 }
