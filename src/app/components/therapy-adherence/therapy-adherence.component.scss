@@ -107,7 +107,7 @@
   // Floating general note button in top right
   .floating-top-right {
     position: absolute;
-    top: 0;
+    top: 1rem;
     right: 2rem;
     z-index: 10;
   }
@@ -115,7 +115,7 @@
   // Refresh button in top right (next to general note)
   .refresh-tool-button {
     position: absolute;
-    top: 0;
+    top: 1rem;
     right: -0.5rem;
     z-index: 10;
     width: 32px;
@@ -357,7 +357,7 @@
 .graph-rows {
   display: flex;
   flex-direction: column;
-  margin-top: 0.95rem;
+  margin-top: 1.165rem;
   overflow: visible; // Allow tooltips to render outside
 }
 
